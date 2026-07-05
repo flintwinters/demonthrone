@@ -84,11 +84,23 @@ function syncGoButton() {
 }
 
 function go() {
+  if (plannedUnits().length === 0) {
+    return;
+  }
+
   commitPlannedMoves();
   draw();
 }
 
+function handleKeyDown(event) {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    go();
+  }
+}
+
 connectInput(canvas, selectTile, draw);
 goButton.addEventListener("click", go);
+window.addEventListener("keydown", handleKeyDown);
 window.addEventListener("resize", resize);
 resize();
