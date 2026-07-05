@@ -1,10 +1,12 @@
 import { gridFromScreen, rotateAt, view, zoomAt } from "./camera.js";
-import { dragThreshold, wheelDeltaLineMode } from "./constants.js";
+import { dragThreshold, mouseRotateSpeed, wheelDeltaLineMode } from "./constants.js";
+import { endPinch, handlePinch, startPinch } from "./pinch.js";
 
 export function connectInput(canvas, onSelectTile, onViewChange) {
   const activePointers = new Map();
   let dragStart = null;
   let pinchStart = null;
+  let rotateStart = null;
 
   function pointerDown(event) {
     const point = pointerPosition(canvas, event);
@@ -13,6 +15,13 @@ export function connectInput(canvas, onSelectTile, onViewChange) {
     if (activePointers.size > 1) {
       pinchStart = startPinch(activePointers);
       dragStart = null;
+      rotateStart = null;
+      canvas.setPointerCapture(event.pointerId);
+      return;
+    }
+
+    if (isMouseRotate(event)) {
+      rotateStart = createRotateStart(event.pointerId, point);
       canvas.setPointerCapture(event.pointerId);
       return;
     }
@@ -29,6 +38,11 @@ export function connectInput(canvas, onSelectTile, onViewChange) {
       return;
     }
 
+    if (rotateStart?.pointerId === event.pointerId) {
+      handlePointerRotate(canvas, activePointers, event.pointerId, rotateStart, onViewChange);
+      return;
+    }
+
     if (dragStart?.pointerId === event.pointerId) {
       dragStart = handleDrag(activePointers, event.pointerId, dragStart, onViewChange);
     }
@@ -40,6 +54,12 @@ export function connectInput(canvas, onSelectTile, onViewChange) {
     if (pinchStart) {
       pinchStart = endPinch(activePointers);
       dragStart = null;
+      rotateStart = null;
+      return;
+    }
+
+    if (rotateStart?.pointerId === event.pointerId) {
+      rotateStart = null;
       return;
     }
 
@@ -53,6 +73,7 @@ export function connectInput(canvas, onSelectTile, onViewChange) {
     activePointers.delete(event.pointerId);
     pinchStart = endPinch(activePointers);
     dragStart = null;
+    rotateStart = null;
   }
 
   function wheel(event) {
@@ -69,6 +90,7 @@ export function connectInput(canvas, onSelectTile, onViewChange) {
   canvas.addEventListener("pointerup", pointerUp);
   canvas.addEventListener("pointercancel", pointerCancel);
   canvas.addEventListener("wheel", wheel, { passive: false });
+  canvas.addEventListener("contextmenu", suppressContextMenu);
 }
 
 function createDragStart(pointerId, point) {
@@ -97,6 +119,24 @@ function handleDrag(activePointers, pointerId, dragStart, onViewChange) {
   };
 }
 
+function createRotateStart(pointerId, point) {
+  return {
+    pointerId,
+    pointerX: point.x,
+    pointerY: point.y,
+    rotation: view.rotation,
+  };
+}
+
+function handlePointerRotate(canvas, activePointers, pointerId, rotateStart, onViewChange) {
+  const point = activePointers.get(pointerId);
+  const dx = point.x - rotateStart.pointerX;
+  const nextRotation = rotateStart.rotation + dx * mouseRotateSpeed;
+
+  rotateAt(canvas, rotateStart.pointerX, rotateStart.pointerY, nextRotation);
+  onViewChange();
+}
+
 function selectTile(canvas, event, dragStart, onSelectTile) {
   if (dragStart.moved) {
     return;
@@ -105,60 +145,6 @@ function selectTile(canvas, event, dragStart, onSelectTile) {
   const point = pointerPosition(canvas, event);
   const grid = gridFromScreen(canvas, point.x, point.y);
   onSelectTile(grid);
-}
-
-function startPinch(activePointers) {
-  const pinch = currentPinch(activePointers);
-
-  return pinch
-    ? {
-        distance: pinch.distance,
-        angle: pinch.angle,
-        rotation: view.rotation,
-        zoom: view.zoom,
-      }
-    : null;
-}
-
-function handlePinch(canvas, activePointers, pinchStart, onViewChange) {
-  const pinch = currentPinch(activePointers);
-
-  if (!pinch || pinchStart.distance <= 0) {
-    return;
-  }
-
-  zoomAt(
-    pinch.centerX,
-    pinch.centerY,
-    pinchStart.zoom * (pinch.distance / pinchStart.distance),
-  );
-  rotateAt(
-    canvas,
-    pinch.centerX,
-    pinch.centerY,
-    pinchStart.rotation + angleDelta(pinchStart.angle, pinch.angle),
-  );
-  onViewChange();
-}
-
-function endPinch(activePointers) {
-  return activePointers.size >= 2 ? startPinch(activePointers) : null;
-}
-
-function currentPinch(activePointers) {
-  const points = Array.from(activePointers.values());
-
-  if (points.length < 2) {
-    return null;
-  }
-
-  const [first, second] = points;
-  return {
-    centerX: (first.x + second.x) / 2,
-    centerY: (first.y + second.y) / 2,
-    distance: Math.hypot(second.x - first.x, second.y - first.y),
-    angle: Math.atan2(second.y - first.y, second.x - first.x),
-  };
 }
 
 function updatePointer(canvas, activePointers, event) {
@@ -180,6 +166,10 @@ function normalizedWheelDeltaY(event) {
   return event.deltaMode === wheelDeltaLineMode ? event.deltaY * 16 : event.deltaY;
 }
 
-function angleDelta(start, end) {
-  return Math.atan2(Math.sin(end - start), Math.cos(end - start));
+function isMouseRotate(event) {
+  return event.pointerType === "mouse" && event.button === 2;
+}
+
+function suppressContextMenu(event) {
+  event.preventDefault();
 }

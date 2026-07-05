@@ -1,10 +1,10 @@
-import { devicePixelRatio, rotateAt, view } from "./camera.js";
+import { devicePixelRatio } from "./camera.js";
 import { connectInput } from "./input.js";
 import { canReachTile } from "./movement.js";
 import { isObstacleTile } from "./obstacles.js";
 import { drawGrid } from "./renderer.js";
+import { connectRotationControls } from "./rotation-controls.js";
 import { isSightBlockingTile } from "./world.js";
-import { rotationStep } from "./constants.js";
 import {
   clickBoardTile,
   commitPlannedMoves,
@@ -17,6 +17,8 @@ import { isVisibleTile, l1Distance } from "./visibility.js";
 
 const canvas = document.querySelector("#grid");
 const goButton = document.querySelector("#go");
+const rotateLeftButton = document.querySelector("#rotate-left");
+const rotateRightButton = document.querySelector("#rotate-right");
 const context = canvas.getContext("2d");
 let selectedTile = null;
 
@@ -99,22 +101,14 @@ function handleKeyDown(event) {
     event.preventDefault();
     go();
   }
-
-  if (event.key === "q" || event.key === "Q") {
-    rotateCamera(-rotationStep);
-  }
-
-  if (event.key === "e" || event.key === "E") {
-    rotateCamera(rotationStep);
-  }
-}
-
-function rotateCamera(amount) {
-  rotateAt(canvas, window.innerWidth / 2, window.innerHeight / 2, view.rotation + amount);
-  draw();
 }
 
 connectInput(canvas, selectTile, draw);
+connectRotationControls(
+  canvas,
+  { left: rotateLeftButton, right: rotateRightButton },
+  draw,
+);
 goButton.addEventListener("click", go);
 window.addEventListener("keydown", handleKeyDown);
 window.addEventListener("resize", resize);

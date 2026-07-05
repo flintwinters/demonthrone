@@ -5,13 +5,15 @@ export const tile = {
 
 export const gridTopOffset = 72;
 export const dragThreshold = 3;
+export const mouseRotateSpeed = 0.008;
 export const wheelDeltaLineMode = 1;
 
 export const zoomLimits = {
   min: 0.5,
   max: 2.5,
 };
-export const rotationStep = Math.PI / 8;
+export const rotationControlStep = Math.PI / 96;
+export const rotationControlInterval = 16;
 
 export const colors = {
   background: "#1d2021",
