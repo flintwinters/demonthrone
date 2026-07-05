@@ -19,4 +19,10 @@ export const colors = {
   selectedTile: "#3c3836",
   tileStroke: "#928374",
   selectedTileStroke: "#fabd2f",
+  moveLine: "#83a598",
+  moveTarget: "#458588",
+  moveTargetFill: "rgba(69, 133, 136, 0.28)",
+  unitBase: "#1d2021",
+  unitOne: "#fb4934",
+  unitTwo: "#b8bb26",
 };

@@ -28,3 +28,26 @@ canvas {
   cursor: grab;
   touch-action: none;
 }
+
+.go-button {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  min-width: 56px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid #fabd2f;
+  border-radius: 4px;
+  background: #282828;
+  color: #fabd2f;
+  font: 700 16px/1 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.go-button:active {
+  background: #3c3836;
+}
+
+.go-button:focus-visible {
+  outline: 2px solid #ebdbb2;
+  outline-offset: 2px;
+}

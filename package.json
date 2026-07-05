@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "npm run lint && node --check src/main.js && node --check src/input.js && node --check src/camera.js && node --check src/renderer.js && node --check src/constants.js",
+    "check": "npm run lint && node --check src/main.js && node --check src/input.js && node --check src/camera.js && node --check src/renderer.js && node --check src/constants.js && node --check src/units.js",
     "lint": "eslint .",
     "serve": "npx serve .",
     "test": "npm run check"
