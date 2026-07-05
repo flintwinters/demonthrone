@@ -1,31 +1,33 @@
 import { viewportSize, screenFromGrid, view } from "./camera.js";
 import { colors, gridSize, tile } from "./constants.js";
 
-export function drawGrid(canvas, context, selectedTile, units, selectedUnitId, isTileVisible) {
+export function drawGrid(canvas, context, boardState) {
   const { width, height } = viewportSize(canvas);
 
   context.clearRect(0, 0, width, height);
   context.fillStyle = colors.background;
   context.fillRect(0, 0, width, height);
 
-  drawTiles(canvas, context, selectedTile, isTileVisible);
-  drawMovePlans(canvas, context, units);
-  drawUnits(canvas, context, units, selectedUnitId);
+  drawTiles(canvas, context, boardState);
+  drawMovePlans(canvas, context, boardState.units);
+  drawUnits(canvas, context, boardState.units, boardState.selectedUnitId);
 }
 
-function drawTiles(canvas, context, selectedTile, isTileVisible) {
+function drawTiles(canvas, context, boardState) {
   eachGridTile((x, y) => {
-    if (isTileVisible({ x, y })) {
-      drawTile(canvas, context, x, y, selectedTile);
+    const gridPoint = { x, y };
+
+    if (boardState.isTileVisible(gridPoint)) {
+      drawTile(canvas, context, gridPoint, boardState);
     }
   });
 }
 
-function drawTile(canvas, context, x, y, selectedTile) {
-  const point = screenFromGrid(canvas, x, y);
+function drawTile(canvas, context, gridPoint, boardState) {
+  const point = screenFromGrid(canvas, gridPoint.x, gridPoint.y);
   const width = tile.width * view.zoom;
   const height = tile.height * view.zoom;
-  const style = tileStyle(selectedTile, x, y);
+  const style = tileStyle(gridPoint, boardState);
 
   context.beginPath();
   context.moveTo(point.x, point.y);
@@ -41,11 +43,19 @@ function drawTile(canvas, context, x, y, selectedTile) {
   context.stroke();
 }
 
-function tileStyle(selectedTile, x, y) {
-  if (selectedTile?.x === x && selectedTile?.y === y) {
+function tileStyle(gridPoint, boardState) {
+  if (sameTile(boardState.selectedTile, gridPoint)) {
     return {
       fill: colors.selectedTile,
       stroke: colors.selectedTileStroke,
+      lineWidth: 2,
+    };
+  }
+
+  if (boardState.isMovementTile(gridPoint)) {
+    return {
+      fill: colors.movementTile,
+      stroke: colors.movementTileStroke,
       lineWidth: 2,
     };
   }
@@ -55,6 +65,10 @@ function tileStyle(selectedTile, x, y) {
     stroke: colors.tileStroke,
     lineWidth: 1,
   };
+}
+
+function sameTile(first, second) {
+  return first?.x === second.x && first?.y === second.y;
 }
 
 function drawMovePlans(canvas, context, units) {

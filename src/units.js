@@ -7,6 +7,7 @@ export const units = [
     y: 7,
     color: colors.unitOne,
     lineOfSight: 5,
+    movement: 3,
     target: null,
   },
   {
@@ -15,6 +16,7 @@ export const units = [
     y: 6,
     color: colors.unitTwo,
     lineOfSight: 5,
+    movement: 3,
     target: null,
   },
 ];
@@ -31,7 +33,7 @@ export function plannedUnits() {
   return units.filter((unit) => unit.target);
 }
 
-export function clickBoardTile(tile) {
+export function clickBoardTile(tile, canTargetTile) {
   const unit = unitAt(tile);
 
   if (unit) {
@@ -39,8 +41,7 @@ export function clickBoardTile(tile) {
     return tile;
   }
 
-  assignSelectedTarget(tile);
-  return tile;
+  return assignSelectedTarget(tile, canTargetTile);
 }
 
 export function commitPlannedMoves() {
@@ -51,12 +52,15 @@ export function commitPlannedMoves() {
   }
 }
 
-function assignSelectedTarget(tile) {
+function assignSelectedTarget(tile, canTargetTile) {
   const unit = selectedUnit();
 
-  if (unit) {
+  if (unit && canTargetTile(tile, unit)) {
     unit.target = { x: tile.x, y: tile.y };
+    return tile;
   }
+
+  return null;
 }
 
 function unitAt(tile) {
