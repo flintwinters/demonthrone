@@ -1,4 +1,5 @@
-- Project state: dependency-free browser proof of concept for a crisp isometric grid.
+- Project state: runtime dependency-free browser proof of concept for a crisp isometric grid.
 - Run locally by opening `index.html` or serving the directory with any static file server.
 - Current scope is grid rendering, panning, wheel/pinch zooming, and tile selection.
+- Verification gate: run `npm run check`; ESLint enforces cyclomatic complexity and file length limits.
 - UI direction: dense high-contrast gruvbox dark theme, minimal labels, no animations or transitions.
