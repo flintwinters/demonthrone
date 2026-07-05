@@ -1,20 +1,24 @@
 import { viewportSize, screenFromGrid, view } from "./camera.js";
 import { colors, gridSize, tile } from "./constants.js";
 
-export function drawGrid(canvas, context, selectedTile, units, selectedUnitId) {
+export function drawGrid(canvas, context, selectedTile, units, selectedUnitId, isTileVisible) {
   const { width, height } = viewportSize(canvas);
 
   context.clearRect(0, 0, width, height);
   context.fillStyle = colors.background;
   context.fillRect(0, 0, width, height);
 
-  drawTiles(canvas, context, selectedTile);
+  drawTiles(canvas, context, selectedTile, isTileVisible);
   drawMovePlans(canvas, context, units);
   drawUnits(canvas, context, units, selectedUnitId);
 }
 
-function drawTiles(canvas, context, selectedTile) {
-  eachGridTile((x, y) => drawTile(canvas, context, x, y, selectedTile));
+function drawTiles(canvas, context, selectedTile, isTileVisible) {
+  eachGridTile((x, y) => {
+    if (isTileVisible({ x, y })) {
+      drawTile(canvas, context, x, y, selectedTile);
+    }
+  });
 }
 
 function drawTile(canvas, context, x, y, selectedTile) {

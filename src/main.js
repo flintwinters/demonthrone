@@ -8,6 +8,7 @@ import {
   selection,
   units,
 } from "./units.js";
+import { isVisibleTile } from "./visibility.js";
 
 const canvas = document.querySelector("#grid");
 const goButton = document.querySelector("#go");
@@ -15,7 +16,7 @@ const context = canvas.getContext("2d");
 let selectedTile = null;
 
 function draw() {
-  drawGrid(canvas, context, selectedTile, units, selection.unitId);
+  drawGrid(canvas, context, selectedTile, units, selection.unitId, canSeeTile);
   syncGoButton();
 }
 
@@ -33,8 +34,12 @@ function resize() {
 }
 
 function selectTile(tile) {
-  selectedTile = tile ? clickBoardTile(tile) : null;
+  selectedTile = tile && canSeeTile(tile) ? clickBoardTile(tile) : null;
   draw();
+}
+
+function canSeeTile(tile) {
+  return isVisibleTile(tile, units);
 }
 
 function syncGoButton() {

@@ -6,6 +6,7 @@ export const units = [
     x: 5,
     y: 7,
     color: colors.unitOne,
+    lineOfSight: 5,
     target: null,
   },
   {
@@ -13,6 +14,7 @@ export const units = [
     x: 8,
     y: 6,
     color: colors.unitTwo,
+    lineOfSight: 5,
     target: null,
   },
 ];
