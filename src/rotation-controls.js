@@ -6,8 +6,8 @@ export function connectRotationControls(canvas, controls, onViewChange) {
     intervalId: null,
   };
 
-  connectButton(canvas, controls.left, -rotationControlStep, state, onViewChange);
-  connectButton(canvas, controls.right, rotationControlStep, state, onViewChange);
+  connectButton(canvas, controls.left, rotationControlStep, state, onViewChange);
+  connectButton(canvas, controls.right, -rotationControlStep, state, onViewChange);
   window.addEventListener("pointerup", () => stopRotation(state));
   window.addEventListener("pointercancel", () => stopRotation(state));
 }

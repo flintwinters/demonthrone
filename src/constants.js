@@ -5,7 +5,7 @@ export const tile = {
 
 export const gridTopOffset = 72;
 export const dragThreshold = 3;
-export const mouseRotateSpeed = 0.008;
+export const mouseRotateSpeed = -0.008;
 export const wheelDeltaLineMode = 1;
 
 export const zoomLimits = {
