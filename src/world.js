@@ -1,9 +1,14 @@
 import { perlinNoise2d } from "./noise.js";
+import { terrainHeight } from "./constants.js";
 
 const worldSeed = 0x5eed;
 const boulderLayer = {
   scale: 0.23,
   threshold: 0.66,
+};
+const heightLayer = {
+  scale: 0.12,
+  seed: worldSeed ^ 0x1234,
 };
 const safeZones = [
   { x: 5, y: 7, radius: 1 },
@@ -40,6 +45,13 @@ export function isSightBlockingTile(tile) {
 
 export function isBoulderTile(tile) {
   return boulderNoise(tile) > boulderLayer.threshold;
+}
+
+export function tileHeight(tile) {
+  const range = terrainHeight.max - terrainHeight.min;
+  const value = perlinNoise2d(tile.x * heightLayer.scale, tile.y * heightLayer.scale, heightLayer.seed);
+
+  return terrainHeight.min + Math.round(value * range);
 }
 
 function boulderNoise(tile) {

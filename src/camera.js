@@ -1,4 +1,4 @@
-import { gridTopOffset, tile, zoomLimits } from "./constants.js";
+import { gridTopOffset, terrainHeight, tile, zoomLimits } from "./constants.js";
 
 export const view = {
   x: 0,
@@ -23,22 +23,24 @@ export function viewportCenter(canvas) {
   };
 }
 
-export function screenFromGrid(canvas, x, y) {
-  return screenFromWorld(worldFromGrid(canvas, x, y));
+export function screenFromGrid(canvas, x, y, z = 0) {
+  return screenFromWorld(worldFromGrid(canvas, x, y, z));
 }
 
-export function worldFromGrid(canvas, x, y) {
+export function worldFromGrid(canvas, x, y, z = 0) {
   const viewport = viewportSize(canvas);
   const rotated = rotatePoint({ x, y }, view.rotation);
 
   return {
     x: viewport.width / 2 + (rotated.x - rotated.y) * tile.width / 2,
-    y: gridTopOffset + (rotated.x + rotated.y) * tile.height / 2,
+    y: gridTopOffset + (rotated.x + rotated.y) * tile.height / 2 - z * terrainHeight.step,
   };
 }
 
-export function gridFromScreen(canvas, screenX, screenY) {
-  const point = gridPointFromScreen(canvas, screenX, screenY);
+export function gridFromScreen(canvas, screenX, screenY, heightAt = null) {
+  const point = heightAt
+    ? topGridPointFromScreen(canvas, screenX, screenY, heightAt)
+    : gridPointFromScreen(canvas, screenX, screenY, 0);
 
   return {
     x: Math.floor(point.x),
@@ -56,7 +58,7 @@ export function zoomAt(screenX, screenY, nextZoom) {
 }
 
 export function rotateAt(canvas, screenX, screenY, nextRotation) {
-  const grid = gridPointFromScreen(canvas, screenX, screenY);
+  const grid = gridPointFromScreen(canvas, screenX, screenY, 0);
   view.rotation = normalizeRotation(nextRotation);
   const screen = screenFromGrid(canvas, grid.x, grid.y);
 
@@ -82,17 +84,30 @@ function worldFromScreen(screenX, screenY) {
   };
 }
 
-function gridPointFromScreen(canvas, screenX, screenY) {
-  const rotated = rotatedGridPointFromScreen(canvas, screenX, screenY);
+function topGridPointFromScreen(canvas, screenX, screenY, heightAt) {
+  for (let z = terrainHeight.max; z >= terrainHeight.min; z -= 1) {
+    const point = gridPointFromScreen(canvas, screenX, screenY, z);
+    const tilePoint = { x: Math.floor(point.x), y: Math.floor(point.y) };
+
+    if (heightAt(tilePoint) === z) {
+      return point;
+    }
+  }
+
+  return gridPointFromScreen(canvas, screenX, screenY, terrainHeight.min);
+}
+
+function gridPointFromScreen(canvas, screenX, screenY, z) {
+  const rotated = rotatedGridPointFromScreen(canvas, screenX, screenY, z);
 
   return rotatePoint(rotated, -view.rotation);
 }
 
-function rotatedGridPointFromScreen(canvas, screenX, screenY) {
+function rotatedGridPointFromScreen(canvas, screenX, screenY, z) {
   const world = worldFromScreen(screenX, screenY);
   const viewport = viewportSize(canvas);
   const dx = world.x - viewport.width / 2;
-  const dy = world.y - gridTopOffset;
+  const dy = world.y + z * terrainHeight.step - gridTopOffset;
 
   return {
     x: (dy / (tile.height / 2) + dx / (tile.width / 2)) / 2,

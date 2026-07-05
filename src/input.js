@@ -2,7 +2,7 @@ import { gridFromScreen, rotateAt, view, viewportCenter, zoomAt } from "./camera
 import { dragThreshold, mouseRotateSpeed, wheelDeltaLineMode } from "./constants.js";
 import { endPinch, handlePinch, startPinch } from "./pinch.js";
 
-export function connectInput(canvas, onSelectTile, onViewChange) {
+export function connectInput(canvas, onSelectTile, onViewChange, heightAt = null) {
   const activePointers = new Map();
   let dragStart = null;
   let pinchStart = null;
@@ -64,7 +64,7 @@ export function connectInput(canvas, onSelectTile, onViewChange) {
     }
 
     if (dragStart?.pointerId === event.pointerId) {
-      selectTile(canvas, event, dragStart, onSelectTile);
+      selectTile(canvas, event, dragStart, onSelectTile, heightAt);
       dragStart = null;
     }
   }
@@ -137,13 +137,13 @@ function handlePointerRotate(canvas, activePointers, pointerId, rotateStart, onV
   onViewChange();
 }
 
-function selectTile(canvas, event, dragStart, onSelectTile) {
+function selectTile(canvas, event, dragStart, onSelectTile, heightAt) {
   if (dragStart.moved) {
     return;
   }
 
   const point = pointerPosition(canvas, event);
-  const grid = gridFromScreen(canvas, point.x, point.y);
+  const grid = gridFromScreen(canvas, point.x, point.y, heightAt);
   onSelectTile(grid);
 }
 

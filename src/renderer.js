@@ -1,6 +1,7 @@
-import { viewportSize, screenFromWorld, worldFromGrid, view } from "./camera.js";
+import { viewportSize, view } from "./camera.js";
 import { colors } from "./constants.js";
 import { visibleTiles } from "./tiles.js";
+import { drawVoxelTile, screenDiamond, tileCenter, tileDepth } from "./voxel-renderer.js";
 
 export function drawGrid(canvas, context, boardState) {
   const { width, height } = viewportSize(canvas);
@@ -10,7 +11,9 @@ export function drawGrid(canvas, context, boardState) {
   context.fillStyle = colors.background;
   context.fillRect(0, 0, width, height);
 
-  drawTiles(canvas, context, boardState, tiles);
+  const orderedTiles = tiles.toSorted((first, second) => tileDepth(canvas, first) - tileDepth(canvas, second));
+
+  drawTiles(canvas, context, boardState, orderedTiles);
   drawObstacles(canvas, context, boardState, tiles);
   drawMovePlans(canvas, context, boardState.units);
   drawUnits(canvas, context, boardState.units, boardState.selectedUnitId);
@@ -23,21 +26,10 @@ function drawTiles(canvas, context, boardState, tiles) {
 }
 
 function drawTile(canvas, context, gridPoint, boardState) {
-  const corners = screenDiamond(canvas, gridPoint, 1);
   const style = tileStyle(gridPoint, boardState);
+  const height = boardState.tileHeight(gridPoint);
 
-  context.beginPath();
-  context.moveTo(corners.top.x, corners.top.y);
-  context.lineTo(corners.right.x, corners.right.y);
-  context.lineTo(corners.bottom.x, corners.bottom.y);
-  context.lineTo(corners.left.x, corners.left.y);
-  context.closePath();
-  context.fillStyle = style.fill;
-  context.fill();
-  context.strokeStyle = style.stroke;
-  context.lineWidth = style.lineWidth;
-  context.lineJoin = "miter";
-  context.stroke();
+  drawVoxelTile(canvas, context, gridPoint, height, style);
 }
 
 function tileStyle(gridPoint, boardState) {
@@ -71,13 +63,13 @@ function sameTile(first, second) {
 function drawObstacles(canvas, context, boardState, tiles) {
   for (const gridPoint of tiles) {
     if (boardState.isObstacleTile(gridPoint)) {
-      drawObstacle(canvas, context, gridPoint);
+      drawObstacle(canvas, context, gridPoint, boardState.tileHeight(gridPoint));
     }
   }
 }
 
-function drawObstacle(canvas, context, gridPoint) {
-  const center = tileCenter(canvas, gridPoint);
+function drawObstacle(canvas, context, gridPoint, height) {
+  const center = tileCenter(canvas, gridPoint, height);
   const radius = Math.max(8, 13 * view.zoom);
 
   context.fillStyle = colors.boulderShadow;
@@ -103,8 +95,8 @@ function drawMovePlans(canvas, context, units) {
 }
 
 function drawMovePlan(canvas, context, unit) {
-  const start = tileCenter(canvas, unit);
-  const end = tileCenter(canvas, unit.target);
+  const start = tileCenter(canvas, unit, unit.height);
+  const end = tileCenter(canvas, unit.target, unit.target.height);
 
   context.strokeStyle = colors.moveLine;
   context.lineWidth = Math.max(2, 2 * view.zoom);
@@ -116,7 +108,7 @@ function drawMovePlan(canvas, context, unit) {
 }
 
 function drawTargetMarker(canvas, context, target) {
-  const corners = screenDiamond(canvas, target, 0.58);
+  const corners = screenDiamond(canvas, target, 0.58, target.height);
 
   context.fillStyle = colors.moveTargetFill;
   context.strokeStyle = colors.moveTarget;
@@ -138,7 +130,7 @@ function drawUnits(canvas, context, units, selectedUnitId) {
 }
 
 function drawUnit(canvas, context, unit, isSelected) {
-  const center = tileCenter(canvas, unit);
+  const center = tileCenter(canvas, unit, unit.height);
   const radius = Math.max(7, 10 * view.zoom);
   const baseRadius = radius * 1.3;
 
@@ -153,25 +145,4 @@ function drawUnit(canvas, context, unit, isSelected) {
   context.strokeStyle = isSelected ? colors.selectedTileStroke : colors.unitBase;
   context.lineWidth = Math.max(2, 2 * view.zoom);
   context.stroke();
-}
-
-function tileCenter(canvas, gridPoint) {
-  const point = worldFromGrid(canvas, gridPoint.x + 0.5, gridPoint.y + 0.5);
-
-  return screenFromWorld(point);
-}
-
-function screenDiamond(canvas, gridPoint, scale) {
-  const inset = (1 - scale) / 2;
-
-  return {
-    top: screenGridPoint(canvas, gridPoint.x + inset, gridPoint.y + inset),
-    right: screenGridPoint(canvas, gridPoint.x + 1 - inset, gridPoint.y + inset),
-    bottom: screenGridPoint(canvas, gridPoint.x + 1 - inset, gridPoint.y + 1 - inset),
-    left: screenGridPoint(canvas, gridPoint.x + inset, gridPoint.y + 1 - inset),
-  };
-}
-
-function screenGridPoint(canvas, x, y) {
-  return screenFromWorld(worldFromGrid(canvas, x, y));
 }

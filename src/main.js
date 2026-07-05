@@ -4,7 +4,7 @@ import { canReachTile } from "./movement.js";
 import { isObstacleTile } from "./obstacles.js";
 import { drawGrid } from "./renderer.js";
 import { connectRotationControls } from "./rotation-controls.js";
-import { isSightBlockingTile } from "./world.js";
+import { isSightBlockingTile, tileHeight } from "./world.js";
 import {
   clickBoardTile,
   commitPlannedMoves,
@@ -41,16 +41,17 @@ function resize() {
 }
 
 function selectTile(tile) {
-  selectedTile = tile && canSeeTile(tile) ? clickBoardTile(tile, canMoveToTile) : null;
+  selectedTile = tile && canSeeTile(tile) ? clickBoardTile(enrichTile(tile), canMoveToTile) : null;
   draw();
 }
 
 function boardState() {
   return {
     selectedTile,
-    units,
+    units: renderableUnits(),
     isObstacleTile,
     selectedUnitId: selection.unitId,
+    tileHeight,
     isMovementTile: canSelectedUnitMoveTo,
     isTileVisible: canSeeTile,
   };
@@ -73,6 +74,21 @@ function canMoveToTile(tile, unit) {
     && !isMovementBlocked(tile)
     && distance <= unit.movement
     && canReachTile(unit, tile, unit.movement, isMovementBlocked);
+}
+
+function renderableUnits() {
+  return units.map((unit) => ({
+    ...unit,
+    height: tileHeight(unit),
+    target: unit.target ? enrichTile(unit.target) : null,
+  }));
+}
+
+function enrichTile(tile) {
+  return {
+    ...tile,
+    height: tileHeight(tile),
+  };
 }
 
 function isMovementBlocked(tile) {
@@ -103,7 +119,7 @@ function handleKeyDown(event) {
   }
 }
 
-connectInput(canvas, selectTile, draw);
+connectInput(canvas, selectTile, draw, tileHeight);
 connectRotationControls(
   canvas,
   { left: rotateLeftButton, right: rotateRightButton },
