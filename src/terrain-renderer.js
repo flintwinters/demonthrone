@@ -28,7 +28,7 @@ function terrainPrimitives(canvas, boardState, tiles, tileMap, tileStyle) {
 function tilePrimitives(canvas, gridPoint, boardState, tileMap, tileStyle) {
   const style = tileStyle(gridPoint, boardState);
   const height = tileMap.get(tileKey(gridPoint));
-  const faces = exposedFaces(gridPoint, height, tileMap);
+  const faces = exposedFaces(canvas, gridPoint, height, tileMap);
 
   return voxelPrimitives(canvas, gridPoint, height, faces, style);
 }
@@ -45,17 +45,19 @@ function visibleTileMap(tiles, tileHeight) {
   return new Map(tiles.map((tile) => [tileKey(tile), tileHeight(tile)]));
 }
 
-function exposedFaces(gridPoint, height, tileMap) {
+function exposedFaces(canvas, gridPoint, height, tileMap) {
+  const depth = tileDepth(canvas, gridPoint);
+
   return sideNeighbors
-    .map((neighbor) => exposedFace(gridPoint, height, tileMap, neighbor))
+    .map((neighbor) => exposedFace(canvas, gridPoint, height, depth, tileMap, neighbor))
     .filter(Boolean);
 }
 
-function exposedFace(gridPoint, height, tileMap, neighbor) {
+function exposedFace(canvas, gridPoint, height, depth, tileMap, neighbor) {
   const neighborTile = { x: gridPoint.x + neighbor.x, y: gridPoint.y + neighbor.y };
   const neighborHeight = tileMap.get(tileKey(neighborTile));
 
-  if (neighborHeight === undefined || neighborHeight >= height) {
+  if (neighborHeight === undefined || neighborHeight >= height || !facesCamera(canvas, depth, neighborTile)) {
     return null;
   }
 
@@ -63,6 +65,10 @@ function exposedFace(gridPoint, height, tileMap, neighbor) {
     direction: neighbor.direction,
     height: neighborHeight,
   };
+}
+
+function facesCamera(canvas, depth, neighborTile) {
+  return tileDepth(canvas, neighborTile) > depth;
 }
 
 function tileKey(tile) {
