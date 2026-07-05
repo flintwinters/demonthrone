@@ -30,7 +30,7 @@ export const colors = {
   tileStroke: "#928374",
   selectedTileStroke: "#fabd2f",
   moveLine: "#83a598",
-  movementTile: "rgba(131, 165, 152, 0.26)",
+  movementTile: "#3f6f67",
   movementTileStroke: "#8ec07c",
   moveTarget: "#458588",
   moveTargetFill: "rgba(69, 133, 136, 0.28)",
