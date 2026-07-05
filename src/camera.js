@@ -14,6 +14,15 @@ export function viewportSize(canvas) {
   };
 }
 
+export function viewportCenter(canvas) {
+  const viewport = viewportSize(canvas);
+
+  return {
+    x: viewport.width / 2,
+    y: viewport.height / 2,
+  };
+}
+
 export function screenFromGrid(canvas, x, y) {
   return screenFromWorld(worldFromGrid(canvas, x, y));
 }

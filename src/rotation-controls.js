@@ -1,4 +1,4 @@
-import { rotateAt, view } from "./camera.js";
+import { rotateAt, view, viewportCenter } from "./camera.js";
 import { rotationControlInterval, rotationControlStep } from "./constants.js";
 
 export function connectRotationControls(canvas, controls, onViewChange) {
@@ -42,6 +42,8 @@ function stopRotation(state) {
 }
 
 function rotateBy(canvas, amount, onViewChange) {
-  rotateAt(canvas, window.innerWidth / 2, window.innerHeight / 2, view.rotation + amount);
+  const center = viewportCenter(canvas);
+
+  rotateAt(canvas, center.x, center.y, view.rotation + amount);
   onViewChange();
 }

@@ -1,4 +1,4 @@
-import { gridFromScreen, rotateAt, view, zoomAt } from "./camera.js";
+import { gridFromScreen, rotateAt, view, viewportCenter, zoomAt } from "./camera.js";
 import { dragThreshold, mouseRotateSpeed, wheelDeltaLineMode } from "./constants.js";
 import { endPinch, handlePinch, startPinch } from "./pinch.js";
 
@@ -123,17 +123,17 @@ function createRotateStart(pointerId, point) {
   return {
     pointerId,
     pointerX: point.x,
-    pointerY: point.y,
     rotation: view.rotation,
   };
 }
 
 function handlePointerRotate(canvas, activePointers, pointerId, rotateStart, onViewChange) {
   const point = activePointers.get(pointerId);
+  const center = viewportCenter(canvas);
   const dx = point.x - rotateStart.pointerX;
   const nextRotation = rotateStart.rotation + dx * mouseRotateSpeed;
 
-  rotateAt(canvas, rotateStart.pointerX, rotateStart.pointerY, nextRotation);
+  rotateAt(canvas, center.x, center.y, nextRotation);
   onViewChange();
 }
 
