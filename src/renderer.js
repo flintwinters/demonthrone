@@ -1,4 +1,4 @@
-import { viewportSize, screenFromGrid } from "./camera.js";
+import { viewportSize, screenFromGrid, view } from "./camera.js";
 import { colors, gridSize, tile } from "./constants.js";
 
 export function drawGrid(canvas, context, selectedTile) {
@@ -17,13 +17,15 @@ export function drawGrid(canvas, context, selectedTile) {
 
 function drawTile(canvas, context, x, y, selectedTile) {
   const point = screenFromGrid(canvas, x, y);
+  const width = tile.width * view.zoom;
+  const height = tile.height * view.zoom;
   const style = tileStyle(selectedTile, x, y);
 
   context.beginPath();
   context.moveTo(point.x, point.y);
-  context.lineTo(point.x + tile.width / 2, point.y + tile.height / 2);
-  context.lineTo(point.x, point.y + tile.height);
-  context.lineTo(point.x - tile.width / 2, point.y + tile.height / 2);
+  context.lineTo(point.x + width / 2, point.y + height / 2);
+  context.lineTo(point.x, point.y + height);
+  context.lineTo(point.x - width / 2, point.y + height / 2);
   context.closePath();
   context.fillStyle = style.fill;
   context.fill();
