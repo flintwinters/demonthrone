@@ -1,13 +1,24 @@
 import { screenFromWorld, worldFromGrid } from "./camera.js";
 import { colors, terrainHeight } from "./constants.js";
 
-export function drawVoxelTile(canvas, context, gridPoint, height, style) {
-  const top = screenDiamond(canvas, gridPoint, 1, height);
-  const base = screenDiamond(canvas, gridPoint, 1, terrainHeight.min);
+const faceStyles = {
+  north: colors.tileSideLeft,
+  east: colors.tileSideRight,
+  south: colors.tileSideLeft,
+  west: colors.tileSideRight,
+};
 
-  if (height > terrainHeight.min) {
-    drawColumnSides(context, top, base);
-  }
+const facePoints = {
+  north: northFace,
+  east: eastFace,
+  south: southFace,
+  west: westFace,
+};
+
+export function drawVoxelTile(canvas, context, gridPoint, height, faces, style) {
+  const top = screenDiamond(canvas, gridPoint, 1, height);
+
+  drawColumnSides(canvas, context, gridPoint, height, faces);
 
   drawDiamond(context, top, style.fill, style.stroke, style.lineWidth);
 }
@@ -33,9 +44,44 @@ export function tileDepth(canvas, gridPoint) {
   return tileCenter(canvas, gridPoint, terrainHeight.min).y;
 }
 
-function drawColumnSides(context, top, base) {
-  drawFace(context, [top.left, top.bottom, base.bottom, base.left], colors.tileSideLeft);
-  drawFace(context, [top.right, top.bottom, base.bottom, base.right], colors.tileSideRight);
+function drawColumnSides(canvas, context, gridPoint, height, faces) {
+  for (const face of faces) {
+    drawExposedFace(canvas, context, gridPoint, height, face);
+  }
+}
+
+function drawExposedFace(canvas, context, gridPoint, height, face) {
+  const points = facePoints[face.direction](canvas, gridPoint, height, face.height);
+
+  drawFace(context, points, faceStyles[face.direction]);
+}
+
+function northFace(canvas, gridPoint, topHeight, bottomHeight) {
+  const top = screenDiamond(canvas, gridPoint, 1, topHeight);
+  const bottom = screenDiamond(canvas, gridPoint, 1, bottomHeight);
+
+  return [top.top, top.right, bottom.right, bottom.top];
+}
+
+function eastFace(canvas, gridPoint, topHeight, bottomHeight) {
+  const top = screenDiamond(canvas, gridPoint, 1, topHeight);
+  const bottom = screenDiamond(canvas, gridPoint, 1, bottomHeight);
+
+  return [top.right, top.bottom, bottom.bottom, bottom.right];
+}
+
+function southFace(canvas, gridPoint, topHeight, bottomHeight) {
+  const top = screenDiamond(canvas, gridPoint, 1, topHeight);
+  const bottom = screenDiamond(canvas, gridPoint, 1, bottomHeight);
+
+  return [top.left, top.bottom, bottom.bottom, bottom.left];
+}
+
+function westFace(canvas, gridPoint, topHeight, bottomHeight) {
+  const top = screenDiamond(canvas, gridPoint, 1, topHeight);
+  const bottom = screenDiamond(canvas, gridPoint, 1, bottomHeight);
+
+  return [top.top, top.left, bottom.left, bottom.top];
 }
 
 function drawDiamond(context, corners, fill, stroke, lineWidth) {
