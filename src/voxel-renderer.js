@@ -15,18 +15,26 @@ const facePoints = {
   west: westFace,
 };
 
-export function drawVoxelTile(canvas, context, gridPoint, height, faces, style) {
-  const top = screenDiamond(canvas, gridPoint, 1, height);
-
-  drawColumnSides(canvas, context, gridPoint, height, faces);
-
-  drawDiamond(context, top, style.fill, style.stroke, style.lineWidth);
-}
-
 export function tileCenter(canvas, gridPoint, height = 0) {
   const point = worldFromGrid(canvas, gridPoint.x + 0.5, gridPoint.y + 0.5, height);
 
   return screenFromWorld(point);
+}
+
+export function voxelPrimitives(canvas, gridPoint, height, faces, style) {
+  return [
+    ...sidePrimitives(canvas, gridPoint, height, faces),
+    topPrimitive(canvas, gridPoint, height, style),
+  ];
+}
+
+export function drawVoxelPrimitive(context, primitive) {
+  if (primitive.kind === "top") {
+    drawDiamond(context, primitive.corners, primitive.fill, primitive.stroke, primitive.lineWidth);
+    return;
+  }
+
+  drawFace(context, primitive.points, primitive.fill);
 }
 
 export function screenDiamond(canvas, gridPoint, scale, height = 0) {
@@ -44,16 +52,43 @@ export function tileDepth(canvas, gridPoint) {
   return tileCenter(canvas, gridPoint, terrainHeight.min).y;
 }
 
-function drawColumnSides(canvas, context, gridPoint, height, faces) {
-  for (const face of faces) {
-    drawExposedFace(canvas, context, gridPoint, height, face);
-  }
+function sidePrimitives(canvas, gridPoint, height, faces) {
+  return faces.flatMap((face) => sideSlabPrimitives(canvas, gridPoint, height, face));
 }
 
-function drawExposedFace(canvas, context, gridPoint, height, face) {
-  const points = facePoints[face.direction](canvas, gridPoint, height, face.height);
+function sideSlabPrimitives(canvas, gridPoint, height, face) {
+  const slabs = [];
 
-  drawFace(context, points, faceStyles[face.direction]);
+  for (let z = face.height + 1; z <= height; z += 1) {
+    slabs.push(sidePrimitive(canvas, gridPoint, face, z));
+  }
+
+  return slabs;
+}
+
+function sidePrimitive(canvas, gridPoint, face, topHeight) {
+  const bottomHeight = topHeight - 1;
+  const points = facePoints[face.direction](canvas, gridPoint, topHeight, bottomHeight);
+
+  return {
+    kind: "side",
+    depth: primitiveDepth(canvas, gridPoint, topHeight),
+    fill: faceStyles[face.direction],
+    points,
+  };
+}
+
+function topPrimitive(canvas, gridPoint, height, style) {
+  const corners = screenDiamond(canvas, gridPoint, 1, height);
+
+  return {
+    kind: "top",
+    depth: primitiveDepth(canvas, gridPoint, height),
+    corners,
+    fill: style.fill,
+    stroke: style.stroke,
+    lineWidth: style.lineWidth,
+  };
 }
 
 function northFace(canvas, gridPoint, topHeight, bottomHeight) {
@@ -105,6 +140,10 @@ function drawFace(context, points, fill) {
   context.closePath();
   context.fillStyle = fill;
   context.fill();
+}
+
+function primitiveDepth(canvas, gridPoint, height) {
+  return tileDepth(canvas, gridPoint) + height * terrainHeight.step;
 }
 
 function pathDiamond(context, corners) {

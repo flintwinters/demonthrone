@@ -1,44 +1,21 @@
 import { viewportSize, view } from "./camera.js";
 import { colors } from "./constants.js";
+import { drawTerrain } from "./terrain-renderer.js";
 import { visibleTiles } from "./tiles.js";
-import { drawVoxelTile, screenDiamond, tileCenter, tileDepth } from "./voxel-renderer.js";
-
-const sideNeighbors = [
-  { direction: "north", x: 0, y: -1 },
-  { direction: "east", x: 1, y: 0 },
-  { direction: "south", x: 0, y: 1 },
-  { direction: "west", x: -1, y: 0 },
-];
+import { screenDiamond, tileCenter } from "./voxel-renderer.js";
 
 export function drawGrid(canvas, context, boardState) {
   const { width, height } = viewportSize(canvas);
   const tiles = visibleTiles(boardState.units, boardState.isObstacleTile);
-  const tileMap = visibleTileMap(tiles, boardState.tileHeight);
 
   context.clearRect(0, 0, width, height);
   context.fillStyle = colors.background;
   context.fillRect(0, 0, width, height);
 
-  const orderedTiles = tiles.toSorted((first, second) => tileDepth(canvas, first) - tileDepth(canvas, second));
-
-  drawTiles(canvas, context, boardState, orderedTiles, tileMap);
+  drawTerrain(canvas, context, boardState, tiles, tileStyle);
   drawObstacles(canvas, context, boardState, tiles);
   drawMovePlans(canvas, context, boardState.units);
   drawUnits(canvas, context, boardState.units, boardState.selectedUnitId);
-}
-
-function drawTiles(canvas, context, boardState, tiles, tileMap) {
-  for (const gridPoint of tiles) {
-    drawTile(canvas, context, gridPoint, boardState, tileMap);
-  }
-}
-
-function drawTile(canvas, context, gridPoint, boardState, tileMap) {
-  const style = tileStyle(gridPoint, boardState);
-  const height = tileMap.get(tileKey(gridPoint));
-  const faces = exposedFaces(canvas, gridPoint, height, tileMap);
-
-  drawVoxelTile(canvas, context, gridPoint, height, faces, style);
 }
 
 function tileStyle(gridPoint, boardState) {
@@ -67,40 +44,6 @@ function tileStyle(gridPoint, boardState) {
 
 function sameTile(first, second) {
   return first?.x === second.x && first?.y === second.y;
-}
-
-function visibleTileMap(tiles, tileHeight) {
-  return new Map(tiles.map((tile) => [tileKey(tile), tileHeight(tile)]));
-}
-
-function exposedFaces(canvas, gridPoint, height, tileMap) {
-  const depth = tileDepth(canvas, gridPoint);
-
-  return sideNeighbors
-    .map((neighbor) => exposedFace(canvas, gridPoint, height, depth, tileMap, neighbor))
-    .filter(Boolean);
-}
-
-function exposedFace(canvas, gridPoint, height, depth, tileMap, neighbor) {
-  const neighborTile = { x: gridPoint.x + neighbor.x, y: gridPoint.y + neighbor.y };
-  const neighborHeight = tileMap.get(tileKey(neighborTile));
-
-  if (neighborHeight === undefined || neighborHeight >= height || !isFrontNeighbor(canvas, depth, neighborTile)) {
-    return null;
-  }
-
-  return {
-    direction: neighbor.direction,
-    height: neighborHeight,
-  };
-}
-
-function isFrontNeighbor(canvas, depth, neighborTile) {
-  return tileDepth(canvas, neighborTile) > depth;
-}
-
-function tileKey(tile) {
-  return `${tile.x}:${tile.y}`;
 }
 
 function drawObstacles(canvas, context, boardState, tiles) {
