@@ -11,6 +11,7 @@ export const zoomLimits = {
   min: 0.5,
   max: 2.5,
 };
+export const rotationStep = Math.PI / 8;
 
 export const colors = {
   background: "#1d2021",

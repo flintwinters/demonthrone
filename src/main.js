@@ -1,9 +1,10 @@
-import { devicePixelRatio } from "./camera.js";
+import { devicePixelRatio, rotateAt, view } from "./camera.js";
 import { connectInput } from "./input.js";
 import { canReachTile } from "./movement.js";
 import { isObstacleTile } from "./obstacles.js";
 import { drawGrid } from "./renderer.js";
 import { isSightBlockingTile } from "./world.js";
+import { rotationStep } from "./constants.js";
 import {
   clickBoardTile,
   commitPlannedMoves,
@@ -98,6 +99,19 @@ function handleKeyDown(event) {
     event.preventDefault();
     go();
   }
+
+  if (event.key === "q" || event.key === "Q") {
+    rotateCamera(-rotationStep);
+  }
+
+  if (event.key === "e" || event.key === "E") {
+    rotateCamera(rotationStep);
+  }
+}
+
+function rotateCamera(amount) {
+  rotateAt(window.innerWidth / 2, window.innerHeight / 2, view.rotation + amount);
+  draw();
 }
 
 connectInput(canvas, selectTile, draw);

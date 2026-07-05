@@ -1,4 +1,4 @@
-import { viewportSize, screenFromGrid, view } from "./camera.js";
+import { viewportSize, screenFromWorld, worldFromGrid, view } from "./camera.js";
 import { colors, tile } from "./constants.js";
 import { visibleTiles } from "./tiles.js";
 
@@ -23,16 +23,14 @@ function drawTiles(canvas, context, boardState, tiles) {
 }
 
 function drawTile(canvas, context, gridPoint, boardState) {
-  const point = screenFromGrid(canvas, gridPoint.x, gridPoint.y);
-  const width = tile.width * view.zoom;
-  const height = tile.height * view.zoom;
+  const corners = screenDiamond(canvas, gridPoint, tile.width, tile.height);
   const style = tileStyle(gridPoint, boardState);
 
   context.beginPath();
-  context.moveTo(point.x, point.y);
-  context.lineTo(point.x + width / 2, point.y + height / 2);
-  context.lineTo(point.x, point.y + height);
-  context.lineTo(point.x - width / 2, point.y + height / 2);
+  context.moveTo(corners.top.x, corners.top.y);
+  context.lineTo(corners.right.x, corners.right.y);
+  context.lineTo(corners.bottom.x, corners.bottom.y);
+  context.lineTo(corners.left.x, corners.left.y);
   context.closePath();
   context.fillStyle = style.fill;
   context.fill();
@@ -118,18 +116,16 @@ function drawMovePlan(canvas, context, unit) {
 }
 
 function drawTargetMarker(canvas, context, target) {
-  const center = tileCenter(canvas, target);
-  const width = tile.width * view.zoom * 0.58;
-  const height = tile.height * view.zoom * 0.58;
+  const corners = screenDiamond(canvas, target, tile.width * 0.58, tile.height * 0.58);
 
   context.fillStyle = colors.moveTargetFill;
   context.strokeStyle = colors.moveTarget;
   context.lineWidth = Math.max(2, 2 * view.zoom);
   context.beginPath();
-  context.moveTo(center.x, center.y - height / 2);
-  context.lineTo(center.x + width / 2, center.y);
-  context.lineTo(center.x, center.y + height / 2);
-  context.lineTo(center.x - width / 2, center.y);
+  context.moveTo(corners.top.x, corners.top.y);
+  context.lineTo(corners.right.x, corners.right.y);
+  context.lineTo(corners.bottom.x, corners.bottom.y);
+  context.lineTo(corners.left.x, corners.left.y);
   context.closePath();
   context.fill();
   context.stroke();
@@ -160,10 +156,18 @@ function drawUnit(canvas, context, unit, isSelected) {
 }
 
 function tileCenter(canvas, gridPoint) {
-  const point = screenFromGrid(canvas, gridPoint.x, gridPoint.y);
+  const point = worldFromGrid(canvas, gridPoint.x, gridPoint.y);
+
+  return screenFromWorld({ x: point.x, y: point.y + tile.height / 2 });
+}
+
+function screenDiamond(canvas, gridPoint, width, height) {
+  const point = worldFromGrid(canvas, gridPoint.x, gridPoint.y);
 
   return {
-    x: point.x,
-    y: point.y + tile.height * view.zoom / 2,
+    top: screenFromWorld(point),
+    right: screenFromWorld({ x: point.x + width / 2, y: point.y + height / 2 }),
+    bottom: screenFromWorld({ x: point.x, y: point.y + height }),
+    left: screenFromWorld({ x: point.x - width / 2, y: point.y + height / 2 }),
   };
 }

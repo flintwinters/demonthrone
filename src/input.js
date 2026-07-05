@@ -1,4 +1,4 @@
-import { gridFromScreen, view, zoomAt } from "./camera.js";
+import { gridFromScreen, rotateAt, view, zoomAt } from "./camera.js";
 import { dragThreshold, wheelDeltaLineMode } from "./constants.js";
 
 export function connectInput(canvas, onSelectTile, onViewChange) {
@@ -113,6 +113,8 @@ function startPinch(activePointers) {
   return pinch
     ? {
         distance: pinch.distance,
+        angle: pinch.angle,
+        rotation: view.rotation,
         zoom: view.zoom,
       }
     : null;
@@ -129,6 +131,11 @@ function handlePinch(activePointers, pinchStart, onViewChange) {
     pinch.centerX,
     pinch.centerY,
     pinchStart.zoom * (pinch.distance / pinchStart.distance),
+  );
+  rotateAt(
+    pinch.centerX,
+    pinch.centerY,
+    pinchStart.rotation + angleDelta(pinchStart.angle, pinch.angle),
   );
   onViewChange();
 }
@@ -149,6 +156,7 @@ function currentPinch(activePointers) {
     centerX: (first.x + second.x) / 2,
     centerY: (first.y + second.y) / 2,
     distance: Math.hypot(second.x - first.x, second.y - first.y),
+    angle: Math.atan2(second.y - first.y, second.x - first.x),
   };
 }
 
@@ -169,4 +177,8 @@ function pointerPosition(canvas, event) {
 
 function normalizedWheelDeltaY(event) {
   return event.deltaMode === wheelDeltaLineMode ? event.deltaY * 16 : event.deltaY;
+}
+
+function angleDelta(start, end) {
+  return Math.atan2(Math.sin(end - start), Math.cos(end - start));
 }
