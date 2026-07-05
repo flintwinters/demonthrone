@@ -1,5 +1,6 @@
 import { viewportSize, screenFromGrid, view } from "./camera.js";
-import { colors, gridSize, tile } from "./constants.js";
+import { colors, tile } from "./constants.js";
+import { visibleTiles } from "./tiles.js";
 
 export function drawGrid(canvas, context, boardState) {
   const { width, height } = viewportSize(canvas);
@@ -14,13 +15,9 @@ export function drawGrid(canvas, context, boardState) {
 }
 
 function drawTiles(canvas, context, boardState) {
-  eachGridTile((x, y) => {
-    const gridPoint = { x, y };
-
-    if (boardState.isTileVisible(gridPoint)) {
-      drawTile(canvas, context, gridPoint, boardState);
-    }
-  });
+  for (const gridPoint of visibleTiles(boardState.units)) {
+    drawTile(canvas, context, gridPoint, boardState);
+  }
 }
 
 function drawTile(canvas, context, gridPoint, boardState) {
@@ -141,12 +138,4 @@ function tileCenter(canvas, gridPoint) {
     x: point.x,
     y: point.y + tile.height * view.zoom / 2,
   };
-}
-
-function eachGridTile(callback) {
-  for (let y = 0; y < gridSize; y += 1) {
-    for (let x = 0; x < gridSize; x += 1) {
-      callback(x, y);
-    }
-  }
 }

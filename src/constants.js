@@ -3,7 +3,6 @@ export const tile = {
   height: 48,
 };
 
-export const gridSize = 48;
 export const gridTopOffset = 72;
 export const dragThreshold = 3;
 export const wheelDeltaLineMode = 1;

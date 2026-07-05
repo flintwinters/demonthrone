@@ -1,5 +1,5 @@
 import { gridFromScreen, view, zoomAt } from "./camera.js";
-import { dragThreshold, gridSize, wheelDeltaLineMode } from "./constants.js";
+import { dragThreshold, wheelDeltaLineMode } from "./constants.js";
 
 export function connectInput(canvas, onSelectTile, onViewChange) {
   const activePointers = new Map();
@@ -104,7 +104,7 @@ function selectTile(canvas, event, dragStart, onSelectTile) {
 
   const point = pointerPosition(canvas, event);
   const grid = gridFromScreen(canvas, point.x, point.y);
-  onSelectTile(isInsideGrid(grid) ? grid : null);
+  onSelectTile(grid);
 }
 
 function startPinch(activePointers) {
@@ -165,10 +165,6 @@ function pointerPosition(canvas, event) {
     x: event.clientX - bounds.left,
     y: event.clientY - bounds.top,
   };
-}
-
-function isInsideGrid(grid) {
-  return grid.x >= 0 && grid.y >= 0 && grid.x < gridSize && grid.y < gridSize;
 }
 
 function normalizedWheelDeltaY(event) {
