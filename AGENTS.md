@@ -1,0 +1,4 @@
+- Project state: dependency-free browser proof of concept for a crisp isometric grid.
+- Run locally by opening `index.html` or serving the directory with any static file server.
+- Current scope is only grid rendering, panning, and tile selection.
+- UI direction: dense high-contrast gruvbox dark theme, minimal labels, no animations or transitions.
