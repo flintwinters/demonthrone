@@ -1,5 +1,7 @@
 import { devicePixelRatio } from "./camera.js";
 import { connectInput } from "./input.js";
+import { canReachTile } from "./movement.js";
+import { isObstacleTile } from "./obstacles.js";
 import { drawGrid } from "./renderer.js";
 import {
   clickBoardTile,
@@ -43,6 +45,7 @@ function boardState() {
   return {
     selectedTile,
     units,
+    isObstacleTile,
     selectedUnitId: selection.unitId,
     isMovementTile: canSelectedUnitMoveTo,
     isTileVisible: canSeeTile,
@@ -50,7 +53,7 @@ function boardState() {
 }
 
 function canSeeTile(tile) {
-  return isVisibleTile(tile, units);
+  return isVisibleTile(tile, units, isObstacleTile);
 }
 
 function canSelectedUnitMoveTo(tile) {
@@ -63,9 +66,13 @@ function canMoveToTile(tile, unit) {
   const distance = l1Distance(tile, unit);
 
   return canSeeTile(tile)
-    && distance > 0
+    && !isMovementBlocked(tile)
     && distance <= unit.movement
-    && !isOccupiedTile(tile);
+    && canReachTile(unit, tile, unit.movement, isMovementBlocked);
+}
+
+function isMovementBlocked(tile) {
+  return isObstacleTile(tile) || isOccupiedTile(tile);
 }
 
 function isOccupiedTile(tile) {

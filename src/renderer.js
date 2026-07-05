@@ -4,18 +4,20 @@ import { visibleTiles } from "./tiles.js";
 
 export function drawGrid(canvas, context, boardState) {
   const { width, height } = viewportSize(canvas);
+  const tiles = visibleTiles(boardState.units, boardState.isObstacleTile);
 
   context.clearRect(0, 0, width, height);
   context.fillStyle = colors.background;
   context.fillRect(0, 0, width, height);
 
-  drawTiles(canvas, context, boardState);
+  drawTiles(canvas, context, boardState, tiles);
+  drawObstacles(canvas, context, boardState, tiles);
   drawMovePlans(canvas, context, boardState.units);
   drawUnits(canvas, context, boardState.units, boardState.selectedUnitId);
 }
 
-function drawTiles(canvas, context, boardState) {
-  for (const gridPoint of visibleTiles(boardState.units)) {
+function drawTiles(canvas, context, boardState, tiles) {
+  for (const gridPoint of tiles) {
     drawTile(canvas, context, gridPoint, boardState);
   }
 }
@@ -66,6 +68,32 @@ function tileStyle(gridPoint, boardState) {
 
 function sameTile(first, second) {
   return first?.x === second.x && first?.y === second.y;
+}
+
+function drawObstacles(canvas, context, boardState, tiles) {
+  for (const gridPoint of tiles) {
+    if (boardState.isObstacleTile(gridPoint)) {
+      drawObstacle(canvas, context, gridPoint);
+    }
+  }
+}
+
+function drawObstacle(canvas, context, gridPoint) {
+  const center = tileCenter(canvas, gridPoint);
+  const radius = Math.max(8, 13 * view.zoom);
+
+  context.fillStyle = colors.boulderShadow;
+  context.beginPath();
+  context.ellipse(center.x, center.y + radius * 0.42, radius * 1.1, radius * 0.38, 0, 0, Math.PI * 2);
+  context.fill();
+  context.fillStyle = colors.boulder;
+  context.beginPath();
+  context.arc(center.x, center.y - radius * 0.1, radius, 0, Math.PI * 2);
+  context.fill();
+  context.fillStyle = colors.boulderTop;
+  context.beginPath();
+  context.arc(center.x - radius * 0.28, center.y - radius * 0.38, radius * 0.32, 0, Math.PI * 2);
+  context.fill();
 }
 
 function drawMovePlans(canvas, context, units) {
