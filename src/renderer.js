@@ -1,5 +1,5 @@
 import { viewportSize, screenFromWorld, worldFromGrid, view } from "./camera.js";
-import { colors, tile } from "./constants.js";
+import { colors } from "./constants.js";
 import { visibleTiles } from "./tiles.js";
 
 export function drawGrid(canvas, context, boardState) {
@@ -23,7 +23,7 @@ function drawTiles(canvas, context, boardState, tiles) {
 }
 
 function drawTile(canvas, context, gridPoint, boardState) {
-  const corners = screenDiamond(canvas, gridPoint, tile.width, tile.height);
+  const corners = screenDiamond(canvas, gridPoint, 1);
   const style = tileStyle(gridPoint, boardState);
 
   context.beginPath();
@@ -116,7 +116,7 @@ function drawMovePlan(canvas, context, unit) {
 }
 
 function drawTargetMarker(canvas, context, target) {
-  const corners = screenDiamond(canvas, target, tile.width * 0.58, tile.height * 0.58);
+  const corners = screenDiamond(canvas, target, 0.58);
 
   context.fillStyle = colors.moveTargetFill;
   context.strokeStyle = colors.moveTarget;
@@ -156,18 +156,22 @@ function drawUnit(canvas, context, unit, isSelected) {
 }
 
 function tileCenter(canvas, gridPoint) {
-  const point = worldFromGrid(canvas, gridPoint.x, gridPoint.y);
+  const point = worldFromGrid(canvas, gridPoint.x + 0.5, gridPoint.y + 0.5);
 
-  return screenFromWorld({ x: point.x, y: point.y + tile.height / 2 });
+  return screenFromWorld(point);
 }
 
-function screenDiamond(canvas, gridPoint, width, height) {
-  const point = worldFromGrid(canvas, gridPoint.x, gridPoint.y);
+function screenDiamond(canvas, gridPoint, scale) {
+  const inset = (1 - scale) / 2;
 
   return {
-    top: screenFromWorld(point),
-    right: screenFromWorld({ x: point.x + width / 2, y: point.y + height / 2 }),
-    bottom: screenFromWorld({ x: point.x, y: point.y + height }),
-    left: screenFromWorld({ x: point.x - width / 2, y: point.y + height / 2 }),
+    top: screenGridPoint(canvas, gridPoint.x + inset, gridPoint.y + inset),
+    right: screenGridPoint(canvas, gridPoint.x + 1 - inset, gridPoint.y + inset),
+    bottom: screenGridPoint(canvas, gridPoint.x + 1 - inset, gridPoint.y + 1 - inset),
+    left: screenGridPoint(canvas, gridPoint.x + inset, gridPoint.y + 1 - inset),
   };
+}
+
+function screenGridPoint(canvas, x, y) {
+  return screenFromWorld(worldFromGrid(canvas, x, y));
 }

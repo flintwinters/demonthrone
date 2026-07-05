@@ -25,7 +25,7 @@ export function connectInput(canvas, onSelectTile, onViewChange) {
     updatePointer(canvas, activePointers, event);
 
     if (pinchStart) {
-      handlePinch(activePointers, pinchStart, onViewChange);
+      handlePinch(canvas, activePointers, pinchStart, onViewChange);
       return;
     }
 
@@ -120,7 +120,7 @@ function startPinch(activePointers) {
     : null;
 }
 
-function handlePinch(activePointers, pinchStart, onViewChange) {
+function handlePinch(canvas, activePointers, pinchStart, onViewChange) {
   const pinch = currentPinch(activePointers);
 
   if (!pinch || pinchStart.distance <= 0) {
@@ -133,6 +133,7 @@ function handlePinch(activePointers, pinchStart, onViewChange) {
     pinchStart.zoom * (pinch.distance / pinchStart.distance),
   );
   rotateAt(
+    canvas,
     pinch.centerX,
     pinch.centerY,
     pinchStart.rotation + angleDelta(pinchStart.angle, pinch.angle),

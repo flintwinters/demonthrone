@@ -20,23 +20,20 @@ export function screenFromGrid(canvas, x, y) {
 
 export function worldFromGrid(canvas, x, y) {
   const viewport = viewportSize(canvas);
+  const rotated = rotatePoint({ x, y }, view.rotation);
+
   return {
-    x: viewport.width / 2 + (x - y) * tile.width / 2,
-    y: gridTopOffset + (x + y) * tile.height / 2,
+    x: viewport.width / 2 + (rotated.x - rotated.y) * tile.width / 2,
+    y: gridTopOffset + (rotated.x + rotated.y) * tile.height / 2,
   };
 }
 
 export function gridFromScreen(canvas, screenX, screenY) {
-  const world = worldFromScreen(screenX, screenY);
-  const viewport = viewportSize(canvas);
-  const worldX = world.x;
-  const worldY = world.y;
-  const dx = worldX - viewport.width / 2;
-  const dy = worldY - gridTopOffset - tile.height / 2;
+  const point = gridPointFromScreen(canvas, screenX, screenY);
 
   return {
-    x: Math.round((dy / (tile.height / 2) + dx / (tile.width / 2)) / 2),
-    y: Math.round((dy / (tile.height / 2) - dx / (tile.width / 2)) / 2),
+    x: Math.floor(point.x),
+    y: Math.floor(point.y),
   };
 }
 
@@ -49,10 +46,10 @@ export function zoomAt(screenX, screenY, nextZoom) {
   view.zoom = zoom;
 }
 
-export function rotateAt(screenX, screenY, nextRotation) {
-  const world = worldFromScreen(screenX, screenY);
+export function rotateAt(canvas, screenX, screenY, nextRotation) {
+  const grid = gridPointFromScreen(canvas, screenX, screenY);
   view.rotation = normalizeRotation(nextRotation);
-  const screen = screenFromWorld(world);
+  const screen = screenFromGrid(canvas, grid.x, grid.y);
 
   view.x += screenX - screen.x;
   view.y += screenY - screen.y;
@@ -63,19 +60,35 @@ export function devicePixelRatio() {
 }
 
 export function screenFromWorld(world) {
-  const rotated = rotatePoint(world, view.rotation);
-
   return {
-    x: view.x + rotated.x * view.zoom,
-    y: view.y + rotated.y * view.zoom,
+    x: view.x + world.x * view.zoom,
+    y: view.y + world.y * view.zoom,
   };
 }
 
 function worldFromScreen(screenX, screenY) {
-  const x = (screenX - view.x) / view.zoom;
-  const y = (screenY - view.y) / view.zoom;
+  return {
+    x: (screenX - view.x) / view.zoom,
+    y: (screenY - view.y) / view.zoom,
+  };
+}
 
-  return rotatePoint({ x, y }, -view.rotation);
+function gridPointFromScreen(canvas, screenX, screenY) {
+  const rotated = rotatedGridPointFromScreen(canvas, screenX, screenY);
+
+  return rotatePoint(rotated, -view.rotation);
+}
+
+function rotatedGridPointFromScreen(canvas, screenX, screenY) {
+  const world = worldFromScreen(screenX, screenY);
+  const viewport = viewportSize(canvas);
+  const dx = world.x - viewport.width / 2;
+  const dy = world.y - gridTopOffset;
+
+  return {
+    x: (dy / (tile.height / 2) + dx / (tile.width / 2)) / 2,
+    y: (dy / (tile.height / 2) - dx / (tile.width / 2)) / 2,
+  };
 }
 
 function rotatePoint(point, rotation) {

@@ -110,7 +110,7 @@ function handleKeyDown(event) {
 }
 
 function rotateCamera(amount) {
-  rotateAt(window.innerWidth / 2, window.innerHeight / 2, view.rotation + amount);
+  rotateAt(canvas, window.innerWidth / 2, window.innerHeight / 2, view.rotation + amount);
   draw();
 }
 
