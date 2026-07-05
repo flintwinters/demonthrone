@@ -30,6 +30,8 @@ function tileStyle(gridPoint, boardState) {
   if (boardState.isMovementTile(gridPoint)) {
     return {
       fill: colors.movementTile,
+      sideLeft: colors.movementTileSideLeft,
+      sideRight: colors.movementTileSideRight,
       stroke: colors.movementTileStroke,
       lineWidth: 2,
     };

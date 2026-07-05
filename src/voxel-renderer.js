@@ -23,7 +23,7 @@ export function tileCenter(canvas, gridPoint, height = 0) {
 
 export function voxelPrimitives(canvas, gridPoint, height, faces, style) {
   return [
-    ...sidePrimitives(canvas, gridPoint, height, faces),
+    ...sidePrimitives(canvas, gridPoint, height, faces, style),
     topPrimitive(canvas, gridPoint, height, style),
   ];
 }
@@ -52,30 +52,36 @@ export function tileDepth(canvas, gridPoint) {
   return tileCenter(canvas, gridPoint, terrainHeight.min).y;
 }
 
-function sidePrimitives(canvas, gridPoint, height, faces) {
-  return faces.flatMap((face) => sideSlabPrimitives(canvas, gridPoint, height, face));
+function sidePrimitives(canvas, gridPoint, height, faces, style) {
+  return faces.flatMap((face) => sideSlabPrimitives(canvas, gridPoint, height, face, style));
 }
 
-function sideSlabPrimitives(canvas, gridPoint, height, face) {
+function sideSlabPrimitives(canvas, gridPoint, height, face, style) {
   const slabs = [];
 
   for (let z = face.height + 1; z <= height; z += 1) {
-    slabs.push(sidePrimitive(canvas, gridPoint, face, z));
+    slabs.push(sidePrimitive(canvas, gridPoint, face, z, style));
   }
 
   return slabs;
 }
 
-function sidePrimitive(canvas, gridPoint, face, topHeight) {
+function sidePrimitive(canvas, gridPoint, face, topHeight, style) {
   const bottomHeight = topHeight - 1;
   const points = facePoints[face.direction](canvas, gridPoint, topHeight, bottomHeight);
 
   return {
     kind: "side",
     depth: primitiveDepth(canvas, gridPoint, topHeight),
-    fill: faceStyles[face.direction],
+    fill: sideFill(face.direction, style),
     points,
   };
+}
+
+function sideFill(direction, style) {
+  return faceStyles[direction] === colors.tileSideLeft
+    ? style.sideLeft ?? faceStyles[direction]
+    : style.sideRight ?? faceStyles[direction];
 }
 
 function topPrimitive(canvas, gridPoint, height, style) {

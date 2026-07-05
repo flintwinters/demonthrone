@@ -31,6 +31,8 @@ export const colors = {
   selectedTileStroke: "#fabd2f",
   moveLine: "#83a598",
   movementTile: "#3f6f67",
+  movementTileSideLeft: "#2d4f4b",
+  movementTileSideRight: "#4c7f73",
   movementTileStroke: "#8ec07c",
   moveTarget: "#458588",
   moveTargetFill: "rgba(69, 133, 136, 0.28)",
