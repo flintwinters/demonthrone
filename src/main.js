@@ -3,6 +3,7 @@ import { connectInput } from "./input.js";
 import { canReachTile } from "./movement.js";
 import { isObstacleTile } from "./obstacles.js";
 import { drawGrid } from "./renderer.js";
+import { isSightBlockingTile } from "./world.js";
 import {
   clickBoardTile,
   commitPlannedMoves,
@@ -53,7 +54,7 @@ function boardState() {
 }
 
 function canSeeTile(tile) {
-  return isVisibleTile(tile, units, isObstacleTile);
+  return isVisibleTile(tile, units, isSightBlockingTile);
 }
 
 function canSelectedUnitMoveTo(tile) {
