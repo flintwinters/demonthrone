@@ -5,6 +5,7 @@ import { canReachTile } from "./movement.js";
 import { isObstacleTile } from "./obstacles.js";
 import { drawGrid } from "./renderer.js";
 import { connectRotationControls } from "./rotation-controls.js";
+import { connectViewCube } from "./view-cube.js";
 import { isBrushTile, sightCost, tileHeight } from "./world.js";
 import {
   clickBoardTile,
@@ -197,6 +198,7 @@ connectRotationControls(
   { left: rotateLeftButton, right: rotateRightButton },
   draw,
 );
+connectViewCube(canvas, draw);
 goButton.addEventListener("click", go);
 window.addEventListener("keydown", handleKeyDown);
 window.addEventListener("resize", resize);

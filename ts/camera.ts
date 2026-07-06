@@ -2,6 +2,7 @@ import * as THREE from "three";
 import {
   cameraDistance,
   cameraElevation,
+  cameraElevationLimits,
   terrainHeight,
   worldPixelsPerUnit,
   zoomLimits,
@@ -18,11 +19,13 @@ export const view: {
   targetY: number;
   zoom: number;
   rotation: number;
+  elevation: number;
 } = {
   targetX: 6.5,
   targetY: 6.5,
   zoom: 1,
   rotation: -Math.PI / 4,
+  elevation: cameraElevation,
 };
 
 const worldUp = new THREE.Vector3(0, 0, 1);
@@ -103,10 +106,12 @@ export function rotateAt(
   screenX: number,
   screenY: number,
   nextRotation: number,
+  nextElevation = view.elevation,
 ): void {
   const before = worldPointAtHeight(canvas, screenX, screenY, 0);
 
   view.rotation = normalizeRotation(nextRotation);
+  view.elevation = clamp(nextElevation, cameraElevationLimits.min, cameraElevationLimits.max);
   anchorView(canvas, screenX, screenY, before);
 }
 
@@ -116,17 +121,6 @@ export function devicePixelRatio(): number {
 
 export function screenFromGrid(canvas: HTMLCanvasElement, x: number, y: number, z = 0): ScreenPoint {
   return projectWorldPoint(canvas, new THREE.Vector3(x, y, z));
-}
-
-export function worldFromGrid(canvas: HTMLCanvasElement, x: number, y: number, z = 0): ScreenPoint {
-  return screenFromGrid(canvas, x, y, z);
-}
-
-export function screenFromWorld(world: ScreenPoint): ScreenPoint {
-  return {
-    x: world.x,
-    y: world.y,
-  };
 }
 
 function topGridPointFromScreen(
@@ -203,9 +197,9 @@ function cameraTarget(): THREE.Vector3 {
 
 function cameraForward(): THREE.Vector3 {
   return new THREE.Vector3(
-    Math.cos(view.rotation) * Math.cos(cameraElevation),
-    Math.sin(view.rotation) * Math.cos(cameraElevation),
-    -Math.sin(cameraElevation),
+    Math.cos(view.rotation) * Math.cos(view.elevation),
+    Math.sin(view.rotation) * Math.cos(view.elevation),
+    -Math.sin(view.elevation),
   ).normalize();
 }
 

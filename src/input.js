@@ -1,5 +1,5 @@
 import { gridFromScreen, panBy, rotateAt, view, viewportCenter, zoomAt } from "./camera.js";
-import { dragThreshold, mouseRotateSpeed, wheelDeltaLineMode } from "./constants.js";
+import { dragThreshold, mousePitchSpeed, mouseRotateSpeed, wheelDeltaLineMode } from "./constants.js";
 import { endPinch, handlePinch, startPinch } from "./pinch.js";
 export function connectInput(canvas, onSelectTile, onHoverTile, onViewChange, heightAt = null, screenTileAt = null) {
     const activePointers = new Map();
@@ -18,7 +18,7 @@ export function connectInput(canvas, onSelectTile, onHoverTile, onViewChange, he
             return;
         }
         if (isMouseRotate(event)) {
-            rotateStart = { pointerId: event.pointerId, pointerX: point.x, rotation: view.rotation };
+            rotateStart = { pointerId: event.pointerId, pointerX: point.x, pointerY: point.y, rotation: view.rotation, elevation: view.elevation };
             canvas.setPointerCapture(event.pointerId);
             return;
         }
@@ -116,8 +116,10 @@ function handlePointerRotate(canvas, activePointers, pointerId, rotateStart, onV
     }
     const center = viewportCenter(canvas);
     const dx = point.x - rotateStart.pointerX;
+    const dy = point.y - rotateStart.pointerY;
     const nextRotation = rotateStart.rotation + dx * mouseRotateSpeed;
-    rotateAt(canvas, center.x, center.y, nextRotation);
+    const nextElevation = rotateStart.elevation + dy * mousePitchSpeed;
+    rotateAt(canvas, center.x, center.y, nextRotation, nextElevation);
     onViewChange();
 }
 function selectTile(canvas, event, dragStart, onSelectTile, heightAt, screenTileAt) {

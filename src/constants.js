@@ -12,8 +12,13 @@ export const gridTopOffset = 72;
 export const worldPixelsPerUnit = 76;
 export const cameraDistance = 80;
 export const cameraElevation = Math.atan(Math.SQRT1_2);
+export const cameraElevationLimits = {
+    min: 0.12,
+    max: 1.5,
+};
 export const dragThreshold = 3;
 export const mouseRotateSpeed = -0.008;
+export const mousePitchSpeed = -0.006;
 export const wheelDeltaLineMode = 1;
 export const zoomLimits = {
     min: 0.5,

@@ -1,10 +1,11 @@
 import * as THREE from "three";
-import { cameraDistance, cameraElevation, terrainHeight, worldPixelsPerUnit, zoomLimits, } from "./constants.js";
+import { cameraDistance, cameraElevation, cameraElevationLimits, terrainHeight, worldPixelsPerUnit, zoomLimits, } from "./constants.js";
 export const view = {
     targetX: 6.5,
     targetY: 6.5,
     zoom: 1,
     rotation: -Math.PI / 4,
+    elevation: cameraElevation,
 };
 const worldUp = new THREE.Vector3(0, 0, 1);
 export function createViewCamera() {
@@ -61,9 +62,10 @@ export function zoomAt(canvas, screenX, screenY, nextZoom) {
     view.zoom = zoom;
     anchorView(canvas, screenX, screenY, before);
 }
-export function rotateAt(canvas, screenX, screenY, nextRotation) {
+export function rotateAt(canvas, screenX, screenY, nextRotation, nextElevation = view.elevation) {
     const before = worldPointAtHeight(canvas, screenX, screenY, 0);
     view.rotation = normalizeRotation(nextRotation);
+    view.elevation = clamp(nextElevation, cameraElevationLimits.min, cameraElevationLimits.max);
     anchorView(canvas, screenX, screenY, before);
 }
 export function devicePixelRatio() {
@@ -71,15 +73,6 @@ export function devicePixelRatio() {
 }
 export function screenFromGrid(canvas, x, y, z = 0) {
     return projectWorldPoint(canvas, new THREE.Vector3(x, y, z));
-}
-export function worldFromGrid(canvas, x, y, z = 0) {
-    return screenFromGrid(canvas, x, y, z);
-}
-export function screenFromWorld(world) {
-    return {
-        x: world.x,
-        y: world.y,
-    };
 }
 function topGridPointFromScreen(canvas, screenX, screenY, heightAt) {
     for (let z = terrainHeight.max; z >= terrainHeight.min; z -= 1) {
@@ -127,7 +120,7 @@ function cameraTarget() {
     return new THREE.Vector3(view.targetX, view.targetY, 0);
 }
 function cameraForward() {
-    return new THREE.Vector3(Math.cos(view.rotation) * Math.cos(cameraElevation), Math.sin(view.rotation) * Math.cos(cameraElevation), -Math.sin(cameraElevation)).normalize();
+    return new THREE.Vector3(Math.cos(view.rotation) * Math.cos(view.elevation), Math.sin(view.rotation) * Math.cos(view.elevation), -Math.sin(view.elevation)).normalize();
 }
 function cameraUp() {
     const forward = cameraForward();
