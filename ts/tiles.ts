@@ -1,4 +1,6 @@
-import { isVisibleTile, l1Distance, sightSearchRadius } from "./visibility.js";
+import { l1Distance, tileKey } from "./grid.js";
+import { sightSearchRadius } from "./sight-cost.js";
+import { isVisibleTile } from "./visibility.js";
 import type { Tile, TileHeight, TileSightCost, Unit } from "./types.js";
 
 export function visibleTiles(units: Unit[], sightCost: TileSightCost, tileHeight: TileHeight): Tile[] {
@@ -23,7 +25,7 @@ function appendVisibleTiles(
   const radius = sightSearchRadius(unit.lineOfSight);
 
   for (let y = unit.y - radius; y <= unit.y + radius; y += 1) {
-    appendVisibleRow(unit, units, sightCost, tileHeight, y, seen, tiles);
+    appendVisibleRow(unit, units, sightCost, tileHeight, y, radius, seen, tiles);
   }
 }
 
@@ -33,13 +35,12 @@ function appendVisibleRow(
   sightCost: TileSightCost,
   tileHeight: TileHeight,
   y: number,
+  radius: number,
   seen: Set<string>,
   tiles: Tile[],
 ): void {
-  const radius = sightSearchRadius(unit.lineOfSight);
-
   for (let x = unit.x - radius; x <= unit.x + radius; x += 1) {
-    appendVisibleTile(unit, units, sightCost, tileHeight, { x, y }, seen, tiles);
+    appendVisibleTile(unit, units, sightCost, tileHeight, { x, y }, radius, seen, tiles);
   }
 }
 
@@ -49,12 +50,13 @@ function appendVisibleTile(
   sightCost: TileSightCost,
   tileHeight: TileHeight,
   tile: Tile,
+  radius: number,
   seen: Set<string>,
   tiles: Tile[],
 ): void {
-  const key = `${tile.x}:${tile.y}`;
+  const key = tileKey(tile);
 
-  if (seen.has(key) || l1Distance(unit, tile) > sightSearchRadius(unit.lineOfSight)) {
+  if (seen.has(key) || l1Distance(unit, tile) > radius) {
     return;
   }
 

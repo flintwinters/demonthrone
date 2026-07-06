@@ -1,5 +1,4 @@
 import { lineSightCost } from "./sight-cost.js";
-export { l1Distance, sightSearchRadius } from "./sight-cost.js";
 export function isVisibleTile(tile, units, sightCost, tileHeight) {
     return units.some((unit) => canUnitSeeTile(unit, tile, sightCost, tileHeight));
 }

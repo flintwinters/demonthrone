@@ -1,4 +1,4 @@
-import { l1Distance } from "./visibility.js";
+import { l1Distance, tileKey } from "./grid.js";
 const directions = [
     { x: 1, y: 0 },
     { x: -1, y: 0 },
@@ -38,7 +38,4 @@ function appendReachableTile(tile, target, limit, isBlockedTile, visited, next) 
     }
     visited.add(key);
     next.push(tile);
-}
-function tileKey(tile) {
-    return `${tile.x}:${tile.y}`;
 }

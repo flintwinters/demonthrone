@@ -1,5 +1,6 @@
 import { perlinNoise2d } from "./noise.js";
 import { terrainHeight } from "./constants.js";
+import { l1Distance } from "./grid.js";
 const worldSeed = 0x5eed;
 const boulderLayer = {
     scale: 0.23,
@@ -74,7 +75,4 @@ function brushNoise(tile) {
 }
 function isSafeTile(tile) {
     return safeZones.some((zone) => l1Distance(tile, zone) <= zone.radius);
-}
-function l1Distance(first, second) {
-    return Math.abs(first.x - second.x) + Math.abs(first.y - second.y);
 }

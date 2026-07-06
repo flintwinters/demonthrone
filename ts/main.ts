@@ -1,5 +1,6 @@
 import { devicePixelRatio, gridFromScreen, screenFromGrid, view } from "./camera.js";
 import { terrainHeight } from "./constants.js";
+import { l1Distance } from "./grid.js";
 import { connectInput } from "./input.js";
 import { canReachTile } from "./movement.js";
 import { isObstacleTile } from "./obstacles.js";
@@ -15,7 +16,7 @@ import {
   selectedUnit,
   units,
 } from "./units.js";
-import { isVisibleTile, l1Distance } from "./visibility.js";
+import { isVisibleTile } from "./visibility.js";
 import type { BoardState, HeightTile, RenderUnit, ScreenPoint, Tile, Unit } from "./types.js";
 
 const unitPickRadius = 30;

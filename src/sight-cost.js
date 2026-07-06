@@ -1,3 +1,4 @@
+import { l1Distance } from "./grid.js";
 const downhillDistanceDiscount = 0.25;
 const uphillHeightPenalty = 1;
 export function lineSightCost(start, end, sightCost, tileHeight) {
@@ -13,9 +14,6 @@ export function lineSightCost(start, end, sightCost, tileHeight) {
         previous = current;
     }
     return cost;
-}
-export function l1Distance(first, second) {
-    return Math.abs(first.x - second.x) + Math.abs(first.y - second.y);
 }
 export function sightSearchRadius(lineOfSight) {
     return Math.ceil(lineOfSight / (1 - downhillDistanceDiscount));

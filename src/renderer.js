@@ -1,9 +1,10 @@
 import * as THREE from "three";
 import { configureViewCamera, createViewCamera, devicePixelRatio } from "./camera.js";
 import { colors, terrainHeight } from "./constants.js";
+import { tileKey } from "./grid.js";
 import { material, transparentMaterial } from "./render-materials.js";
 import { tileStyle } from "./terrain-style.js";
-import { terrainSurface, tileKey } from "./terrain-mesh.js";
+import { terrainSurface } from "./terrain-mesh.js";
 import { boulder, brush } from "./terrain-props.js";
 import { visibleTiles } from "./tiles.js";
 const state = {

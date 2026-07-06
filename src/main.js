@@ -1,5 +1,6 @@
 import { devicePixelRatio, gridFromScreen, screenFromGrid, view } from "./camera.js";
 import { terrainHeight } from "./constants.js";
+import { l1Distance } from "./grid.js";
 import { connectInput } from "./input.js";
 import { canReachTile } from "./movement.js";
 import { isObstacleTile } from "./obstacles.js";
@@ -8,7 +9,7 @@ import { connectRotationControls } from "./rotation-controls.js";
 import { connectViewCube } from "./view-cube.js";
 import { isBrushTile, sightCost, tileHeight } from "./world.js";
 import { clickBoardTile, commitPlannedMoves, plannedUnits, selection, selectedUnit, units, } from "./units.js";
-import { isVisibleTile, l1Distance } from "./visibility.js";
+import { isVisibleTile } from "./visibility.js";
 const unitPickRadius = 30;
 const unitPickMinRadius = 18;
 const unitPickHeight = 0.3;

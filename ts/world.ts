@@ -1,5 +1,6 @@
 import { perlinNoise2d } from "./noise.js";
 import { terrainHeight } from "./constants.js";
+import { l1Distance } from "./grid.js";
 import type { Tile } from "./types.js";
 
 type Terrain = {
@@ -100,8 +101,4 @@ function brushNoise(tile: Tile): number {
 
 function isSafeTile(tile: Tile): boolean {
   return safeZones.some((zone) => l1Distance(tile, zone) <= zone.radius);
-}
-
-function l1Distance(first: Tile, second: Tile): number {
-  return Math.abs(first.x - second.x) + Math.abs(first.y - second.y);
 }

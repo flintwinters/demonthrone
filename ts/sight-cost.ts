@@ -1,3 +1,4 @@
+import { l1Distance } from "./grid.js";
 import type { Tile, TileHeight, TileSightCost } from "./types.js";
 
 const downhillDistanceDiscount = 0.25;
@@ -26,10 +27,6 @@ export function lineSightCost(
   }
 
   return cost;
-}
-
-export function l1Distance(first: Tile, second: Tile): number {
-  return Math.abs(first.x - second.x) + Math.abs(first.y - second.y);
 }
 
 export function sightSearchRadius(lineOfSight: number): number {

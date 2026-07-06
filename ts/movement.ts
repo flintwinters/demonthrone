@@ -1,4 +1,4 @@
-import { l1Distance } from "./visibility.js";
+import { l1Distance, tileKey } from "./grid.js";
 import type { Tile, TilePredicate } from "./types.js";
 
 const directions = [
@@ -79,8 +79,4 @@ function appendReachableTile(
 
   visited.add(key);
   next.push(tile);
-}
-
-function tileKey(tile: Tile): string {
-  return `${tile.x}:${tile.y}`;
 }

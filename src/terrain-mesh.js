@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { tileKey } from "./grid.js";
 import { edgeMaterial, terrainMaterial } from "./render-materials.js";
 const neighbors = [
     { x: 0, y: -1, face: northFace },
@@ -13,9 +14,6 @@ export function terrainSurface(tile, height, style, tileHeights) {
         appendSideSurface(group, tile, height, style, tileHeights, neighbor);
     }
     return group;
-}
-export function tileKey(tile) {
-    return `${tile.x}:${tile.y}`;
 }
 function appendSideSurface(group, tile, height, style, tileHeights, neighbor) {
     const neighborHeight = tileHeights.get(tileKey({ x: tile.x + neighbor.x, y: tile.y + neighbor.y }));

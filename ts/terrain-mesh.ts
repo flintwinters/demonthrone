@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { tileKey } from "./grid.js";
 import { edgeMaterial, terrainMaterial } from "./render-materials.js";
 import type { Tile } from "./types.js";
 
@@ -30,10 +31,6 @@ export function terrainSurface(
   }
 
   return group;
-}
-
-export function tileKey(tile: Tile): string {
-  return `${tile.x}:${tile.y}`;
 }
 
 function appendSideSurface(
