@@ -1,0 +1,21 @@
+<div align="center">
+
+# Demonthrone
+
+</div>
+
+Demonthrone is a tactical, turn-based roguelike where you command a team of adventurers through a procedurally generated world. Each character has unique stats and skills. Navigate through forests and across rivers, battling enemies and gathering resources. The game features a dynamic fog of war system, requiring careful exploration and positioning of your team to succeed.
+
+## todo
+
+- [ ] actual world gen (high prio)
+- [ ] save and load game state
+
+- [ ] direction-dependent vision multipliers (for uphill or downhill sight)
+
+- [ ] probably come up with a better name
+- [ ] actual character info display in the UI
+- [ ] items & inventory
+- [ ] more than one enemy
+- [ ] more than one obstacle - destructible obstacles
+

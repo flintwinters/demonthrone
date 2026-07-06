@@ -4,7 +4,7 @@ import { colors, terrainHeight } from "./constants.js";
 import { material } from "./render-materials.js";
 import { terrainSurface, tileKey, type TerrainStyle } from "./terrain-mesh.js";
 import { visibleTiles } from "./tiles.js";
-import type { BoardState, HeightTile, RenderUnit, Tile } from "./types.js";
+import type { BoardState, RenderUnit, Tile } from "./types.js";
 
 type RenderState = {
   renderer: THREE.WebGLRenderer;
@@ -25,7 +25,6 @@ export function drawGrid(canvas: HTMLCanvasElement, boardState: BoardState): voi
   resetRoot(renderState);
   addTerrain(renderState, boardState, tiles);
   addObstacles(renderState, boardState, tiles);
-  addMovePlans(renderState, boardState.units);
   addUnits(renderState, boardState.units, boardState.selectedUnitId);
   renderState.renderer.render(renderState.scene, renderState.camera);
 }
@@ -83,14 +82,6 @@ function addObstacles(renderState: RenderState, boardState: BoardState, tiles: T
   }
 }
 
-function addMovePlans(renderState: RenderState, units: RenderUnit[]): void {
-  for (const unit of units) {
-    if (unit.target) {
-      renderState.root.add(movePlan(unit, unit.target));
-    }
-  }
-}
-
 function addUnits(renderState: RenderState, units: RenderUnit[], selectedUnitId: string | null): void {
   for (const unit of units) {
     renderState.root.add(unitMesh(unit, unit.id === selectedUnitId));
@@ -104,19 +95,6 @@ function boulder(tile: Tile, height: number): THREE.Mesh {
   mesh.position.set(tile.x + 0.5, tile.y + 0.5, height + 0.32);
   mesh.rotation.set(0.3, 0.1, tile.x * 0.7 + tile.y * 0.2);
   return mesh;
-}
-
-function movePlan(start: RenderUnit, target: HeightTile): THREE.Line {
-  const points = [
-    new THREE.Vector3(start.x + 0.5, start.y + 0.5, visualHeight(start.height) + 0.08),
-    new THREE.Vector3(target.x + 0.5, target.y + 0.5, visualHeight(target.height) + 0.08),
-  ];
-  const line = new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints(points),
-    new THREE.LineBasicMaterial({ color: colors.moveLine }),
-  );
-
-  return line;
 }
 
 function unitMesh(unit: RenderUnit, isSelected: boolean): THREE.Group {
@@ -135,6 +113,14 @@ function unitMesh(unit: RenderUnit, isSelected: boolean): THREE.Group {
 }
 
 function tileStyle(tile: Tile, boardState: BoardState): TerrainStyle {
+  if (isPlannedMoveTarget(tile, boardState.units)) {
+    return { top: colors.moveTarget, side: colors.movementTileSideRight };
+  }
+
+  if (isPlannedMoveStart(tile, boardState.units)) {
+    return { top: colors.moveStart, side: colors.tileSideRight };
+  }
+
   if (sameTile(boardState.selectedTile, tile)) {
     return { top: colors.selectedTile, side: colors.tileSideRight };
   }
@@ -155,6 +141,14 @@ function movementTileStyle(tile: Tile, boardState: BoardState): TerrainStyle {
     top: sameTile(boardState.hoveredTile, tile) ? colors.hoveredMovementTile : colors.movementTile,
     side: colors.movementTileSideRight,
   };
+}
+
+function isPlannedMoveStart(tile: Tile, units: RenderUnit[]): boolean {
+  return units.some((unit) => unit.target && sameTile(unit, tile));
+}
+
+function isPlannedMoveTarget(tile: Tile, units: RenderUnit[]): boolean {
+  return units.some((unit) => unit.target && sameTile(unit.target, tile));
 }
 
 function directionalLight(): THREE.DirectionalLight {
