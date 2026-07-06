@@ -2,9 +2,11 @@ import * as THREE from "three";
 import { edgeMaterial, terrainMaterial } from "./render-materials.js";
 import type { Tile } from "./types.js";
 
+export type SurfaceStyle = string | readonly [string, string, string, string];
+
 export type TerrainStyle = {
-  top: string;
-  side: string;
+  top: SurfaceStyle;
+  side: SurfaceStyle;
 };
 
 const neighbors = [
@@ -51,8 +53,8 @@ function appendSideSurface(
   group.add(surfaceMesh(neighbor.face(tile, neighborHeight, height), style.side));
 }
 
-function surfaceMesh(points: THREE.Vector3[], color: string): THREE.Group {
-  const mesh = new THREE.Mesh(surfaceGeometry(points), terrainMaterial(color));
+function surfaceMesh(points: THREE.Vector3[], style: SurfaceStyle): THREE.Group {
+  const mesh = new THREE.Mesh(surfaceGeometry(points, style), terrainMaterial(style));
   const edges = new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry), edgeMaterial);
   const group = new THREE.Group();
 
@@ -60,12 +62,19 @@ function surfaceMesh(points: THREE.Vector3[], color: string): THREE.Group {
   return group;
 }
 
-function surfaceGeometry(points: THREE.Vector3[]): THREE.BufferGeometry {
+function surfaceGeometry(points: THREE.Vector3[], style: SurfaceStyle): THREE.BufferGeometry {
   const geometry = new THREE.BufferGeometry().setFromPoints(points);
 
   geometry.setIndex([0, 1, 2, 0, 2, 3]);
+  if (Array.isArray(style)) {
+    geometry.setAttribute("color", new THREE.Float32BufferAttribute(vertexColors(style), 3));
+  }
   geometry.computeVertexNormals();
   return geometry;
+}
+
+function vertexColors(colors: readonly string[]): number[] {
+  return colors.flatMap((color) => new THREE.Color(color).toArray());
 }
 
 function topFace(tile: Tile, height: number): THREE.Vector3[] {

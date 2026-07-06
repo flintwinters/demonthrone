@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { configureViewCamera, createViewCamera, devicePixelRatio } from "./camera.js";
 import { colors, terrainHeight } from "./constants.js";
 import { material, transparentMaterial } from "./render-materials.js";
+import { tileStyle } from "./terrain-style.js";
 import { terrainSurface, tileKey } from "./terrain-mesh.js";
 import { visibleTiles } from "./tiles.js";
 const state = {
@@ -48,10 +49,12 @@ function resetRoot(renderState) {
     renderState.scene.add(renderState.root);
 }
 function addTerrain(renderState, boardState, tiles) {
-    const tileHeights = new Map(tiles.map((tile) => [tileKey(tile), visualHeight(boardState.tileHeight(tile))]));
+    const tileLevels = new Map(tiles.map((tile) => [tileKey(tile), boardState.tileHeight(tile)]));
+    const tileHeights = new Map(tiles.map((tile) => [tileKey(tile), visualHeight(tileLevels.get(tileKey(tile)) ?? 0)]));
     for (const tile of tiles) {
+        const level = tileLevels.get(tileKey(tile)) ?? 0;
         const height = tileHeights.get(tileKey(tile)) ?? 0;
-        const style = tileStyle(tile, boardState);
+        const style = tileStyle(tile, boardState, level);
         renderState.root.add(terrainSurface(tile, height, style, tileHeights));
     }
 }
@@ -102,43 +105,10 @@ function unitMesh(unit, isSelected, opacity) {
 function unitMaterial(color, opacity) {
     return opacity < 1 ? transparentMaterial(color, opacity) : material(color);
 }
-function tileStyle(tile, boardState) {
-    if (isPlannedMoveTarget(tile, boardState.units)) {
-        return { top: colors.moveTarget, side: colors.movementTileSideRight };
-    }
-    if (isPlannedMoveStart(tile, boardState.units)) {
-        return { top: colors.moveStart, side: colors.tileSideRight };
-    }
-    if (sameTile(boardState.selectedTile, tile)) {
-        return { top: colors.selectedTile, side: colors.tileSideRight };
-    }
-    if (boardState.isMovementTile(tile)) {
-        return movementTileStyle(tile, boardState);
-    }
-    if (sameTile(boardState.hoveredTile, tile)) {
-        return { top: colors.hoveredTile, side: colors.tileSideRight };
-    }
-    return { top: colors.tile, side: colors.tileSideRight };
-}
-function movementTileStyle(tile, boardState) {
-    return {
-        top: sameTile(boardState.hoveredTile, tile) ? colors.hoveredMovementTile : colors.movementTile,
-        side: colors.movementTileSideRight,
-    };
-}
-function isPlannedMoveStart(tile, units) {
-    return units.some((unit) => unit.target && sameTile(unit, tile));
-}
-function isPlannedMoveTarget(tile, units) {
-    return units.some((unit) => unit.target && sameTile(unit.target, tile));
-}
 function directionalLight() {
     const light = new THREE.DirectionalLight(colors.tileStroke, 2.2);
     light.position.set(-3, -4, 7);
     return light;
-}
-function sameTile(first, second) {
-    return first?.x === second.x && first?.y === second.y;
 }
 function visualHeight(height) {
     return height * terrainHeight.visualScale;

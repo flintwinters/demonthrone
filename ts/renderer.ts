@@ -2,7 +2,8 @@ import * as THREE from "three";
 import { configureViewCamera, createViewCamera, devicePixelRatio } from "./camera.js";
 import { colors, terrainHeight } from "./constants.js";
 import { material, transparentMaterial } from "./render-materials.js";
-import { terrainSurface, tileKey, type TerrainStyle } from "./terrain-mesh.js";
+import { tileStyle } from "./terrain-style.js";
+import { terrainSurface, tileKey } from "./terrain-mesh.js";
 import { visibleTiles } from "./tiles.js";
 import type { BoardState, HeightTile, RenderUnit, Tile } from "./types.js";
 
@@ -65,11 +66,13 @@ function resetRoot(renderState: RenderState): void {
 }
 
 function addTerrain(renderState: RenderState, boardState: BoardState, tiles: Tile[]): void {
-  const tileHeights = new Map(tiles.map((tile) => [tileKey(tile), visualHeight(boardState.tileHeight(tile))]));
+  const tileLevels = new Map(tiles.map((tile) => [tileKey(tile), boardState.tileHeight(tile)]));
+  const tileHeights = new Map(tiles.map((tile) => [tileKey(tile), visualHeight(tileLevels.get(tileKey(tile)) ?? 0)]));
 
   for (const tile of tiles) {
+    const level = tileLevels.get(tileKey(tile)) ?? 0;
     const height = tileHeights.get(tileKey(tile)) ?? 0;
-    const style = tileStyle(tile, boardState);
+    const style = tileStyle(tile, boardState, level);
 
     renderState.root.add(terrainSurface(tile, height, style, tileHeights));
   }
@@ -134,54 +137,11 @@ function unitMaterial(color: string, opacity: number): THREE.MeshLambertMaterial
   return opacity < 1 ? transparentMaterial(color, opacity) : material(color);
 }
 
-function tileStyle(tile: Tile, boardState: BoardState): TerrainStyle {
-  if (isPlannedMoveTarget(tile, boardState.units)) {
-    return { top: colors.moveTarget, side: colors.movementTileSideRight };
-  }
-
-  if (isPlannedMoveStart(tile, boardState.units)) {
-    return { top: colors.moveStart, side: colors.tileSideRight };
-  }
-
-  if (sameTile(boardState.selectedTile, tile)) {
-    return { top: colors.selectedTile, side: colors.tileSideRight };
-  }
-
-  if (boardState.isMovementTile(tile)) {
-    return movementTileStyle(tile, boardState);
-  }
-
-  if (sameTile(boardState.hoveredTile, tile)) {
-    return { top: colors.hoveredTile, side: colors.tileSideRight };
-  }
-
-  return { top: colors.tile, side: colors.tileSideRight };
-}
-
-function movementTileStyle(tile: Tile, boardState: BoardState): TerrainStyle {
-  return {
-    top: sameTile(boardState.hoveredTile, tile) ? colors.hoveredMovementTile : colors.movementTile,
-    side: colors.movementTileSideRight,
-  };
-}
-
-function isPlannedMoveStart(tile: Tile, units: RenderUnit[]): boolean {
-  return units.some((unit) => unit.target && sameTile(unit, tile));
-}
-
-function isPlannedMoveTarget(tile: Tile, units: RenderUnit[]): boolean {
-  return units.some((unit) => unit.target && sameTile(unit.target, tile));
-}
-
 function directionalLight(): THREE.DirectionalLight {
   const light = new THREE.DirectionalLight(colors.tileStroke, 2.2);
 
   light.position.set(-3, -4, 7);
   return light;
-}
-
-function sameTile(first: Tile | null, second: Tile): boolean {
-  return first?.x === second.x && first?.y === second.y;
 }
 
 function visualHeight(height: number): number {

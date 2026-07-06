@@ -33,17 +33,19 @@ export function transparentMaterial(color, opacity) {
     return created;
 }
 export function terrainMaterial(color) {
-    const existing = terrainMaterials.get(color);
+    const key = typeof color === "string" ? color : "vertex-colors";
+    const existing = terrainMaterials.get(key);
     if (existing) {
         return existing;
     }
     const created = new THREE.MeshLambertMaterial({
-        color,
+        color: typeof color === "string" ? color : "#ffffff",
+        vertexColors: typeof color !== "string",
         side: THREE.DoubleSide,
         polygonOffset: true,
         polygonOffsetFactor: 1,
         polygonOffsetUnits: 1,
     });
-    terrainMaterials.set(color, created);
+    terrainMaterials.set(key, created);
     return created;
 }

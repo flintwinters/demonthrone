@@ -24,18 +24,24 @@ function appendSideSurface(group, tile, height, style, tileHeights, neighbor) {
     }
     group.add(surfaceMesh(neighbor.face(tile, neighborHeight, height), style.side));
 }
-function surfaceMesh(points, color) {
-    const mesh = new THREE.Mesh(surfaceGeometry(points), terrainMaterial(color));
+function surfaceMesh(points, style) {
+    const mesh = new THREE.Mesh(surfaceGeometry(points, style), terrainMaterial(style));
     const edges = new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry), edgeMaterial);
     const group = new THREE.Group();
     group.add(mesh, edges);
     return group;
 }
-function surfaceGeometry(points) {
+function surfaceGeometry(points, style) {
     const geometry = new THREE.BufferGeometry().setFromPoints(points);
     geometry.setIndex([0, 1, 2, 0, 2, 3]);
+    if (Array.isArray(style)) {
+        geometry.setAttribute("color", new THREE.Float32BufferAttribute(vertexColors(style), 3));
+    }
     geometry.computeVertexNormals();
     return geometry;
+}
+function vertexColors(colors) {
+    return colors.flatMap((color) => new THREE.Color(color).toArray());
 }
 function topFace(tile, height) {
     return [
