@@ -4,13 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "npm run lint && node --check src/main.js && node --check src/input.js && node --check src/pinch.js && node --check src/rotation-controls.js && node --check src/camera.js && node --check src/renderer.js && node --check src/terrain-renderer.js && node --check src/voxel-renderer.js && node --check src/constants.js && node --check src/units.js && node --check src/visibility.js && node --check src/tiles.js && node --check src/obstacles.js && node --check src/movement.js && node --check src/noise.js && node --check src/world.js",
+    "build": "tsc -p tsconfig.json",
+    "check": "npm run build && npm run lint && node --check src/main.js && node --check src/input.js && node --check src/pinch.js && node --check src/rotation-controls.js && node --check src/camera.js && node --check src/renderer.js && node --check src/constants.js && node --check src/units.js && node --check src/visibility.js && node --check src/tiles.js && node --check src/obstacles.js && node --check src/movement.js && node --check src/noise.js && node --check src/world.js",
     "lint": "eslint .",
     "serve": "npx serve .",
     "test": "npm run check"
   },
   "devDependencies": {
-    "eslint": "^9.31.0"
+    "@types/three": "^0.185.0",
+    "eslint": "^9.31.0",
+    "typescript": "^6.0.3"
   },
   "dependencies": {
     "three": "^0.185.1"
