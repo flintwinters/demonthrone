@@ -24,22 +24,22 @@ function movementTileStyle(tile, boardState, level) {
 }
 function terrainStyle(top, side, level) {
     return {
-        top: topGradient(top, level),
-        side: shadeByHeight(side, level, -0.08),
+        top: shadeByHeight(top, level, 0),
+        side: sideGradient(side, level),
     };
 }
-function topGradient(color, level) {
+function sideGradient(color, level) {
     return [
         shadeByHeight(color, level, 0.08),
-        shadeByHeight(color, level, 0.02),
-        shadeByHeight(color, level, -0.1),
-        shadeByHeight(color, level, -0.04),
+        shadeByHeight(color, level, 0.08),
+        shadeByHeight(color, level, -0.14),
+        shadeByHeight(color, level, -0.14),
     ];
 }
 function shadeByHeight(color, level, offset) {
     const range = Math.max(1, terrainHeight.max - terrainHeight.min);
     const normalized = (level - terrainHeight.min) / range;
-    const shade = normalized * 0.24 - 0.08 + offset;
+    const shade = normalized * 0.1 - 0.03 + offset;
     const base = new THREE.Color(color);
     const target = new THREE.Color(shade >= 0 ? "#ffffff" : "#000000");
     return `#${base.lerp(target, Math.abs(shade)).getHexString()}`;
