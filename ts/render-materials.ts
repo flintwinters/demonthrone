@@ -32,6 +32,7 @@ export function terrainMaterial(color: string): THREE.MeshLambertMaterial {
 
   const created = new THREE.MeshLambertMaterial({
     color,
+    side: THREE.DoubleSide,
     polygonOffset: true,
     polygonOffsetFactor: 1,
     polygonOffsetUnits: 1,

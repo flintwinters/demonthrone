@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { configureViewCamera, createViewCamera } from "./camera.js";
-import { colors, terrainHeight } from "./constants.js";
-import { edgeMaterial, material, terrainMaterial } from "./render-materials.js";
+import { colors } from "./constants.js";
+import { material } from "./render-materials.js";
+import { terrainSurface, tileKey } from "./terrain-mesh.js";
 import { visibleTiles } from "./tiles.js";
 const state = {
     current: null,
@@ -42,10 +43,11 @@ function resetRoot(renderState) {
     renderState.scene.add(renderState.root);
 }
 function addTerrain(renderState, boardState, tiles) {
+    const tileHeights = new Map(tiles.map((tile) => [tileKey(tile), boardState.tileHeight(tile)]));
     for (const tile of tiles) {
-        const height = boardState.tileHeight(tile);
+        const height = tileHeights.get(tileKey(tile)) ?? 0;
         const style = tileStyle(tile, boardState);
-        renderState.root.add(terrainColumn(tile, height, style));
+        renderState.root.add(terrainSurface(tile, height, style, tileHeights));
     }
 }
 function addObstacles(renderState, boardState, tiles) {
@@ -66,15 +68,6 @@ function addUnits(renderState, units, selectedUnitId) {
     for (const unit of units) {
         renderState.root.add(unitMesh(unit, unit.id === selectedUnitId));
     }
-}
-function terrainColumn(tile, height, style) {
-    const depth = heightDepth(height);
-    const geometry = new THREE.BoxGeometry(1, 1, depth);
-    const mesh = new THREE.Mesh(geometry, columnMaterials(style));
-    const group = new THREE.Group();
-    mesh.position.set(tile.x + 0.5, tile.y + 0.5, height - depth / 2);
-    group.add(mesh, columnEdges(mesh));
-    return group;
 }
 function boulder(tile, height) {
     const geometry = new THREE.DodecahedronGeometry(0.34, 0);
@@ -110,24 +103,10 @@ function tileStyle(tile, boardState) {
     }
     return { top: colors.tile, side: colors.tileSideRight };
 }
-function columnMaterials(style) {
-    const side = terrainMaterial(style.side);
-    const top = terrainMaterial(style.top);
-    return [side, side, side, side, top, terrainMaterial(colors.tileBottom)];
-}
-function columnEdges(mesh) {
-    const geometry = new THREE.EdgesGeometry(mesh.geometry);
-    const edges = new THREE.LineSegments(geometry, edgeMaterial);
-    edges.position.copy(mesh.position);
-    return edges;
-}
 function directionalLight() {
     const light = new THREE.DirectionalLight(colors.tileStroke, 2.2);
     light.position.set(-3, -4, 7);
     return light;
-}
-function heightDepth(height) {
-    return Math.max(terrainHeight.step, height);
 }
 function sameTile(first, second) {
     return first?.x === second.x && first?.y === second.y;

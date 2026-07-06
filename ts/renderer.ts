@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { configureViewCamera, createViewCamera } from "./camera.js";
-import { colors, terrainHeight } from "./constants.js";
-import { edgeMaterial, material, terrainMaterial } from "./render-materials.js";
+import { colors } from "./constants.js";
+import { material } from "./render-materials.js";
+import { terrainSurface, tileKey, type TerrainStyle } from "./terrain-mesh.js";
 import { visibleTiles } from "./tiles.js";
 import type { BoardState, HeightTile, RenderUnit, Tile } from "./types.js";
 
@@ -10,11 +11,6 @@ type RenderState = {
   scene: THREE.Scene;
   camera: THREE.OrthographicCamera;
   root: THREE.Group;
-};
-
-type TileStyle = {
-  top: string;
-  side: string;
 };
 
 const state: { current: RenderState | null } = {
@@ -63,11 +59,13 @@ function resetRoot(renderState: RenderState): void {
 }
 
 function addTerrain(renderState: RenderState, boardState: BoardState, tiles: Tile[]): void {
+  const tileHeights = new Map(tiles.map((tile) => [tileKey(tile), boardState.tileHeight(tile)]));
+
   for (const tile of tiles) {
-    const height = boardState.tileHeight(tile);
+    const height = tileHeights.get(tileKey(tile)) ?? 0;
     const style = tileStyle(tile, boardState);
 
-    renderState.root.add(terrainColumn(tile, height, style));
+    renderState.root.add(terrainSurface(tile, height, style, tileHeights));
   }
 }
 
@@ -91,17 +89,6 @@ function addUnits(renderState: RenderState, units: RenderUnit[], selectedUnitId:
   for (const unit of units) {
     renderState.root.add(unitMesh(unit, unit.id === selectedUnitId));
   }
-}
-
-function terrainColumn(tile: Tile, height: number, style: TileStyle): THREE.Group {
-  const depth = heightDepth(height);
-  const geometry = new THREE.BoxGeometry(1, 1, depth);
-  const mesh = new THREE.Mesh(geometry, columnMaterials(style));
-  const group = new THREE.Group();
-
-  mesh.position.set(tile.x + 0.5, tile.y + 0.5, height - depth / 2);
-  group.add(mesh, columnEdges(mesh));
-  return group;
 }
 
 function boulder(tile: Tile, height: number): THREE.Mesh {
@@ -141,7 +128,7 @@ function unitMesh(unit: RenderUnit, isSelected: boolean): THREE.Group {
   return group;
 }
 
-function tileStyle(tile: Tile, boardState: BoardState): TileStyle {
+function tileStyle(tile: Tile, boardState: BoardState): TerrainStyle {
   if (sameTile(boardState.selectedTile, tile)) {
     return { top: colors.selectedTile, side: colors.tileSideRight };
   }
@@ -153,30 +140,11 @@ function tileStyle(tile: Tile, boardState: BoardState): TileStyle {
   return { top: colors.tile, side: colors.tileSideRight };
 }
 
-function columnMaterials(style: TileStyle): THREE.Material[] {
-  const side = terrainMaterial(style.side);
-  const top = terrainMaterial(style.top);
-
-  return [side, side, side, side, top, terrainMaterial(colors.tileBottom)];
-}
-
-function columnEdges(mesh: THREE.Mesh): THREE.LineSegments {
-  const geometry = new THREE.EdgesGeometry(mesh.geometry);
-  const edges = new THREE.LineSegments(geometry, edgeMaterial);
-
-  edges.position.copy(mesh.position);
-  return edges;
-}
-
 function directionalLight(): THREE.DirectionalLight {
   const light = new THREE.DirectionalLight(colors.tileStroke, 2.2);
 
   light.position.set(-3, -4, 7);
   return light;
-}
-
-function heightDepth(height: number): number {
-  return Math.max(terrainHeight.step, height);
 }
 
 function sameTile(first: Tile | null, second: Tile): boolean {
