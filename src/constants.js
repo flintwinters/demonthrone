@@ -6,6 +6,7 @@ export const terrainHeight = {
     min: 0,
     max: 5,
     step: 0.32,
+    visualScale: 0.5,
 };
 export const gridTopOffset = 72;
 export const worldPixelsPerUnit = 76;

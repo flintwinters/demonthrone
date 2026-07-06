@@ -83,13 +83,13 @@ export function screenFromWorld(world) {
 }
 function topGridPointFromScreen(canvas, screenX, screenY, heightAt) {
     for (let z = terrainHeight.max; z >= terrainHeight.min; z -= 1) {
-        const point = worldPointAtHeight(canvas, screenX, screenY, z);
+        const point = worldPointAtHeight(canvas, screenX, screenY, visualHeight(z));
         const tile = { x: Math.floor(point.x), y: Math.floor(point.y) };
         if (heightAt(tile) === z) {
             return point;
         }
     }
-    return worldPointAtHeight(canvas, screenX, screenY, terrainHeight.min);
+    return worldPointAtHeight(canvas, screenX, screenY, visualHeight(terrainHeight.min));
 }
 function worldPointAtHeight(canvas, screenX, screenY, height) {
     const ray = screenRay(canvas, screenX, screenY);
@@ -139,4 +139,7 @@ function clamp(value, min, max) {
 }
 function normalizeRotation(rotation) {
     return Math.atan2(Math.sin(rotation), Math.cos(rotation));
+}
+function visualHeight(height) {
+    return height * terrainHeight.visualScale;
 }

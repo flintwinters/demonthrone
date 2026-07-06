@@ -136,7 +136,7 @@ function topGridPointFromScreen(
   heightAt: TileHeight,
 ): THREE.Vector3 {
   for (let z = terrainHeight.max; z >= terrainHeight.min; z -= 1) {
-    const point = worldPointAtHeight(canvas, screenX, screenY, z);
+    const point = worldPointAtHeight(canvas, screenX, screenY, visualHeight(z));
     const tile = { x: Math.floor(point.x), y: Math.floor(point.y) };
 
     if (heightAt(tile) === z) {
@@ -144,7 +144,7 @@ function topGridPointFromScreen(
     }
   }
 
-  return worldPointAtHeight(canvas, screenX, screenY, terrainHeight.min);
+  return worldPointAtHeight(canvas, screenX, screenY, visualHeight(terrainHeight.min));
 }
 
 function worldPointAtHeight(
@@ -222,4 +222,8 @@ function clamp(value: number, min: number, max: number): number {
 
 function normalizeRotation(rotation: number): number {
   return Math.atan2(Math.sin(rotation), Math.cos(rotation));
+}
+
+function visualHeight(height: number): number {
+  return height * terrainHeight.visualScale;
 }

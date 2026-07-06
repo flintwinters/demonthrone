@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { configureViewCamera, createViewCamera } from "./camera.js";
-import { colors } from "./constants.js";
+import { colors, terrainHeight } from "./constants.js";
 import { material } from "./render-materials.js";
 import { terrainSurface, tileKey, type TerrainStyle } from "./terrain-mesh.js";
 import { visibleTiles } from "./tiles.js";
@@ -59,7 +59,7 @@ function resetRoot(renderState: RenderState): void {
 }
 
 function addTerrain(renderState: RenderState, boardState: BoardState, tiles: Tile[]): void {
-  const tileHeights = new Map(tiles.map((tile) => [tileKey(tile), boardState.tileHeight(tile)]));
+  const tileHeights = new Map(tiles.map((tile) => [tileKey(tile), visualHeight(boardState.tileHeight(tile))]));
 
   for (const tile of tiles) {
     const height = tileHeights.get(tileKey(tile)) ?? 0;
@@ -72,7 +72,7 @@ function addTerrain(renderState: RenderState, boardState: BoardState, tiles: Til
 function addObstacles(renderState: RenderState, boardState: BoardState, tiles: Tile[]): void {
   for (const tile of tiles) {
     if (boardState.isObstacleTile(tile)) {
-      renderState.root.add(boulder(tile, boardState.tileHeight(tile)));
+      renderState.root.add(boulder(tile, visualHeight(boardState.tileHeight(tile))));
     }
   }
 }
@@ -102,8 +102,8 @@ function boulder(tile: Tile, height: number): THREE.Mesh {
 
 function movePlan(start: RenderUnit, target: HeightTile): THREE.Line {
   const points = [
-    new THREE.Vector3(start.x + 0.5, start.y + 0.5, start.height + 0.08),
-    new THREE.Vector3(target.x + 0.5, target.y + 0.5, target.height + 0.08),
+    new THREE.Vector3(start.x + 0.5, start.y + 0.5, visualHeight(start.height) + 0.08),
+    new THREE.Vector3(target.x + 0.5, target.y + 0.5, visualHeight(target.height) + 0.08),
   ];
   const line = new THREE.Line(
     new THREE.BufferGeometry().setFromPoints(points),
@@ -121,8 +121,8 @@ function unitMesh(unit: RenderUnit, isSelected: boolean): THREE.Group {
   );
   const body = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 10), material(unit.color));
 
-  base.position.z = unit.height + 0.06;
-  body.position.z = unit.height + 0.38;
+  base.position.z = visualHeight(unit.height) + 0.06;
+  body.position.z = visualHeight(unit.height) + 0.38;
   group.position.set(unit.x + 0.5, unit.y + 0.5, 0);
   group.add(base, body);
   return group;
@@ -149,6 +149,10 @@ function directionalLight(): THREE.DirectionalLight {
 
 function sameTile(first: Tile | null, second: Tile): boolean {
   return first?.x === second.x && first?.y === second.y;
+}
+
+function visualHeight(height: number): number {
+  return height * terrainHeight.visualScale;
 }
 
 function disposeGroup(group: THREE.Group): void {
