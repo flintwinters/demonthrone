@@ -15,9 +15,24 @@ export type Unit = Tile & {
   target: Tile | null;
 };
 
+export type Enemy = Tile & {
+  id: string;
+  color: string;
+};
+
+export type RenderPiece = Tile & {
+  id: string;
+  color: string;
+  height: number;
+};
+
 export type RenderUnit = Unit & {
   height: number;
   target: HeightTile | null;
+};
+
+export type RenderEnemy = Enemy & {
+  height: number;
 };
 
 export type TilePredicate = (tile: Tile) => boolean;
@@ -40,6 +55,7 @@ export type BoardState = {
   selectedTile: HeightTile | null;
   hoveredTile: HeightTile | null;
   units: RenderUnit[];
+  enemies: RenderEnemy[];
   isObstacleTile: TilePredicate;
   isBrushTile: TilePredicate;
   sightCost: TileSightCost;

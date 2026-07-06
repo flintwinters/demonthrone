@@ -62,6 +62,10 @@ export function commitPlannedMoves(): void {
     unit.y = unit.target.y;
     unit.target = null;
   }
+
+  if (selection.unitId && !selectedUnit()) {
+    selection.unitId = null;
+  }
 }
 
 function assignSelectedTarget(

@@ -45,6 +45,9 @@ export function commitPlannedMoves() {
         unit.y = unit.target.y;
         unit.target = null;
     }
+    if (selection.unitId && !selectedUnit()) {
+        selection.unitId = null;
+    }
 }
 function assignSelectedTarget(tile, canTargetTile) {
     const unit = selectedUnit();

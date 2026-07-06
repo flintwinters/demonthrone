@@ -7,7 +7,7 @@ import { tileStyle } from "./terrain-style.js";
 import { terrainSurface } from "./terrain-mesh.js";
 import { boulder, brush } from "./terrain-props.js";
 import { visibleTiles } from "./tiles.js";
-import type { BoardState, HeightTile, RenderUnit, Tile } from "./types.js";
+import type { BoardState, HeightTile, RenderEnemy, RenderPiece, RenderUnit, Tile } from "./types.js";
 
 type RenderState = {
   renderer: THREE.WebGLRenderer;
@@ -29,6 +29,7 @@ export function drawGrid(canvas: HTMLCanvasElement, boardState: BoardState): voi
   addTerrain(renderState, boardState, tiles);
   addObstacles(renderState, boardState, tiles);
   addPlannedUnits(renderState, boardState.units);
+  addEnemies(renderState, boardState.enemies);
   addUnits(renderState, boardState.units, boardState.selectedUnitId);
   renderState.renderer.render(renderState.scene, renderState.camera);
 }
@@ -98,6 +99,12 @@ function addUnits(renderState: RenderState, units: RenderUnit[], selectedUnitId:
   }
 }
 
+function addEnemies(renderState: RenderState, enemies: RenderEnemy[]): void {
+  for (const enemy of enemies) {
+    renderState.root.add(enemyMesh(enemy));
+  }
+}
+
 function addPlannedUnits(renderState: RenderState, units: RenderUnit[]): void {
   for (const unit of units) {
     if (unit.target) {
@@ -115,7 +122,7 @@ function plannedUnit(unit: RenderUnit, target: HeightTile): RenderUnit {
   };
 }
 
-function unitMesh(unit: RenderUnit, isSelected: boolean, opacity: number): THREE.Group {
+function unitMesh(unit: RenderPiece, isSelected: boolean, opacity: number): THREE.Group {
   const group = new THREE.Group();
   const base = new THREE.Mesh(
     new THREE.CylinderGeometry(0.34, 0.38, 0.12, 16),
@@ -126,6 +133,18 @@ function unitMesh(unit: RenderUnit, isSelected: boolean, opacity: number): THREE
   base.position.z = visualHeight(unit.height) + 0.06;
   body.position.z = visualHeight(unit.height) + 0.38;
   group.position.set(unit.x + 0.5, unit.y + 0.5, 0);
+  group.add(base, body);
+  return group;
+}
+
+function enemyMesh(enemy: RenderEnemy): THREE.Group {
+  const group = new THREE.Group();
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.34, 0.1, 6), material(colors.unitBase));
+  const body = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.5, 5), material(enemy.color));
+
+  base.position.z = visualHeight(enemy.height) + 0.05;
+  body.position.z = visualHeight(enemy.height) + 0.34;
+  group.position.set(enemy.x + 0.5, enemy.y + 0.5, 0);
   group.add(base, body);
   return group;
 }

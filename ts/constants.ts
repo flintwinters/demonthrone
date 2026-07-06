@@ -56,4 +56,5 @@ export const colors = {
   unitBase: "#1d2021",
   unitOne: "#fb4934",
   unitTwo: "#b8bb26",
+  enemy: "#d3869b",
 };
