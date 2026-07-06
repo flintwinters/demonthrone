@@ -3,7 +3,6 @@ import { colors } from "./constants.js";
 const materials = new Map();
 const transparentMaterials = new Map();
 const terrainMaterials = new Map();
-const spriteMaterials = new Map();
 export const edgeMaterial = new THREE.LineBasicMaterial({
     color: colors.tileEdge,
     transparent: true,
@@ -48,19 +47,5 @@ export function terrainMaterial(color) {
         polygonOffsetUnits: 1,
     });
     terrainMaterials.set(key, created);
-    return created;
-}
-export function spriteMaterial(texture) {
-    const existing = spriteMaterials.get(texture.id);
-    if (existing) {
-        return existing;
-    }
-    const created = new THREE.MeshBasicMaterial({
-        map: texture,
-        alphaTest: 0.5,
-        side: THREE.DoubleSide,
-        transparent: true,
-    });
-    spriteMaterials.set(texture.id, created);
     return created;
 }
