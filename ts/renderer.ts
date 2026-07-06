@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { configureViewCamera, createViewCamera } from "./camera.js";
+import { configureViewCamera, createViewCamera, devicePixelRatio } from "./camera.js";
 import { colors, terrainHeight } from "./constants.js";
 import { material } from "./render-materials.js";
 import { terrainSurface, tileKey, type TerrainStyle } from "./terrain-mesh.js";
@@ -32,7 +32,7 @@ export function drawGrid(canvas: HTMLCanvasElement, boardState: BoardState): voi
 
 function initializeRenderer(canvas: HTMLCanvasElement): RenderState {
   if (state.current) {
-    state.current.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+    configureRendererSize(state.current.renderer, canvas);
     return state.current;
   }
 
@@ -43,12 +43,18 @@ function initializeRenderer(canvas: HTMLCanvasElement): RenderState {
     root: new THREE.Group(),
   };
 
+  configureRendererSize(renderState.renderer, canvas);
   renderState.renderer.setClearColor(colors.background, 1);
   renderState.scene.add(renderState.root);
   renderState.scene.add(new THREE.HemisphereLight(colors.tileStroke, colors.background, 1.7));
   renderState.scene.add(directionalLight());
   state.current = renderState;
   return renderState;
+}
+
+function configureRendererSize(renderer: THREE.WebGLRenderer, canvas: HTMLCanvasElement): void {
+  renderer.setPixelRatio(devicePixelRatio());
+  renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 }
 
 function resetRoot(renderState: RenderState): void {
