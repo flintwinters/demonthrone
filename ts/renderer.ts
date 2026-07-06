@@ -137,16 +137,11 @@ function unitMesh(unit: RenderPiece, isSelected: boolean, opacity: number): THRE
   return group;
 }
 
-function enemyMesh(enemy: RenderEnemy): THREE.Group {
-  const group = new THREE.Group();
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.34, 0.1, 6), material(colors.unitBase));
-  const body = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.5, 5), material(enemy.color));
+function enemyMesh(enemy: RenderEnemy): THREE.Mesh {
+  const mesh = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.5, 5), material(enemy.color));
 
-  base.position.z = visualHeight(enemy.height) + 0.05;
-  body.position.z = visualHeight(enemy.height) + 0.34;
-  group.position.set(enemy.x + 0.5, enemy.y + 0.5, 0);
-  group.add(base, body);
-  return group;
+  mesh.position.set(enemy.x + 0.5, enemy.y + 0.5, visualHeight(enemy.height) + 0.25);
+  return mesh;
 }
 
 function unitMaterial(color: string, opacity: number): THREE.MeshLambertMaterial {
