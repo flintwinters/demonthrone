@@ -5,6 +5,7 @@
 </div>
 
 Demonthrone is a tactical, turn-based roguelike where you command a team of adventurers through a procedurally generated world. Each character has unique stats and skills. Navigate through forests and across rivers, battling enemies and gathering resources. The game features a dynamic fog of war system, requiring careful exploration and positioning of your team to succeed.
+- Squad / Party based Roguelike
 
 ## todo
 

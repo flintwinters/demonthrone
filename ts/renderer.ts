@@ -1,10 +1,10 @@
 import * as THREE from "three";
 import { configureViewCamera, createViewCamera, devicePixelRatio } from "./camera.js";
 import { colors, terrainHeight } from "./constants.js";
-import { material } from "./render-materials.js";
+import { material, transparentMaterial } from "./render-materials.js";
 import { terrainSurface, tileKey, type TerrainStyle } from "./terrain-mesh.js";
 import { visibleTiles } from "./tiles.js";
-import type { BoardState, RenderUnit, Tile } from "./types.js";
+import type { BoardState, HeightTile, RenderUnit, Tile } from "./types.js";
 
 type RenderState = {
   renderer: THREE.WebGLRenderer;
@@ -25,6 +25,7 @@ export function drawGrid(canvas: HTMLCanvasElement, boardState: BoardState): voi
   resetRoot(renderState);
   addTerrain(renderState, boardState, tiles);
   addObstacles(renderState, boardState, tiles);
+  addPlannedUnits(renderState, boardState.units);
   addUnits(renderState, boardState.units, boardState.selectedUnitId);
   renderState.renderer.render(renderState.scene, renderState.camera);
 }
@@ -84,8 +85,25 @@ function addObstacles(renderState: RenderState, boardState: BoardState, tiles: T
 
 function addUnits(renderState: RenderState, units: RenderUnit[], selectedUnitId: string | null): void {
   for (const unit of units) {
-    renderState.root.add(unitMesh(unit, unit.id === selectedUnitId));
+    renderState.root.add(unitMesh(unit, unit.id === selectedUnitId, 1));
   }
+}
+
+function addPlannedUnits(renderState: RenderState, units: RenderUnit[]): void {
+  for (const unit of units) {
+    if (unit.target) {
+      renderState.root.add(unitMesh(plannedUnit(unit, unit.target), false, 0.42));
+    }
+  }
+}
+
+function plannedUnit(unit: RenderUnit, target: HeightTile): RenderUnit {
+  return {
+    ...unit,
+    x: target.x,
+    y: target.y,
+    height: target.height,
+  };
 }
 
 function boulder(tile: Tile, height: number): THREE.Mesh {
@@ -97,19 +115,23 @@ function boulder(tile: Tile, height: number): THREE.Mesh {
   return mesh;
 }
 
-function unitMesh(unit: RenderUnit, isSelected: boolean): THREE.Group {
+function unitMesh(unit: RenderUnit, isSelected: boolean, opacity: number): THREE.Group {
   const group = new THREE.Group();
   const base = new THREE.Mesh(
     new THREE.CylinderGeometry(0.34, 0.38, 0.12, 16),
-    material(isSelected ? colors.selectedTileStroke : colors.unitBase),
+    unitMaterial(isSelected ? colors.selectedTileStroke : colors.unitBase, opacity),
   );
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 10), material(unit.color));
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 10), unitMaterial(unit.color, opacity));
 
   base.position.z = visualHeight(unit.height) + 0.06;
   body.position.z = visualHeight(unit.height) + 0.38;
   group.position.set(unit.x + 0.5, unit.y + 0.5, 0);
   group.add(base, body);
   return group;
+}
+
+function unitMaterial(color: string, opacity: number): THREE.MeshLambertMaterial {
+  return opacity < 1 ? transparentMaterial(color, opacity) : material(color);
 }
 
 function tileStyle(tile: Tile, boardState: BoardState): TerrainStyle {

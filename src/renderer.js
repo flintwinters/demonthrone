@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { configureViewCamera, createViewCamera, devicePixelRatio } from "./camera.js";
 import { colors, terrainHeight } from "./constants.js";
-import { material } from "./render-materials.js";
+import { material, transparentMaterial } from "./render-materials.js";
 import { terrainSurface, tileKey } from "./terrain-mesh.js";
 import { visibleTiles } from "./tiles.js";
 const state = {
@@ -14,6 +14,7 @@ export function drawGrid(canvas, boardState) {
     resetRoot(renderState);
     addTerrain(renderState, boardState, tiles);
     addObstacles(renderState, boardState, tiles);
+    addPlannedUnits(renderState, boardState.units);
     addUnits(renderState, boardState.units, boardState.selectedUnitId);
     renderState.renderer.render(renderState.scene, renderState.camera);
 }
@@ -63,8 +64,23 @@ function addObstacles(renderState, boardState, tiles) {
 }
 function addUnits(renderState, units, selectedUnitId) {
     for (const unit of units) {
-        renderState.root.add(unitMesh(unit, unit.id === selectedUnitId));
+        renderState.root.add(unitMesh(unit, unit.id === selectedUnitId, 1));
     }
+}
+function addPlannedUnits(renderState, units) {
+    for (const unit of units) {
+        if (unit.target) {
+            renderState.root.add(unitMesh(plannedUnit(unit, unit.target), false, 0.42));
+        }
+    }
+}
+function plannedUnit(unit, target) {
+    return {
+        ...unit,
+        x: target.x,
+        y: target.y,
+        height: target.height,
+    };
 }
 function boulder(tile, height) {
     const geometry = new THREE.DodecahedronGeometry(0.34, 0);
@@ -73,15 +89,18 @@ function boulder(tile, height) {
     mesh.rotation.set(0.3, 0.1, tile.x * 0.7 + tile.y * 0.2);
     return mesh;
 }
-function unitMesh(unit, isSelected) {
+function unitMesh(unit, isSelected, opacity) {
     const group = new THREE.Group();
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.38, 0.12, 16), material(isSelected ? colors.selectedTileStroke : colors.unitBase));
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 10), material(unit.color));
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.38, 0.12, 16), unitMaterial(isSelected ? colors.selectedTileStroke : colors.unitBase, opacity));
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 10), unitMaterial(unit.color, opacity));
     base.position.z = visualHeight(unit.height) + 0.06;
     body.position.z = visualHeight(unit.height) + 0.38;
     group.position.set(unit.x + 0.5, unit.y + 0.5, 0);
     group.add(base, body);
     return group;
+}
+function unitMaterial(color, opacity) {
+    return opacity < 1 ? transparentMaterial(color, opacity) : material(color);
 }
 function tileStyle(tile, boardState) {
     if (isPlannedMoveTarget(tile, boardState.units)) {
