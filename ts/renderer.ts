@@ -124,16 +124,11 @@ function plannedUnit(unit: RenderUnit, target: HeightTile): RenderUnit {
 
 function unitMesh(unit: RenderPiece, isSelected: boolean, opacity: number): THREE.Group {
   const group = new THREE.Group();
-  const base = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.34, 0.38, 0.12, 16),
-    unitMaterial(isSelected ? colors.selectedTileStroke : colors.unitBase, opacity),
-  );
   const body = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 10), unitMaterial(unit.color, opacity));
 
-  base.position.z = visualHeight(unit.height) + 0.06;
   body.position.z = visualHeight(unit.height) + 0.38;
   group.position.set(unit.x + 0.5, unit.y + 0.5, 0);
-  group.add(base, body);
+  group.add(body);
   return group;
 }
 
@@ -141,6 +136,7 @@ function enemyMesh(enemy: RenderEnemy): THREE.Mesh {
   const mesh = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.5, 5), material(enemy.color));
 
   mesh.position.set(enemy.x + 0.5, enemy.y + 0.5, visualHeight(enemy.height) + 0.25);
+  mesh.rotation.x = Math.PI / 2;
   return mesh;
 }
 
