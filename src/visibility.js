@@ -1,21 +1,19 @@
-export function isVisibleTile(tile, units, isObstacleTile) {
-    return units.some((unit) => canUnitSeeTile(unit, tile, isObstacleTile));
+export function isVisibleTile(tile, units, sightCost) {
+    return units.some((unit) => canUnitSeeTile(unit, tile, sightCost));
 }
 export function l1Distance(first, second) {
     return Math.abs(first.x - second.x) + Math.abs(first.y - second.y);
 }
-function canUnitSeeTile(unit, tile, isObstacleTile) {
-    return l1Distance(unit, tile) <= unit.lineOfSight
-        && hasOpenSightLine(unit, tile, isObstacleTile);
+function canUnitSeeTile(unit, tile, sightCost) {
+    return sightDistance(unit, tile, sightCost) <= unit.lineOfSight;
 }
-function hasOpenSightLine(start, end, isObstacleTile) {
+function sightDistance(start, end, sightCost) {
     const steps = Math.max(Math.abs(end.x - start.x), Math.abs(end.y - start.y));
+    let cost = l1Distance(start, end);
     for (let step = 1; step < steps; step += 1) {
-        if (isObstacleTile(linePoint(start, end, step, steps))) {
-            return false;
-        }
+        cost += sightCost(linePoint(start, end, step, steps)) - 1;
     }
-    return true;
+    return cost;
 }
 function linePoint(start, end, step, steps) {
     return {

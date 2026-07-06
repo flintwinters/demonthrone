@@ -5,6 +5,10 @@ const boulderLayer = {
     scale: 0.23,
     threshold: 0.66,
 };
+const brushLayer = {
+    scale: 0.31,
+    threshold: 0.62,
+};
 const heightLayer = {
     scale: 0.12,
     seed: worldSeed ^ 0x1234,
@@ -18,18 +22,29 @@ const terrain = {
         kind: "floor",
         blocksMovement: false,
         blocksSight: false,
+        sightCost: 1,
     },
     boulder: {
         kind: "boulder",
         blocksMovement: true,
         blocksSight: true,
+        sightCost: Number.POSITIVE_INFINITY,
+    },
+    brush: {
+        kind: "brush",
+        blocksMovement: false,
+        blocksSight: false,
+        sightCost: 2,
     },
 };
 export function tileTerrain(tile) {
     if (isSafeTile(tile)) {
         return terrain.floor;
     }
-    return isBoulderTile(tile) ? terrain.boulder : terrain.floor;
+    if (isBoulderTile(tile)) {
+        return terrain.boulder;
+    }
+    return isBrushTile(tile) ? terrain.brush : terrain.floor;
 }
 export function isObstacleTile(tile) {
     return tileTerrain(tile).blocksMovement;
@@ -37,8 +52,14 @@ export function isObstacleTile(tile) {
 export function isSightBlockingTile(tile) {
     return tileTerrain(tile).blocksSight;
 }
+export function sightCost(tile) {
+    return tileTerrain(tile).sightCost;
+}
 export function isBoulderTile(tile) {
     return boulderNoise(tile) > boulderLayer.threshold;
+}
+export function isBrushTile(tile) {
+    return !isSafeTile(tile) && !isBoulderTile(tile) && brushNoise(tile) > brushLayer.threshold;
 }
 export function tileHeight(tile) {
     const range = terrainHeight.max - terrainHeight.min;
@@ -47,6 +68,9 @@ export function tileHeight(tile) {
 }
 function boulderNoise(tile) {
     return perlinNoise2d(tile.x * boulderLayer.scale, tile.y * boulderLayer.scale, worldSeed);
+}
+function brushNoise(tile) {
+    return perlinNoise2d(tile.x * brushLayer.scale, tile.y * brushLayer.scale, worldSeed ^ 0x4b1d);
 }
 function isSafeTile(tile) {
     return safeZones.some((zone) => l1Distance(tile, zone) <= zone.radius);

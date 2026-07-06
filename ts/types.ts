@@ -22,6 +22,7 @@ export type RenderUnit = Unit & {
 
 export type TilePredicate = (tile: Tile) => boolean;
 export type TileHeight = (tile: Tile) => number;
+export type TileSightCost = (tile: Tile) => number;
 
 export type ScreenPoint = {
   x: number;
@@ -40,6 +41,8 @@ export type BoardState = {
   hoveredTile: HeightTile | null;
   units: RenderUnit[];
   isObstacleTile: TilePredicate;
+  isBrushTile: TilePredicate;
+  sightCost: TileSightCost;
   selectedUnitId: string | null;
   tileHeight: TileHeight;
   isMovementTile: TilePredicate;

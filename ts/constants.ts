@@ -43,6 +43,8 @@ export const colors = {
   movementTileSideRight: "#4c7f73",
   movementTileStroke: "#8ec07c",
   moveTarget: "#458588",
+  brush: "#79740e",
+  brushDark: "#3c3836",
   boulder: "#665c54",
   boulderShadow: "#1d2021",
   boulderTop: "#928374",

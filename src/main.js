@@ -5,7 +5,7 @@ import { canReachTile } from "./movement.js";
 import { isObstacleTile } from "./obstacles.js";
 import { drawGrid } from "./renderer.js";
 import { connectRotationControls } from "./rotation-controls.js";
-import { isSightBlockingTile, tileHeight } from "./world.js";
+import { isBrushTile, sightCost, tileHeight } from "./world.js";
 import { clickBoardTile, commitPlannedMoves, plannedUnits, selection, selectedUnit, units, } from "./units.js";
 import { isVisibleTile, l1Distance } from "./visibility.js";
 const unitPickRadius = 30;
@@ -52,6 +52,8 @@ function boardState() {
         hoveredTile,
         units: renderableUnits(),
         isObstacleTile,
+        isBrushTile,
+        sightCost,
         selectedUnitId: selection.unitId,
         tileHeight,
         isMovementTile: canSelectedUnitMoveTo,
@@ -59,7 +61,7 @@ function boardState() {
     };
 }
 function canSeeTile(tile) {
-    return isVisibleTile(tile, units, isSightBlockingTile);
+    return isVisibleTile(tile, units, sightCost);
 }
 function canSelectedUnitMoveTo(tile) {
     const unit = selectedUnit();

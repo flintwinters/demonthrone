@@ -4,12 +4,13 @@ import { colors, terrainHeight } from "./constants.js";
 import { material, transparentMaterial } from "./render-materials.js";
 import { tileStyle } from "./terrain-style.js";
 import { terrainSurface, tileKey } from "./terrain-mesh.js";
+import { boulder, brush } from "./terrain-props.js";
 import { visibleTiles } from "./tiles.js";
 const state = {
     current: null,
 };
 export function drawGrid(canvas, boardState) {
-    const tiles = visibleTiles(boardState.units, boardState.isObstacleTile);
+    const tiles = visibleTiles(boardState.units, boardState.sightCost);
     const renderState = initializeRenderer(canvas);
     configureViewCamera(canvas, renderState.camera);
     resetRoot(renderState);
@@ -63,6 +64,9 @@ function addObstacles(renderState, boardState, tiles) {
         if (boardState.isObstacleTile(tile)) {
             renderState.root.add(boulder(tile, visualHeight(boardState.tileHeight(tile))));
         }
+        if (boardState.isBrushTile(tile)) {
+            renderState.root.add(brush(tile, visualHeight(boardState.tileHeight(tile))));
+        }
     }
 }
 function addUnits(renderState, units, selectedUnitId) {
@@ -84,13 +88,6 @@ function plannedUnit(unit, target) {
         y: target.y,
         height: target.height,
     };
-}
-function boulder(tile, height) {
-    const geometry = new THREE.DodecahedronGeometry(0.34, 0);
-    const mesh = new THREE.Mesh(geometry, material(colors.boulder));
-    mesh.position.set(tile.x + 0.5, tile.y + 0.5, height + 0.32);
-    mesh.rotation.set(0.3, 0.1, tile.x * 0.7 + tile.y * 0.2);
-    return mesh;
 }
 function unitMesh(unit, isSelected, opacity) {
     const group = new THREE.Group();
