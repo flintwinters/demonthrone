@@ -82,7 +82,7 @@ function boardState(): BoardState {
 }
 
 function canSeeTile(tile: Tile): boolean {
-  return isVisibleTile(tile, units, sightCost);
+  return isVisibleTile(tile, units, sightCost, tileHeight);
 }
 
 function canSelectedUnitMoveTo(tile: Tile): boolean {

@@ -1,28 +1,30 @@
-import { l1Distance, isVisibleTile } from "./visibility.js";
-export function visibleTiles(units, sightCost) {
+import { isVisibleTile, l1Distance, sightSearchRadius } from "./visibility.js";
+export function visibleTiles(units, sightCost, tileHeight) {
     const seen = new Set();
     const tiles = [];
     for (const unit of units) {
-        appendVisibleTiles(unit, units, sightCost, seen, tiles);
+        appendVisibleTiles(unit, units, sightCost, tileHeight, seen, tiles);
     }
     return tiles;
 }
-function appendVisibleTiles(unit, units, sightCost, seen, tiles) {
-    for (let y = unit.y - unit.lineOfSight; y <= unit.y + unit.lineOfSight; y += 1) {
-        appendVisibleRow(unit, units, sightCost, y, seen, tiles);
+function appendVisibleTiles(unit, units, sightCost, tileHeight, seen, tiles) {
+    const radius = sightSearchRadius(unit.lineOfSight);
+    for (let y = unit.y - radius; y <= unit.y + radius; y += 1) {
+        appendVisibleRow(unit, units, sightCost, tileHeight, y, seen, tiles);
     }
 }
-function appendVisibleRow(unit, units, sightCost, y, seen, tiles) {
-    for (let x = unit.x - unit.lineOfSight; x <= unit.x + unit.lineOfSight; x += 1) {
-        appendVisibleTile(unit, units, sightCost, { x, y }, seen, tiles);
+function appendVisibleRow(unit, units, sightCost, tileHeight, y, seen, tiles) {
+    const radius = sightSearchRadius(unit.lineOfSight);
+    for (let x = unit.x - radius; x <= unit.x + radius; x += 1) {
+        appendVisibleTile(unit, units, sightCost, tileHeight, { x, y }, seen, tiles);
     }
 }
-function appendVisibleTile(unit, units, sightCost, tile, seen, tiles) {
+function appendVisibleTile(unit, units, sightCost, tileHeight, tile, seen, tiles) {
     const key = `${tile.x}:${tile.y}`;
-    if (seen.has(key) || l1Distance(unit, tile) > unit.lineOfSight) {
+    if (seen.has(key) || l1Distance(unit, tile) > sightSearchRadius(unit.lineOfSight)) {
         return;
     }
-    if (!isVisibleTile(tile, units, sightCost)) {
+    if (!isVisibleTile(tile, units, sightCost, tileHeight)) {
         return;
     }
     seen.add(key);

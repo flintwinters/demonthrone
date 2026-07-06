@@ -117,8 +117,8 @@ function handlePointerRotate(canvas, activePointers, pointerId, rotateStart, onV
     const center = viewportCenter(canvas);
     const dx = point.x - rotateStart.pointerX;
     const dy = point.y - rotateStart.pointerY;
-    const nextRotation = rotateStart.rotation + dy * mouseRotateSpeed;
-    const nextElevation = rotateStart.elevation + dx * mousePitchSpeed;
+    const nextRotation = rotateStart.rotation + dx * mouseRotateSpeed;
+    const nextElevation = rotateStart.elevation - dy * mousePitchSpeed;
     rotateAt(canvas, center.x, center.y, nextRotation, nextElevation);
     onViewChange();
 }

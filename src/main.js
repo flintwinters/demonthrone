@@ -62,7 +62,7 @@ function boardState() {
     };
 }
 function canSeeTile(tile) {
-    return isVisibleTile(tile, units, sightCost);
+    return isVisibleTile(tile, units, sightCost, tileHeight);
 }
 function canSelectedUnitMoveTo(tile) {
     const unit = selectedUnit();
