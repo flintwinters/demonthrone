@@ -1,4 +1,5 @@
-import { devicePixelRatio } from "./camera.js";
+import { devicePixelRatio, gridFromScreen, screenFromGrid, view } from "./camera.js";
+import { terrainHeight } from "./constants.js";
 import { connectInput } from "./input.js";
 import { canReachTile } from "./movement.js";
 import { isObstacleTile } from "./obstacles.js";
@@ -7,6 +8,9 @@ import { connectRotationControls } from "./rotation-controls.js";
 import { isSightBlockingTile, tileHeight } from "./world.js";
 import { clickBoardTile, commitPlannedMoves, plannedUnits, selection, selectedUnit, units, } from "./units.js";
 import { isVisibleTile, l1Distance } from "./visibility.js";
+const unitPickRadius = 30;
+const unitPickMinRadius = 18;
+const unitPickHeight = 0.3;
 const canvas = requiredElement("#grid");
 const goButton = requiredElement("#go");
 const rotateLeftButton = requiredElement("#rotate-left");
@@ -29,6 +33,9 @@ function resize() {
 function selectTile(tile) {
     selectedTile = tile && canSeeTile(tile) ? clickBoardTile(enrichTile(tile), canMoveToTile) : null;
     draw();
+}
+function pickSelectableTile(point) {
+    return pickUnitTile(point) ?? terrainTileAt(point);
 }
 function boardState() {
     return {
@@ -55,6 +62,24 @@ function canMoveToTile(tile, unit) {
         && distance <= unit.movement
         && canReachTile(unit, tile, unit.movement, isMovementBlocked);
 }
+function pickUnitTile(point) {
+    let nearest = null;
+    let nearestDistance = pickRadius();
+    for (const unit of units) {
+        if (!canSeeTile(unit)) {
+            continue;
+        }
+        const distance = screenDistance(point, unitScreenPoint(unit));
+        if (distance < nearestDistance) {
+            nearest = unit;
+            nearestDistance = distance;
+        }
+    }
+    return nearest ? { x: nearest.x, y: nearest.y } : null;
+}
+function terrainTileAt(point) {
+    return gridFromScreen(canvas, point.x, point.y, tileHeight);
+}
 function renderableUnits() {
     return units.map((unit) => ({
         ...unit,
@@ -74,6 +99,18 @@ function isMovementBlocked(tile) {
 function isOccupiedTile(tile) {
     return units.some((unit) => unit.x === tile.x && unit.y === tile.y);
 }
+function unitScreenPoint(unit) {
+    return screenFromGrid(canvas, unit.x + 0.5, unit.y + 0.5, visualHeight(tileHeight(unit)) + unitPickHeight);
+}
+function screenDistance(first, second) {
+    return Math.hypot(first.x - second.x, first.y - second.y);
+}
+function pickRadius() {
+    return Math.max(unitPickMinRadius, unitPickRadius * view.zoom);
+}
+function visualHeight(height) {
+    return height * terrainHeight.visualScale;
+}
 function syncGoButton() {
     goButton.hidden = plannedUnits().length === 0;
 }
@@ -90,7 +127,7 @@ function handleKeyDown(event) {
         go();
     }
 }
-connectInput(canvas, selectTile, draw, tileHeight);
+connectInput(canvas, selectTile, draw, tileHeight, pickSelectableTile);
 connectRotationControls(canvas, { left: rotateLeftButton, right: rotateRightButton }, draw);
 goButton.addEventListener("click", go);
 window.addEventListener("keydown", handleKeyDown);

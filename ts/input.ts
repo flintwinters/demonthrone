@@ -3,6 +3,8 @@ import { dragThreshold, mouseRotateSpeed, wheelDeltaLineMode } from "./constants
 import { endPinch, handlePinch, startPinch, type PinchStart } from "./pinch.js";
 import type { PointerMap, ScreenPoint, Tile, TileHeight } from "./types.js";
 
+type ScreenTilePicker = (point: ScreenPoint) => Tile;
+
 type DragStart = {
   pointerId: number;
   pointerX: number;
@@ -23,6 +25,7 @@ export function connectInput(
   onSelectTile: (tile: Tile) => void,
   onViewChange: () => void,
   heightAt: TileHeight | null = null,
+  screenTileAt: ScreenTilePicker | null = null,
 ): void {
   const activePointers: PointerMap = new Map();
   let dragStart: DragStart | null = null;
@@ -85,7 +88,7 @@ export function connectInput(
     }
 
     if (dragStart?.pointerId === event.pointerId) {
-      selectTile(canvas, event, dragStart, onSelectTile, heightAt);
+      selectTile(canvas, event, dragStart, onSelectTile, heightAt, screenTileAt);
       dragStart = null;
     }
   }
@@ -187,13 +190,14 @@ function selectTile(
   dragStart: DragStart,
   onSelectTile: (tile: Tile) => void,
   heightAt: TileHeight | null,
+  screenTileAt: ScreenTilePicker | null,
 ): void {
   if (dragStart.moved) {
     return;
   }
 
   const point = pointerPosition(canvas, event);
-  const grid = gridFromScreen(canvas, point.x, point.y, heightAt);
+  const grid = screenTileAt ? screenTileAt(point) : gridFromScreen(canvas, point.x, point.y, heightAt);
   onSelectTile(grid);
 }
 
