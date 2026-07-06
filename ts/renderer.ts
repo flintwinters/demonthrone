@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { configureViewCamera, createViewCamera } from "./camera.js";
 import { colors, terrainHeight } from "./constants.js";
+import { edgeMaterial, material, terrainMaterial } from "./render-materials.js";
 import { visibleTiles } from "./tiles.js";
 import type { BoardState, HeightTile, RenderUnit, Tile } from "./types.js";
 
@@ -19,12 +20,6 @@ type TileStyle = {
 const state: { current: RenderState | null } = {
   current: null,
 };
-const materials: Map<string, THREE.MeshLambertMaterial> = new Map();
-const edgeMaterial = new THREE.LineBasicMaterial({
-  color: colors.tileEdge,
-  transparent: true,
-  opacity: 0.38,
-});
 
 export function drawGrid(canvas: HTMLCanvasElement, boardState: BoardState): void {
   const tiles = visibleTiles(boardState.units, boardState.isObstacleTile);
@@ -159,10 +154,10 @@ function tileStyle(tile: Tile, boardState: BoardState): TileStyle {
 }
 
 function columnMaterials(style: TileStyle): THREE.Material[] {
-  const side = material(style.side);
-  const top = material(style.top);
+  const side = terrainMaterial(style.side);
+  const top = terrainMaterial(style.top);
 
-  return [side, side, side, side, top, material(colors.tileBottom)];
+  return [side, side, side, side, top, terrainMaterial(colors.tileBottom)];
 }
 
 function columnEdges(mesh: THREE.Mesh): THREE.LineSegments {
@@ -186,19 +181,6 @@ function heightDepth(height: number): number {
 
 function sameTile(first: Tile | null, second: Tile): boolean {
   return first?.x === second.x && first?.y === second.y;
-}
-
-function material(color: string): THREE.MeshLambertMaterial {
-  const existing = materials.get(color);
-
-  if (existing) {
-    return existing;
-  }
-
-  const created = new THREE.MeshLambertMaterial({ color });
-
-  materials.set(color, created);
-  return created;
 }
 
 function disposeGroup(group: THREE.Group): void {
