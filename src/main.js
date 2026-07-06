@@ -10,7 +10,7 @@ import { drawGrid } from "./renderer.js";
 import { connectRotationControls } from "./rotation-controls.js";
 import { connectViewCube } from "./view-cube.js";
 import { tileHeight } from "./world.js";
-import { clickBoardTile, commitPlannedMoves, plannedUnits, selection, selectedUnit, units, } from "./units.js";
+import { clickBoardTile, commitPlannedMoves, selection, selectedUnit, units, } from "./units.js";
 const unitPickRadius = 30;
 const unitPickMinRadius = 18;
 const unitPickHeight = 0.3;
@@ -101,10 +101,10 @@ function visualHeight(height) {
     return height * terrainHeight.visualScale;
 }
 function syncGoButton() {
-    goButton.hidden = plannedUnits().length === 0;
+    goButton.hidden = units.length === 0;
 }
 function go() {
-    if (plannedUnits().length === 0) {
+    if (units.length === 0) {
         return;
     }
     commitPlannedMoves();

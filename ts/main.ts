@@ -13,7 +13,6 @@ import { tileHeight } from "./world.js";
 import {
   clickBoardTile,
   commitPlannedMoves,
-  plannedUnits,
   selection,
   selectedUnit,
   units,
@@ -142,11 +141,11 @@ function visualHeight(height: number): number {
 }
 
 function syncGoButton(): void {
-  goButton.hidden = plannedUnits().length === 0;
+  goButton.hidden = units.length === 0;
 }
 
 function go(): void {
-  if (plannedUnits().length === 0) {
+  if (units.length === 0) {
     return;
   }
 
