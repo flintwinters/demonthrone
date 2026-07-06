@@ -19,11 +19,10 @@ const canvas = document.querySelector("#grid");
 const goButton = document.querySelector("#go");
 const rotateLeftButton = document.querySelector("#rotate-left");
 const rotateRightButton = document.querySelector("#rotate-right");
-const context = canvas.getContext("2d");
 let selectedTile = null;
 
 function draw() {
-  drawGrid(canvas, context, boardState());
+  drawGrid(canvas, boardState());
   syncGoButton();
 }
 
@@ -36,7 +35,6 @@ function resize() {
   canvas.style.height = `${height}px`;
   canvas.width = Math.floor(width * pixelRatio);
   canvas.height = Math.floor(height * pixelRatio);
-  context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
   draw();
 }
 

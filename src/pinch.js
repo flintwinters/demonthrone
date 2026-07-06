@@ -21,6 +21,7 @@ export function handlePinch(canvas, activePointers, pinchStart, onViewChange) {
   }
 
   zoomAt(
+    canvas,
     pinch.centerX,
     pinch.centerY,
     pinchStart.zoom * (pinch.distance / pinchStart.distance),

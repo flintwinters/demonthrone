@@ -1,136 +1,173 @@
-import { viewportSize, view } from "./camera.js";
-import { colors } from "./constants.js";
-import { drawTerrain } from "./terrain-renderer.js";
+import * as THREE from "three";
+import { configureViewCamera, createViewCamera } from "./camera.js";
+import { colors, terrainHeight } from "./constants.js";
 import { visibleTiles } from "./tiles.js";
-import { screenDiamond, tileCenter } from "./voxel-renderer.js";
 
-export function drawGrid(canvas, context, boardState) {
-  const { width, height } = viewportSize(canvas);
+const state = {
+  renderer: null,
+  scene: null,
+  camera: null,
+  root: null,
+};
+const materials = new Map();
+
+export function drawGrid(canvas, boardState) {
   const tiles = visibleTiles(boardState.units, boardState.isObstacleTile);
 
-  context.clearRect(0, 0, width, height);
-  context.fillStyle = colors.background;
-  context.fillRect(0, 0, width, height);
-
-  drawTerrain(canvas, context, boardState, tiles, tileStyle);
-  drawObstacles(canvas, context, boardState, tiles);
-  drawMovePlans(canvas, context, boardState.units);
-  drawUnits(canvas, context, boardState.units, boardState.selectedUnitId);
+  initializeRenderer(canvas);
+  configureViewCamera(canvas, state.camera);
+  resetRoot();
+  addTerrain(boardState, tiles);
+  addObstacles(boardState, tiles);
+  addMovePlans(boardState.units);
+  addUnits(boardState.units, boardState.selectedUnitId);
+  state.renderer.render(state.scene, state.camera);
 }
 
-function tileStyle(gridPoint, boardState) {
-  if (sameTile(boardState.selectedTile, gridPoint)) {
-    return {
-      fill: colors.selectedTile,
-      stroke: colors.selectedTileStroke,
-      lineWidth: 2,
-    };
+function initializeRenderer(canvas) {
+  if (state.renderer) {
+    state.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+    return;
   }
 
-  if (boardState.isMovementTile(gridPoint)) {
-    return {
-      fill: colors.movementTile,
-      sideLeft: colors.movementTileSideLeft,
-      sideRight: colors.movementTileSideRight,
-      stroke: colors.movementTileStroke,
-      lineWidth: 2,
-    };
+  state.renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
+  state.renderer.setClearColor(colors.background, 1);
+  state.scene = new THREE.Scene();
+  state.camera = createViewCamera();
+  state.root = new THREE.Group();
+  state.scene.add(state.root);
+  state.scene.add(new THREE.HemisphereLight(colors.tileStroke, colors.background, 1.7));
+  state.scene.add(directionalLight());
+}
+
+function resetRoot() {
+  disposeGroup(state.root);
+  state.scene.remove(state.root);
+  state.root = new THREE.Group();
+  state.scene.add(state.root);
+}
+
+function addTerrain(boardState, tiles) {
+  for (const tile of tiles) {
+    const height = boardState.tileHeight(tile);
+    const style = tileStyle(tile, boardState);
+
+    state.root.add(terrainColumn(tile, height, style));
+  }
+}
+
+function addObstacles(boardState, tiles) {
+  for (const tile of tiles) {
+    if (boardState.isObstacleTile(tile)) {
+      state.root.add(boulder(tile, boardState.tileHeight(tile)));
+    }
+  }
+}
+
+function addMovePlans(units) {
+  for (const unit of units) {
+    if (unit.target) {
+      state.root.add(movePlan(unit, unit.target));
+    }
+  }
+}
+
+function addUnits(units, selectedUnitId) {
+  for (const unit of units) {
+    state.root.add(unitMesh(unit, unit.id === selectedUnitId));
+  }
+}
+
+function terrainColumn(tile, height, style) {
+  const depth = heightDepth(height);
+  const geometry = new THREE.BoxGeometry(1, 1, depth);
+  const mesh = new THREE.Mesh(geometry, columnMaterials(style));
+
+  mesh.position.set(tile.x + 0.5, tile.y + 0.5, height - depth / 2);
+  return mesh;
+}
+
+function boulder(tile, height) {
+  const geometry = new THREE.DodecahedronGeometry(0.34, 0);
+  const mesh = new THREE.Mesh(geometry, material(colors.boulder));
+
+  mesh.position.set(tile.x + 0.5, tile.y + 0.5, height + 0.32);
+  mesh.rotation.set(0.3, 0.1, tile.x * 0.7 + tile.y * 0.2);
+  return mesh;
+}
+
+function movePlan(start, target) {
+  const points = [
+    new THREE.Vector3(start.x + 0.5, start.y + 0.5, start.height + 0.08),
+    new THREE.Vector3(target.x + 0.5, target.y + 0.5, target.height + 0.08),
+  ];
+  const line = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(points),
+    new THREE.LineBasicMaterial({ color: colors.moveLine }),
+  );
+
+  return line;
+}
+
+function unitMesh(unit, isSelected) {
+  const group = new THREE.Group();
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.34, 0.38, 0.12, 16),
+    material(isSelected ? colors.selectedTileStroke : colors.unitBase),
+  );
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 10), material(unit.color));
+
+  base.position.z = unit.height + 0.06;
+  body.position.z = unit.height + 0.38;
+  group.position.set(unit.x + 0.5, unit.y + 0.5, 0);
+  group.add(base, body);
+  return group;
+}
+
+function tileStyle(tile, boardState) {
+  if (sameTile(boardState.selectedTile, tile)) {
+    return { top: colors.selectedTile, side: colors.tileSideRight };
   }
 
-  return {
-    fill: colors.tile,
-    stroke: colors.tileStroke,
-    lineWidth: 1,
-  };
+  if (boardState.isMovementTile(tile)) {
+    return { top: colors.movementTile, side: colors.movementTileSideRight };
+  }
+
+  return { top: colors.tile, side: colors.tileSideRight };
+}
+
+function columnMaterials(style) {
+  const side = material(style.side);
+  const top = material(style.top);
+
+  return [side, side, side, side, top, material(colors.tileBottom)];
+}
+
+function directionalLight() {
+  const light = new THREE.DirectionalLight(colors.tileStroke, 2.2);
+
+  light.position.set(-3, -4, 7);
+  return light;
+}
+
+function heightDepth(height) {
+  return Math.max(terrainHeight.step, height);
 }
 
 function sameTile(first, second) {
   return first?.x === second.x && first?.y === second.y;
 }
 
-function drawObstacles(canvas, context, boardState, tiles) {
-  for (const gridPoint of tiles) {
-    if (boardState.isObstacleTile(gridPoint)) {
-      drawObstacle(canvas, context, gridPoint, boardState.tileHeight(gridPoint));
-    }
+function material(color) {
+  if (!materials.has(color)) {
+    materials.set(color, new THREE.MeshLambertMaterial({ color }));
   }
+
+  return materials.get(color);
 }
 
-function drawObstacle(canvas, context, gridPoint, height) {
-  const center = tileCenter(canvas, gridPoint, height);
-  const radius = Math.max(8, 13 * view.zoom);
-
-  context.fillStyle = colors.boulderShadow;
-  context.beginPath();
-  context.ellipse(center.x, center.y + radius * 0.42, radius * 1.1, radius * 0.38, 0, 0, Math.PI * 2);
-  context.fill();
-  context.fillStyle = colors.boulder;
-  context.beginPath();
-  context.arc(center.x, center.y - radius * 0.1, radius, 0, Math.PI * 2);
-  context.fill();
-  context.fillStyle = colors.boulderTop;
-  context.beginPath();
-  context.arc(center.x - radius * 0.28, center.y - radius * 0.38, radius * 0.32, 0, Math.PI * 2);
-  context.fill();
-}
-
-function drawMovePlans(canvas, context, units) {
-  for (const unit of units) {
-    if (unit.target) {
-      drawMovePlan(canvas, context, unit);
-    }
-  }
-}
-
-function drawMovePlan(canvas, context, unit) {
-  const start = tileCenter(canvas, unit, unit.height);
-  const end = tileCenter(canvas, unit.target, unit.target.height);
-
-  context.strokeStyle = colors.moveLine;
-  context.lineWidth = Math.max(2, 2 * view.zoom);
-  context.beginPath();
-  context.moveTo(start.x, start.y);
-  context.lineTo(end.x, end.y);
-  context.stroke();
-  drawTargetMarker(canvas, context, unit.target);
-}
-
-function drawTargetMarker(canvas, context, target) {
-  const corners = screenDiamond(canvas, target, 0.58, target.height);
-
-  context.fillStyle = colors.moveTargetFill;
-  context.strokeStyle = colors.moveTarget;
-  context.lineWidth = Math.max(2, 2 * view.zoom);
-  context.beginPath();
-  context.moveTo(corners.top.x, corners.top.y);
-  context.lineTo(corners.right.x, corners.right.y);
-  context.lineTo(corners.bottom.x, corners.bottom.y);
-  context.lineTo(corners.left.x, corners.left.y);
-  context.closePath();
-  context.fill();
-  context.stroke();
-}
-
-function drawUnits(canvas, context, units, selectedUnitId) {
-  for (const unit of units) {
-    drawUnit(canvas, context, unit, unit.id === selectedUnitId);
-  }
-}
-
-function drawUnit(canvas, context, unit, isSelected) {
-  const center = tileCenter(canvas, unit, unit.height);
-  const radius = Math.max(7, 10 * view.zoom);
-  const baseRadius = radius * 1.3;
-
-  context.fillStyle = colors.unitBase;
-  context.beginPath();
-  context.ellipse(center.x, center.y + radius * 0.62, baseRadius, radius * 0.44, 0, 0, Math.PI * 2);
-  context.fill();
-  context.fillStyle = unit.color;
-  context.beginPath();
-  context.arc(center.x, center.y, radius, 0, Math.PI * 2);
-  context.fill();
-  context.strokeStyle = isSelected ? colors.selectedTileStroke : colors.unitBase;
-  context.lineWidth = Math.max(2, 2 * view.zoom);
-  context.stroke();
+function disposeGroup(group) {
+  group.traverse((object) => {
+    object.geometry?.dispose();
+  });
 }

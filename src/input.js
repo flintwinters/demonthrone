@@ -1,4 +1,4 @@
-import { gridFromScreen, rotateAt, view, viewportCenter, zoomAt } from "./camera.js";
+import { gridFromScreen, panBy, rotateAt, view, viewportCenter, zoomAt } from "./camera.js";
 import { dragThreshold, mouseRotateSpeed, wheelDeltaLineMode } from "./constants.js";
 import { endPinch, handlePinch, startPinch } from "./pinch.js";
 
@@ -44,7 +44,7 @@ export function connectInput(canvas, onSelectTile, onViewChange, heightAt = null
     }
 
     if (dragStart?.pointerId === event.pointerId) {
-      dragStart = handleDrag(activePointers, event.pointerId, dragStart, onViewChange);
+      dragStart = handleDrag(canvas, activePointers, event.pointerId, dragStart, onViewChange);
     }
   }
 
@@ -81,7 +81,7 @@ export function connectInput(canvas, onSelectTile, onViewChange, heightAt = null
     const point = pointerPosition(canvas, event);
     const deltaY = normalizedWheelDeltaY(event);
     const zoomFactor = Math.exp(-deltaY * 0.001);
-    zoomAt(point.x, point.y, view.zoom * zoomFactor);
+    zoomAt(canvas, point.x, point.y, view.zoom * zoomFactor);
     onViewChange();
   }
 
@@ -98,23 +98,24 @@ function createDragStart(pointerId, point) {
     pointerId,
     pointerX: point.x,
     pointerY: point.y,
-    viewX: view.x,
-    viewY: view.y,
+    dx: 0,
+    dy: 0,
     moved: false,
   };
 }
 
-function handleDrag(activePointers, pointerId, dragStart, onViewChange) {
+function handleDrag(canvas, activePointers, pointerId, dragStart, onViewChange) {
   const point = activePointers.get(pointerId);
   const dx = point.x - dragStart.pointerX;
   const dy = point.y - dragStart.pointerY;
 
-  view.x = dragStart.viewX + dx;
-  view.y = dragStart.viewY + dy;
+  panBy(canvas, dx - dragStart.dx, dy - dragStart.dy);
   onViewChange();
 
   return {
     ...dragStart,
+    dx,
+    dy,
     moved: dragStart.moved || Math.hypot(dx, dy) > dragThreshold,
   };
 }
