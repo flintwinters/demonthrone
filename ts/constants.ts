@@ -30,6 +30,7 @@ export const colors = {
   tileSideLeft: "#1d2021",
   tileSideRight: "#3c3836",
   tileBottom: "#1d2021",
+  tileEdge: "#504945",
   selectedTile: "#3c3836",
   tileStroke: "#928374",
   selectedTileStroke: "#fabd2f",

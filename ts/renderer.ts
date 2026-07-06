@@ -20,6 +20,11 @@ const state: { current: RenderState | null } = {
   current: null,
 };
 const materials: Map<string, THREE.MeshLambertMaterial> = new Map();
+const edgeMaterial = new THREE.LineBasicMaterial({
+  color: colors.tileEdge,
+  transparent: true,
+  opacity: 0.38,
+});
 
 export function drawGrid(canvas: HTMLCanvasElement, boardState: BoardState): void {
   const tiles = visibleTiles(boardState.units, boardState.isObstacleTile);
@@ -93,13 +98,15 @@ function addUnits(renderState: RenderState, units: RenderUnit[], selectedUnitId:
   }
 }
 
-function terrainColumn(tile: Tile, height: number, style: TileStyle): THREE.Mesh {
+function terrainColumn(tile: Tile, height: number, style: TileStyle): THREE.Group {
   const depth = heightDepth(height);
   const geometry = new THREE.BoxGeometry(1, 1, depth);
   const mesh = new THREE.Mesh(geometry, columnMaterials(style));
+  const group = new THREE.Group();
 
   mesh.position.set(tile.x + 0.5, tile.y + 0.5, height - depth / 2);
-  return mesh;
+  group.add(mesh, columnEdges(mesh));
+  return group;
 }
 
 function boulder(tile: Tile, height: number): THREE.Mesh {
@@ -158,6 +165,14 @@ function columnMaterials(style: TileStyle): THREE.Material[] {
   return [side, side, side, side, top, material(colors.tileBottom)];
 }
 
+function columnEdges(mesh: THREE.Mesh): THREE.LineSegments {
+  const geometry = new THREE.EdgesGeometry(mesh.geometry);
+  const edges = new THREE.LineSegments(geometry, edgeMaterial);
+
+  edges.position.copy(mesh.position);
+  return edges;
+}
+
 function directionalLight(): THREE.DirectionalLight {
   const light = new THREE.DirectionalLight(colors.tileStroke, 2.2);
 
@@ -189,6 +204,10 @@ function material(color: string): THREE.MeshLambertMaterial {
 function disposeGroup(group: THREE.Group): void {
   group.traverse((object) => {
     if (object instanceof THREE.Mesh) {
+      object.geometry.dispose();
+    }
+
+    if (object instanceof THREE.LineSegments) {
       object.geometry.dispose();
     }
   });
