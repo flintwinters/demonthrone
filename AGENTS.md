@@ -1,7 +1,7 @@
 - Project state: browser proof of concept for a crisp Three.js/WebGL isometric tactics grid.
 - Run locally by opening `index.html` or serving the directory with any static file server.
 - TypeScript source lives in `ts/`; compiled browser modules are emitted to `src/` by `npm run build`.
-- Current scope is coordinate-unbounded height-aware Three.js voxel grid rendering, height-tinted terrain with vertical side-face gradients, panning, wheel/pinch zooming, right-drag vertical/horizontal camera rotation, clickable top/front/right view cube, mouse hover tile highlighting, tile selection, two-character line of sight, Perlin-noise procedural boulder, passable sight-reducing brush, integer-height terrain, and obstacle-aware L1-limited simultaneous planned movement with highlighted start/end tiles and transparent destination unit previews.
+- Current scope is coordinate-unbounded height-aware Three.js voxel grid rendering, height-tinted terrain with vertical side-face gradients, panning, wheel/pinch zooming, right-drag vertical/horizontal camera rotation, clickable top/front/right view cube, mouse hover tile highlighting, tile selection, two-character elevation-aware line of sight, Perlin-noise procedural boulder, passable sight-reducing brush, integer-height terrain, and obstacle-aware L1-limited simultaneous planned movement with highlighted start/end tiles and transparent destination unit previews.
 - Verification gate: run `npm run check`; ESLint enforces cyclomatic complexity and file length limits.
 - UI direction: dense high-contrast gruvbox dark theme, minimal labels, no animations or transitions.
 - Use TypeScript as much as possible. Try not to hand-edit JavaScript.
