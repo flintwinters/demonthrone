@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { colors } from "./constants.js";
-import { material } from "./render-materials.js";
+import { material, spriteMaterial } from "./render-materials.js";
+const brushCardGeometry = new THREE.PlaneGeometry(0.7, 0.46);
+let cachedBrushTexture = null;
 export function boulder(tile, height) {
     const geometry = new THREE.DodecahedronGeometry(0.34, 0);
     const mesh = new THREE.Mesh(geometry, material(colors.boulder));
@@ -10,14 +12,40 @@ export function boulder(tile, height) {
 }
 export function brush(tile, height) {
     const group = new THREE.Group();
-    group.position.set(tile.x + 0.5, tile.y + 0.5, height);
-    group.add(brushStem(-0.18, -0.03, 0.28, colors.brushDark));
-    group.add(brushStem(0.02, 0.08, 0.34, colors.brush));
-    group.add(brushStem(0.17, -0.08, 0.24, colors.brushDark));
+    group.position.set(tile.x + 0.5, tile.y + 0.5, height + 0.23);
+    group.add(brushCard(0));
+    group.add(brushCard(Math.PI / 2));
     return group;
 }
-function brushStem(x, y, height, color) {
-    const mesh = new THREE.Mesh(new THREE.ConeGeometry(0.12, height, 5), material(color));
-    mesh.position.set(x, y, height / 2);
+function brushCard(rotation) {
+    const mesh = new THREE.Mesh(brushCardGeometry, spriteMaterial(brushTexture()));
+    mesh.rotation.set(Math.PI / 2, 0, rotation);
     return mesh;
+}
+function brushTexture() {
+    if (cachedBrushTexture) {
+        return cachedBrushTexture;
+    }
+    const canvas = document.createElement("canvas");
+    const context = requiredContext(canvas);
+    canvas.width = 64;
+    canvas.height = 48;
+    context.fillStyle = colors.brushDark;
+    context.fillRect(14, 20, 10, 22);
+    context.fillRect(40, 16, 9, 26);
+    context.fillStyle = colors.brush;
+    context.fillRect(24, 10, 16, 34);
+    context.fillRect(8, 28, 48, 12);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.magFilter = THREE.NearestFilter;
+    texture.minFilter = THREE.NearestFilter;
+    cachedBrushTexture = texture;
+    return texture;
+}
+function requiredContext(canvas) {
+    const context = canvas.getContext("2d");
+    if (!context) {
+        throw new Error("2D canvas context is required for brush sprites.");
+    }
+    return context;
 }
