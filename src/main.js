@@ -16,6 +16,7 @@ const goButton = requiredElement("#go");
 const rotateLeftButton = requiredElement("#rotate-left");
 const rotateRightButton = requiredElement("#rotate-right");
 let selectedTile = null;
+let hoveredTile = null;
 function draw() {
     drawGrid(canvas, boardState());
     syncGoButton();
@@ -34,12 +35,21 @@ function selectTile(tile) {
     selectedTile = tile && canSeeTile(tile) ? clickBoardTile(enrichTile(tile), canMoveToTile) : null;
     draw();
 }
+function hoverTile(tile) {
+    const nextTile = tile && canSeeTile(tile) ? enrichTile(tile) : null;
+    if (sameTile(hoveredTile, nextTile)) {
+        return;
+    }
+    hoveredTile = nextTile;
+    draw();
+}
 function pickSelectableTile(point) {
     return pickUnitTile(point) ?? terrainTileAt(point);
 }
 function boardState() {
     return {
         selectedTile,
+        hoveredTile,
         units: renderableUnits(),
         isObstacleTile,
         selectedUnitId: selection.unitId,
@@ -105,6 +115,9 @@ function unitScreenPoint(unit) {
 function screenDistance(first, second) {
     return Math.hypot(first.x - second.x, first.y - second.y);
 }
+function sameTile(first, second) {
+    return first?.x === second?.x && first?.y === second?.y;
+}
 function pickRadius() {
     return Math.max(unitPickMinRadius, unitPickRadius * view.zoom);
 }
@@ -127,7 +140,7 @@ function handleKeyDown(event) {
         go();
     }
 }
-connectInput(canvas, selectTile, draw, tileHeight, pickSelectableTile);
+connectInput(canvas, selectTile, hoverTile, draw, tileHeight, pickSelectableTile);
 connectRotationControls(canvas, { left: rotateLeftButton, right: rotateRightButton }, draw);
 goButton.addEventListener("click", go);
 window.addEventListener("keydown", handleKeyDown);

@@ -26,6 +26,7 @@ const goButton = requiredElement<HTMLButtonElement>("#go");
 const rotateLeftButton = requiredElement<HTMLButtonElement>("#rotate-left");
 const rotateRightButton = requiredElement<HTMLButtonElement>("#rotate-right");
 let selectedTile: HeightTile | null = null;
+let hoveredTile: HeightTile | null = null;
 
 function draw(): void {
   drawGrid(canvas, boardState());
@@ -49,6 +50,17 @@ function selectTile(tile: Tile): void {
   draw();
 }
 
+function hoverTile(tile: Tile | null): void {
+  const nextTile = tile && canSeeTile(tile) ? enrichTile(tile) : null;
+
+  if (sameTile(hoveredTile, nextTile)) {
+    return;
+  }
+
+  hoveredTile = nextTile;
+  draw();
+}
+
 function pickSelectableTile(point: ScreenPoint): Tile {
   return pickUnitTile(point) ?? terrainTileAt(point);
 }
@@ -56,6 +68,7 @@ function pickSelectableTile(point: ScreenPoint): Tile {
 function boardState(): BoardState {
   return {
     selectedTile,
+    hoveredTile,
     units: renderableUnits(),
     isObstacleTile,
     selectedUnitId: selection.unitId,
@@ -144,6 +157,10 @@ function screenDistance(first: ScreenPoint, second: ScreenPoint): number {
   return Math.hypot(first.x - second.x, first.y - second.y);
 }
 
+function sameTile(first: Tile | null, second: Tile | null): boolean {
+  return first?.x === second?.x && first?.y === second?.y;
+}
+
 function pickRadius(): number {
   return Math.max(unitPickMinRadius, unitPickRadius * view.zoom);
 }
@@ -172,7 +189,7 @@ function handleKeyDown(event: KeyboardEvent): void {
   }
 }
 
-connectInput(canvas, selectTile, draw, tileHeight, pickSelectableTile);
+connectInput(canvas, selectTile, hoverTile, draw, tileHeight, pickSelectableTile);
 connectRotationControls(
   canvas,
   { left: rotateLeftButton, right: rotateRightButton },

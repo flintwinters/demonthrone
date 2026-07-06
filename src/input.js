@@ -1,13 +1,14 @@
 import { gridFromScreen, panBy, rotateAt, view, viewportCenter, zoomAt } from "./camera.js";
 import { dragThreshold, mouseRotateSpeed, wheelDeltaLineMode } from "./constants.js";
 import { endPinch, handlePinch, startPinch } from "./pinch.js";
-export function connectInput(canvas, onSelectTile, onViewChange, heightAt = null, screenTileAt = null) {
+export function connectInput(canvas, onSelectTile, onHoverTile, onViewChange, heightAt = null, screenTileAt = null) {
     const activePointers = new Map();
     let dragStart = null;
     let pinchStart = null;
     let rotateStart = null;
     function pointerDown(event) {
         const point = pointerPosition(canvas, event);
+        onHoverTile(null);
         activePointers.set(event.pointerId, point);
         if (activePointers.size > 1) {
             pinchStart = startPinch(activePointers);
@@ -17,7 +18,7 @@ export function connectInput(canvas, onSelectTile, onViewChange, heightAt = null
             return;
         }
         if (isMouseRotate(event)) {
-            rotateStart = createRotateStart(event.pointerId, point);
+            rotateStart = { pointerId: event.pointerId, pointerX: point.x, rotation: view.rotation };
             canvas.setPointerCapture(event.pointerId);
             return;
         }
@@ -26,15 +27,19 @@ export function connectInput(canvas, onSelectTile, onViewChange, heightAt = null
     }
     function pointerMove(event) {
         updatePointer(canvas, activePointers, event);
+        if (event.pointerType === "mouse" && activePointers.size === 0) {
+            onHoverTile(tileAtPointer(canvas, event, heightAt, screenTileAt));
+            return;
+        }
         if (pinchStart) {
             handlePinch(canvas, activePointers, pinchStart, onViewChange);
             return;
         }
-        if (rotateStart?.pointerId === event.pointerId) {
+        if (isPointerStart(rotateStart, event)) {
             handlePointerRotate(canvas, activePointers, event.pointerId, rotateStart, onViewChange);
             return;
         }
-        if (dragStart?.pointerId === event.pointerId) {
+        if (isPointerStart(dragStart, event)) {
             dragStart = handleDrag(canvas, activePointers, event.pointerId, dragStart, onViewChange);
         }
     }
@@ -46,11 +51,11 @@ export function connectInput(canvas, onSelectTile, onViewChange, heightAt = null
             rotateStart = null;
             return;
         }
-        if (rotateStart?.pointerId === event.pointerId) {
+        if (isPointerStart(rotateStart, event)) {
             rotateStart = null;
             return;
         }
-        if (dragStart?.pointerId === event.pointerId) {
+        if (isPointerStart(dragStart, event)) {
             selectTile(canvas, event, dragStart, onSelectTile, heightAt, screenTileAt);
             dragStart = null;
         }
@@ -60,6 +65,7 @@ export function connectInput(canvas, onSelectTile, onViewChange, heightAt = null
         pinchStart = endPinch(activePointers);
         dragStart = null;
         rotateStart = null;
+        onHoverTile(null);
     }
     function wheel(event) {
         event.preventDefault();
@@ -73,6 +79,7 @@ export function connectInput(canvas, onSelectTile, onViewChange, heightAt = null
     canvas.addEventListener("pointermove", pointerMove);
     canvas.addEventListener("pointerup", pointerUp);
     canvas.addEventListener("pointercancel", pointerCancel);
+    canvas.addEventListener("pointerleave", () => onHoverTile(null));
     canvas.addEventListener("wheel", wheel, { passive: false });
     canvas.addEventListener("contextmenu", suppressContextMenu);
 }
@@ -102,13 +109,6 @@ function handleDrag(canvas, activePointers, pointerId, dragStart, onViewChange) 
         moved: dragStart.moved || Math.hypot(dx, dy) > dragThreshold,
     };
 }
-function createRotateStart(pointerId, point) {
-    return {
-        pointerId,
-        pointerX: point.x,
-        rotation: view.rotation,
-    };
-}
 function handlePointerRotate(canvas, activePointers, pointerId, rotateStart, onViewChange) {
     const point = activePointers.get(pointerId);
     if (!point) {
@@ -124,9 +124,11 @@ function selectTile(canvas, event, dragStart, onSelectTile, heightAt, screenTile
     if (dragStart.moved) {
         return;
     }
+    onSelectTile(tileAtPointer(canvas, event, heightAt, screenTileAt));
+}
+function tileAtPointer(canvas, event, heightAt, screenTileAt) {
     const point = pointerPosition(canvas, event);
-    const grid = screenTileAt ? screenTileAt(point) : gridFromScreen(canvas, point.x, point.y, heightAt);
-    onSelectTile(grid);
+    return screenTileAt ? screenTileAt(point) : gridFromScreen(canvas, point.x, point.y, heightAt);
 }
 function updatePointer(canvas, activePointers, event) {
     if (activePointers.has(event.pointerId)) {
@@ -145,6 +147,9 @@ function normalizedWheelDeltaY(event) {
 }
 function isMouseRotate(event) {
     return event.pointerType === "mouse" && event.button === 2;
+}
+function isPointerStart(start, event) {
+    return start !== null && start.pointerId === event.pointerId;
 }
 function suppressContextMenu(event) {
     event.preventDefault();

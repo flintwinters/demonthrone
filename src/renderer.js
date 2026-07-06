@@ -99,9 +99,18 @@ function tileStyle(tile, boardState) {
         return { top: colors.selectedTile, side: colors.tileSideRight };
     }
     if (boardState.isMovementTile(tile)) {
-        return { top: colors.movementTile, side: colors.movementTileSideRight };
+        return movementTileStyle(tile, boardState);
+    }
+    if (sameTile(boardState.hoveredTile, tile)) {
+        return { top: colors.hoveredTile, side: colors.tileSideRight };
     }
     return { top: colors.tile, side: colors.tileSideRight };
+}
+function movementTileStyle(tile, boardState) {
+    return {
+        top: sameTile(boardState.hoveredTile, tile) ? colors.hoveredMovementTile : colors.movementTile,
+        side: colors.movementTileSideRight,
+    };
 }
 function directionalLight() {
     const light = new THREE.DirectionalLight(colors.tileStroke, 2.2);

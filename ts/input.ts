@@ -23,6 +23,7 @@ type RotateStart = {
 export function connectInput(
   canvas: HTMLCanvasElement,
   onSelectTile: (tile: Tile) => void,
+  onHoverTile: (tile: Tile | null) => void,
   onViewChange: () => void,
   heightAt: TileHeight | null = null,
   screenTileAt: ScreenTilePicker | null = null,
@@ -34,6 +35,8 @@ export function connectInput(
 
   function pointerDown(event: PointerEvent): void {
     const point = pointerPosition(canvas, event);
+
+    onHoverTile(null);
     activePointers.set(event.pointerId, point);
 
     if (activePointers.size > 1) {
@@ -45,7 +48,7 @@ export function connectInput(
     }
 
     if (isMouseRotate(event)) {
-      rotateStart = createRotateStart(event.pointerId, point);
+      rotateStart = { pointerId: event.pointerId, pointerX: point.x, rotation: view.rotation };
       canvas.setPointerCapture(event.pointerId);
       return;
     }
@@ -57,17 +60,22 @@ export function connectInput(
   function pointerMove(event: PointerEvent): void {
     updatePointer(canvas, activePointers, event);
 
+    if (event.pointerType === "mouse" && activePointers.size === 0) {
+      onHoverTile(tileAtPointer(canvas, event, heightAt, screenTileAt));
+      return;
+    }
+
     if (pinchStart) {
       handlePinch(canvas, activePointers, pinchStart, onViewChange);
       return;
     }
 
-    if (rotateStart?.pointerId === event.pointerId) {
+    if (isPointerStart(rotateStart, event)) {
       handlePointerRotate(canvas, activePointers, event.pointerId, rotateStart, onViewChange);
       return;
     }
 
-    if (dragStart?.pointerId === event.pointerId) {
+    if (isPointerStart(dragStart, event)) {
       dragStart = handleDrag(canvas, activePointers, event.pointerId, dragStart, onViewChange);
     }
   }
@@ -82,12 +90,12 @@ export function connectInput(
       return;
     }
 
-    if (rotateStart?.pointerId === event.pointerId) {
+    if (isPointerStart(rotateStart, event)) {
       rotateStart = null;
       return;
     }
 
-    if (dragStart?.pointerId === event.pointerId) {
+    if (isPointerStart(dragStart, event)) {
       selectTile(canvas, event, dragStart, onSelectTile, heightAt, screenTileAt);
       dragStart = null;
     }
@@ -98,6 +106,7 @@ export function connectInput(
     pinchStart = endPinch(activePointers);
     dragStart = null;
     rotateStart = null;
+    onHoverTile(null);
   }
 
   function wheel(event: WheelEvent): void {
@@ -113,6 +122,7 @@ export function connectInput(
   canvas.addEventListener("pointermove", pointerMove);
   canvas.addEventListener("pointerup", pointerUp);
   canvas.addEventListener("pointercancel", pointerCancel);
+  canvas.addEventListener("pointerleave", () => onHoverTile(null));
   canvas.addEventListener("wheel", wheel, { passive: false });
   canvas.addEventListener("contextmenu", suppressContextMenu);
 }
@@ -155,14 +165,6 @@ function handleDrag(
   };
 }
 
-function createRotateStart(pointerId: number, point: ScreenPoint): RotateStart {
-  return {
-    pointerId,
-    pointerX: point.x,
-    rotation: view.rotation,
-  };
-}
-
 function handlePointerRotate(
   canvas: HTMLCanvasElement,
   activePointers: PointerMap,
@@ -196,9 +198,18 @@ function selectTile(
     return;
   }
 
+  onSelectTile(tileAtPointer(canvas, event, heightAt, screenTileAt));
+}
+
+function tileAtPointer(
+  canvas: HTMLCanvasElement,
+  event: PointerEvent,
+  heightAt: TileHeight | null,
+  screenTileAt: ScreenTilePicker | null,
+): Tile {
   const point = pointerPosition(canvas, event);
-  const grid = screenTileAt ? screenTileAt(point) : gridFromScreen(canvas, point.x, point.y, heightAt);
-  onSelectTile(grid);
+
+  return screenTileAt ? screenTileAt(point) : gridFromScreen(canvas, point.x, point.y, heightAt);
 }
 
 function updatePointer(canvas: HTMLCanvasElement, activePointers: PointerMap, event: PointerEvent): void {
@@ -222,6 +233,10 @@ function normalizedWheelDeltaY(event: WheelEvent): number {
 
 function isMouseRotate(event: PointerEvent): boolean {
   return event.pointerType === "mouse" && event.button === 2;
+}
+
+function isPointerStart(start: DragStart | RotateStart | null, event: PointerEvent): start is DragStart | RotateStart {
+  return start !== null && start.pointerId === event.pointerId;
 }
 
 function suppressContextMenu(event: MouseEvent): void {

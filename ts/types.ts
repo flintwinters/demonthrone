@@ -37,6 +37,7 @@ export type PointerMap = Map<number, ScreenPoint>;
 
 export type BoardState = {
   selectedTile: HeightTile | null;
+  hoveredTile: HeightTile | null;
   units: RenderUnit[];
   isObstacleTile: TilePredicate;
   selectedUnitId: string | null;
