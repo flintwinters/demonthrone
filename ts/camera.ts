@@ -86,8 +86,8 @@ export function panBy(canvas: HTMLCanvasElement, dx: number, dy: number): void {
   const before = worldPointAtHeight(canvas, center.x, center.y, 0);
   const after = worldPointAtHeight(canvas, center.x - dx, center.y - dy, 0);
 
-  view.targetX += before.x - after.x;
-  view.targetY += before.y - after.y;
+  view.targetX += after.x - before.x;
+  view.targetY += after.y - before.y;
 }
 
 export function zoomAt(canvas: HTMLCanvasElement, screenX: number, screenY: number, nextZoom: number): void {
