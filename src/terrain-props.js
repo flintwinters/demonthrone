@@ -18,7 +18,14 @@ export function boulder(tile, height) {
     return mesh;
 }
 export function brush(tile, height) {
+    const group = new THREE.Group();
+    group.position.set(tile.x + 0.5, tile.y + 0.5, height);
+    group.add(brushTriangle(0));
+    group.add(brushTriangle(Math.PI / 2));
+    return group;
+}
+function brushTriangle(rotation) {
     const mesh = new THREE.Mesh(brushGeometry, brushMaterial);
-    mesh.position.set(tile.x + 0.5, tile.y + 0.5, height);
+    mesh.rotation.z = rotation;
     return mesh;
 }

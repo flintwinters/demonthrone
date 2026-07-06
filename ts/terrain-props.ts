@@ -22,9 +22,18 @@ export function boulder(tile: Tile, height: number): THREE.Mesh {
   return mesh;
 }
 
-export function brush(tile: Tile, height: number): THREE.Mesh {
+export function brush(tile: Tile, height: number): THREE.Group {
+  const group = new THREE.Group();
+
+  group.position.set(tile.x + 0.5, tile.y + 0.5, height);
+  group.add(brushTriangle(0));
+  group.add(brushTriangle(Math.PI / 2));
+  return group;
+}
+
+function brushTriangle(rotation: number): THREE.Mesh {
   const mesh = new THREE.Mesh(brushGeometry, brushMaterial);
 
-  mesh.position.set(tile.x + 0.5, tile.y + 0.5, height);
+  mesh.rotation.z = rotation;
   return mesh;
 }
