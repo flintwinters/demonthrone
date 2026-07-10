@@ -20,3 +20,21 @@ Demonthrone is a tactical, turn-based roguelike where you command a team of adve
 - [ ] more than one enemy
 - [ ] more than one obstacle - destructible obstacles
 
+## Backend
+
+Run the zero-dependency Python backend from the project root:
+
+```sh
+python -m backend.app
+```
+
+The backend serves the static browser app at `http://127.0.0.1:8001` and exposes:
+
+- `GET /api/health`
+- `GET /api/game/new`
+
+Run backend tests with:
+
+```sh
+python -m unittest discover
+```
