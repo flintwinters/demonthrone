@@ -1,4 +1,5 @@
 import { colors } from "./constants.js";
+import { CharacterTemplate } from "./domain.js";
 import { cardinalDirections, l1Distance, neighborTile, sameTile } from "./grid.js";
 import type { Enemy, Tile, TilePredicate, Unit } from "./types.js";
 
@@ -10,12 +11,12 @@ const spawnBounds = {
   minY: 0,
   maxY: 13,
 };
-const enemyStats = {
+const enemyTemplate = new CharacterTemplate({
   sight: 5,
   movement: 1,
   attackRange: 1,
   health: 1,
-};
+});
 
 export function randomEnemies(units: Unit[], isBlockedTile: TilePredicate): Enemy[] {
   const enemies: Enemy[] = [];
@@ -34,12 +35,7 @@ export function randomEnemies(units: Unit[], isBlockedTile: TilePredicate): Enem
       continue;
     }
 
-    enemies.push({
-      ...tile,
-      ...enemyStats,
-      id: `enemy-${enemies.length + 1}`,
-      color: colors.enemy,
-    });
+    enemies.push(enemyTemplate.enemy(`enemy-${enemies.length + 1}`, tile, colors.enemy));
   }
 
   return enemies;

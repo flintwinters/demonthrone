@@ -1,115 +1,51 @@
-import { perlinNoise2d } from "./noise.js";
 import { terrainHeight } from "./constants.js";
-import { l1Distance } from "./grid.js";
+import { BiomeProfile, HeightComponent, HeightProfile, NoiseLayer, SafeZone, TerrainType } from "./domain.js";
 import type { BiomeKind, Terrain, TerrainKind, Tile } from "./types.js";
-
-type NoiseLayer = {
-  scale: number;
-  seed: number;
-};
-
-type SafeZone = Tile & {
-  radius: number;
-};
-
-type HeightSample = "centered" | "crest" | "linear" | "terraced";
-
-type HeightComponent = {
-  layer: NoiseLayer;
-  sample: HeightSample;
-  weight: number;
-};
-
-type HeightProfile = {
-  base: number;
-  components: readonly HeightComponent[];
-};
-
-type Biome = {
-  kind: BiomeKind;
-  height: HeightProfile;
-  boulderThreshold: number;
-  brushThreshold: number;
-  brushSightCost: number;
-};
 
 const worldSeed = 0x5eed;
 const layers = {
-  elevation: { scale: 0.055, seed: worldSeed ^ 0x1234 },
-  moisture: { scale: 0.06, seed: worldSeed ^ 0x4321 },
-  ridge: { scale: 0.13, seed: worldSeed ^ 0x6d2b },
-  detail: { scale: 0.24, seed: worldSeed ^ 0x1f91 },
-  heightCinder: { scale: 0.048, seed: worldSeed ^ 0x7099 },
-  heightFen: { scale: 0.038, seed: worldSeed ^ 0x4a87 },
-  heightHeath: { scale: 0.07, seed: worldSeed ^ 0x39c1 },
-  heightRidge: { scale: 0.085, seed: worldSeed ^ 0x55ad },
-  boulder: { scale: 0.23, seed: worldSeed ^ 0x2b0d },
-  brush: { scale: 0.31, seed: worldSeed ^ 0x4b1d },
+  elevation: new NoiseLayer({ scale: 0.055, seed: worldSeed ^ 0x1234 }),
+  moisture: new NoiseLayer({ scale: 0.06, seed: worldSeed ^ 0x4321 }),
+  ridge: new NoiseLayer({ scale: 0.13, seed: worldSeed ^ 0x6d2b }),
+  detail: new NoiseLayer({ scale: 0.24, seed: worldSeed ^ 0x1f91 }),
+  heightCinder: new NoiseLayer({ scale: 0.048, seed: worldSeed ^ 0x7099 }),
+  heightFen: new NoiseLayer({ scale: 0.038, seed: worldSeed ^ 0x4a87 }),
+  heightHeath: new NoiseLayer({ scale: 0.07, seed: worldSeed ^ 0x39c1 }),
+  heightRidge: new NoiseLayer({ scale: 0.085, seed: worldSeed ^ 0x55ad }),
+  boulder: new NoiseLayer({ scale: 0.23, seed: worldSeed ^ 0x2b0d }),
+  brush: new NoiseLayer({ scale: 0.31, seed: worldSeed ^ 0x4b1d }),
 };
-const safeZones: SafeZone[] = [{ x: 5, y: 7, radius: 1 }, { x: 8, y: 6, radius: 1 }];
+const safeZones = [
+  new SafeZone({ x: 5, y: 7 }, 1),
+  new SafeZone({ x: 8, y: 6 }, 1),
+];
 const biomes = {
-  cinder: {
-    kind: "cinder",
-    height: {
-      base: 0.18,
-      components: [
-        { layer: layers.heightCinder, sample: "terraced", weight: 0.42 },
-        { layer: layers.detail, sample: "crest", weight: 0.16 },
-        { layer: layers.elevation, sample: "centered", weight: 0.12 },
-      ],
-    },
-    boulderThreshold: 0.58,
-    brushThreshold: 0.78,
-    brushSightCost: 2,
-  },
-  fen: {
-    kind: "fen",
-    height: {
-      base: 0.22,
-      components: [
-        { layer: layers.heightFen, sample: "linear", weight: 0.24 },
-        { layer: layers.moisture, sample: "linear", weight: -0.16 },
-        { layer: layers.detail, sample: "centered", weight: 0.06 },
-      ],
-    },
-    boulderThreshold: 0.76,
-    brushThreshold: 0.5,
-    brushSightCost: 3,
-  },
-  heath: {
-    kind: "heath",
-    height: {
-      base: 0.12,
-      components: [
-        { layer: layers.heightHeath, sample: "linear", weight: 0.52 },
-        { layer: layers.elevation, sample: "centered", weight: 0.1 },
-        { layer: layers.detail, sample: "centered", weight: 0.14 },
-      ],
-    },
-    boulderThreshold: 0.66,
-    brushThreshold: 0.62,
-    brushSightCost: 2,
-  },
-  ridge: {
-    kind: "ridge",
-    height: {
-      base: 0.32,
-      components: [
-        { layer: layers.heightRidge, sample: "crest", weight: 0.34 },
-        { layer: layers.ridge, sample: "linear", weight: 0.22 },
-        { layer: layers.detail, sample: "centered", weight: 0.28 },
-      ],
-    },
-    boulderThreshold: 0.53,
-    brushThreshold: 0.72,
-    brushSightCost: 2,
-  },
-} satisfies Record<BiomeKind, Biome>;
+  cinder: biome("cinder", height(0.18, [
+    new HeightComponent(layers.heightCinder, "terraced", 0.42),
+    new HeightComponent(layers.detail, "crest", 0.16),
+    new HeightComponent(layers.elevation, "centered", 0.12),
+  ]), 0.58, 0.78, 2),
+  fen: biome("fen", height(0.22, [
+    new HeightComponent(layers.heightFen, "linear", 0.24),
+    new HeightComponent(layers.moisture, "linear", -0.16),
+    new HeightComponent(layers.detail, "centered", 0.06),
+  ]), 0.76, 0.5, 3),
+  heath: biome("heath", height(0.12, [
+    new HeightComponent(layers.heightHeath, "linear", 0.52),
+    new HeightComponent(layers.elevation, "centered", 0.1),
+    new HeightComponent(layers.detail, "centered", 0.14),
+  ]), 0.66, 0.62, 2),
+  ridge: biome("ridge", height(0.32, [
+    new HeightComponent(layers.heightRidge, "crest", 0.34),
+    new HeightComponent(layers.ridge, "linear", 0.22),
+    new HeightComponent(layers.detail, "centered", 0.28),
+  ]), 0.53, 0.72, 2),
+} satisfies Record<BiomeKind, BiomeProfile>;
 const terrainTraits = {
-  floor: { kind: "floor", blocksMovement: false, sightCost: 1 },
-  boulder: { kind: "boulder", blocksMovement: true, sightCost: Number.POSITIVE_INFINITY },
-  brush: { kind: "brush", blocksMovement: false, sightCost: 2 },
-} satisfies Record<TerrainKind, Omit<Terrain, "biome">>;
+  floor: new TerrainType("floor", false, 1),
+  boulder: new TerrainType("boulder", true, Number.POSITIVE_INFINITY),
+  brush: new TerrainType("brush", false, 2),
+};
 
 export function tileTerrain(tile: Tile): Terrain {
   const biome = tileBiome(tile);
@@ -134,9 +70,9 @@ export function sightCost(tile: Tile): number {
 }
 
 export function tileBiome(tile: Tile): BiomeKind {
-  const elevation = noise(tile, layers.elevation);
-  const moisture = noise(tile, layers.moisture);
-  const ridge = noise(tile, layers.ridge);
+  const elevation = layers.elevation.value(tile);
+  const moisture = layers.moisture.value(tile);
+  const ridge = layers.ridge.value(tile);
 
   if (elevation > 0.66 || ridge > 0.72) {
     return "ridge";
@@ -150,59 +86,34 @@ export function tileBiome(tile: Tile): BiomeKind {
 }
 
 export function isBoulderTile(tile: Tile): boolean {
-  return !isSafeTile(tile) && noise(tile, layers.boulder) > biome(tile).boulderThreshold;
+  return !isSafeTile(tile) && layers.boulder.value(tile) > biomeAt(tile).boulderThreshold;
 }
 
 export function isBrushTile(tile: Tile): boolean {
-  return !isSafeTile(tile) && !isBoulderTile(tile) && noise(tile, layers.brush) > biome(tile).brushThreshold;
+  return !isSafeTile(tile) && !isBoulderTile(tile) && layers.brush.value(tile) > biomeAt(tile).brushThreshold;
 }
 
 export function tileHeight(tile: Tile): number {
-  const trait = biome(tile);
   const range = terrainHeight.max - terrainHeight.min;
-  const value = heightValue(tile, trait);
+  const value = biomeAt(tile).height.value(tile);
 
   return terrainHeight.min + Math.round(clamp(value) * range);
 }
 
 function terrainFor(kind: TerrainKind, biomeKind: BiomeKind): Terrain {
-  const trait = terrainTraits[kind];
-  const sightCost = kind === "brush" ? biomes[biomeKind].brushSightCost : trait.sightCost;
-
-  return { ...trait, biome: biomeKind, sightCost };
+  return terrainTraits[kind].terrain(biomes[biomeKind]);
 }
 
-function heightValue(tile: Tile, trait: Biome): number {
-  return trait.height.components.reduce(
-    (value, component) => value + sampleHeight(tile, component) * component.weight,
-    trait.height.base,
-  );
+function biome(kind: BiomeKind, profile: HeightProfile, boulder: number, brush: number, sight: number): BiomeProfile {
+  return new BiomeProfile(kind, profile, boulder, brush, sight);
 }
 
-function sampleHeight(tile: Tile, component: HeightComponent): number {
-  const value = noise(tile, component.layer);
-
-  if (component.sample === "centered") {
-    return value - 0.5;
-  }
-
-  if (component.sample === "crest") {
-    return 1 - Math.abs(value - 0.5) * 2;
-  }
-
-  if (component.sample === "terraced") {
-    return Math.round(value * 4) / 4;
-  }
-
-  return value;
+function height(base: number, components: readonly HeightComponent[]): HeightProfile {
+  return new HeightProfile(base, components);
 }
 
-function biome(tile: Tile): Biome {
+function biomeAt(tile: Tile): BiomeProfile {
   return biomes[tileBiome(tile)];
-}
-
-function noise(tile: Tile, layer: NoiseLayer): number {
-  return perlinNoise2d(tile.x * layer.scale, tile.y * layer.scale, layer.seed);
 }
 
 function clamp(value: number): number {
@@ -210,5 +121,5 @@ function clamp(value: number): number {
 }
 
 function isSafeTile(tile: Tile): boolean {
-  return safeZones.some((zone) => l1Distance(tile, zone) <= zone.radius);
+  return safeZones.some((zone) => zone.contains(tile));
 }

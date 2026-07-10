@@ -1,4 +1,5 @@
 import { colors } from "./constants.js";
+import { CharacterTemplate } from "./domain.js";
 import { cardinalDirections, l1Distance, neighborTile, sameTile } from "./grid.js";
 const enemyCount = 5;
 const maxSpawnAttempts = 500;
@@ -8,12 +9,12 @@ const spawnBounds = {
     minY: 0,
     maxY: 13,
 };
-const enemyStats = {
+const enemyTemplate = new CharacterTemplate({
     sight: 5,
     movement: 1,
     attackRange: 1,
     health: 1,
-};
+});
 export function randomEnemies(units, isBlockedTile) {
     const enemies = [];
     let attempts = 0;
@@ -26,12 +27,7 @@ export function randomEnemies(units, isBlockedTile) {
         if (isBlockedTile(tile) || isOccupied(tile, units, enemies)) {
             continue;
         }
-        enemies.push({
-            ...tile,
-            ...enemyStats,
-            id: `enemy-${enemies.length + 1}`,
-            color: colors.enemy,
-        });
+        enemies.push(enemyTemplate.enemy(`enemy-${enemies.length + 1}`, tile, colors.enemy));
     }
     return enemies;
 }
