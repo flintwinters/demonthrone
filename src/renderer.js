@@ -1,13 +1,9 @@
 import * as THREE from "three";
 import { configureViewCamera, createViewCamera, devicePixelRatio } from "./camera.js";
 import { colors, terrainHeight } from "./constants.js";
-import { tileKey } from "./grid.js";
 import { material, transparentMaterial } from "./render-materials.js";
-import { tileStyle } from "./terrain-style.js";
-import { terrainSurface } from "./terrain-mesh.js";
-import { boulder, brush } from "./terrain-props.js";
+import { terrainLayer, terrainSignature } from "./terrain-layer.js";
 import { visibleTiles } from "./tiles.js";
-import { tileTerrain } from "./world.js";
 const unitGeometry = new THREE.SphereGeometry(0.24, 16, 10);
 const enemyGeometry = new THREE.ConeGeometry(0.24, 0.5, 5);
 const tombstoneGeometry = new THREE.SphereGeometry(0.15, 12, 8);
@@ -21,9 +17,8 @@ export function drawGrid(canvas, boardState) {
     const tiles = visibleTiles(boardState.units, boardState.sightBlockers, boardState.sightCost, boardState.tileHeight);
     const renderState = initializeRenderer(canvas);
     configureViewCamera(canvas, renderState.camera);
-    clearRoot(renderState.root);
-    addTerrain(renderState, boardState, tiles);
-    addObstacles(renderState, boardState, tiles);
+    syncTerrain(renderState, boardState, tiles);
+    clearRoot(renderState.dynamicRoot);
     addTombstones(renderState, boardState.tombstones);
     addPlannedUnits(renderState, boardState.units);
     addEnemies(renderState, boardState.enemies);
@@ -40,10 +35,13 @@ function initializeRenderer(canvas) {
         scene: new THREE.Scene(),
         camera: createViewCamera(),
         root: new THREE.Group(),
+        dynamicRoot: new THREE.Group(),
+        terrainCache: null,
     };
     configureRendererSize(renderState.renderer, canvas);
     renderState.renderer.setClearColor(colors.background, 1);
     renderState.scene.add(renderState.root);
+    renderState.root.add(renderState.dynamicRoot);
     renderState.scene.add(new THREE.HemisphereLight(colors.tileStroke, colors.background, 1.7));
     renderState.scene.add(directionalLight());
     state.current = renderState;
@@ -57,45 +55,38 @@ function clearRoot(root) {
     disposeGroup(root);
     root.clear();
 }
-function addTerrain(renderState, boardState, tiles) {
-    const tileLevels = new Map(tiles.map((tile) => [tileKey(tile), boardState.tileHeight(tile)]));
-    const tileHeights = new Map(tiles.map((tile) => [tileKey(tile), visualHeight(tileLevels.get(tileKey(tile)) ?? 0)]));
-    for (const tile of tiles) {
-        const level = tileLevels.get(tileKey(tile)) ?? 0;
-        const height = tileHeights.get(tileKey(tile)) ?? 0;
-        const style = tileStyle(tile, boardState, level);
-        renderState.root.add(terrainSurface(tile, height, style, tileHeights));
+function syncTerrain(renderState, boardState, tiles) {
+    const signature = terrainSignature(tiles, boardState);
+    if (renderState.terrainCache?.signature === signature) {
+        return;
     }
-}
-function addObstacles(renderState, boardState, tiles) {
-    for (const tile of tiles) {
-        if (boardState.isObstacleTile(tile)) {
-            renderState.root.add(boulder(tile, visualHeight(boardState.tileHeight(tile))));
-        }
-        if (boardState.isBrushTile(tile)) {
-            renderState.root.add(brush(tile, visualHeight(boardState.tileHeight(tile)), tileTerrain(tile).biome));
-        }
+    if (renderState.terrainCache) {
+        disposeGroup(renderState.terrainCache.group);
+        renderState.root.remove(renderState.terrainCache.group);
     }
+    const group = terrainLayer(boardState, tiles);
+    renderState.root.add(group);
+    renderState.terrainCache = { signature, group };
 }
 function addUnits(renderState, units) {
     for (const unit of units) {
-        renderState.root.add(unitMesh(unit, 1));
+        renderState.dynamicRoot.add(unitMesh(unit, 1));
     }
 }
 function addEnemies(renderState, enemies) {
     for (const enemy of enemies) {
-        renderState.root.add(enemyMesh(enemy));
+        renderState.dynamicRoot.add(enemyMesh(enemy));
     }
 }
 function addTombstones(renderState, tombstones) {
     for (const tombstone of tombstones) {
-        renderState.root.add(tombstoneMesh(tombstone));
+        renderState.dynamicRoot.add(tombstoneMesh(tombstone));
     }
 }
 function addPlannedUnits(renderState, units) {
     for (const unit of units) {
         if (unit.target) {
-            renderState.root.add(unitMeshAt(unit, unit.target, 0.42));
+            renderState.dynamicRoot.add(unitMeshAt(unit, unit.target, 0.42));
         }
     }
 }

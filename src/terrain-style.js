@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import { colors, terrainHeight } from "./constants.js";
-import { sameTile } from "./grid.js";
 import { tileBiome } from "./world.js";
 const biomeStyles = {
     cinder: {
@@ -20,29 +19,7 @@ const biomeStyles = {
         side: colors.ridgeTileSide,
     },
 };
-export function tileStyle(tile, boardState, level) {
-    if (isPlannedMoveTarget(tile, boardState.units)) {
-        return terrainStyle(colors.moveTarget, colors.movementTileSideRight, level);
-    }
-    if (isPlannedMoveStart(tile, boardState.units)) {
-        return terrainStyle(colors.moveStart, colors.tileSideRight, level);
-    }
-    if (sameTile(boardState.selectedTile, tile)) {
-        return terrainStyle(colors.selectedTile, colors.tileSideRight, level);
-    }
-    if (boardState.isMovementTile(tile)) {
-        return movementTileStyle(tile, boardState, level);
-    }
-    if (sameTile(boardState.hoveredTile, tile)) {
-        return terrainStyle(colors.hoveredTile, colors.tileSideRight, level);
-    }
-    return biomeTerrainStyle(tile, level);
-}
-function movementTileStyle(tile, boardState, level) {
-    const top = sameTile(boardState.hoveredTile, tile) ? colors.hoveredMovementTile : colors.movementTile;
-    return terrainStyle(top, colors.movementTileSideRight, level);
-}
-function biomeTerrainStyle(tile, level) {
+export function tileBaseStyle(tile, level) {
     const style = biomeStyles[tileBiome(tile)];
     return terrainStyle(style.top, style.side, level);
 }
@@ -67,10 +44,4 @@ function shadeByHeight(color, level, offset) {
     const base = new THREE.Color(color);
     const target = new THREE.Color(shade >= 0 ? "#ffffff" : "#000000");
     return `#${base.lerp(target, Math.abs(shade)).getHexString()}`;
-}
-function isPlannedMoveStart(tile, units) {
-    return units.some((unit) => unit.target && sameTile(unit, tile));
-}
-function isPlannedMoveTarget(tile, units) {
-    return units.some((unit) => unit.target && sameTile(unit.target, tile));
 }
