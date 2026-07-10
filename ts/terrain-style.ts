@@ -1,7 +1,32 @@
 import * as THREE from "three";
 import { colors, terrainHeight } from "./constants.js";
 import type { TerrainStyle } from "./terrain-mesh.js";
-import type { BoardState, RenderUnit, Tile } from "./types.js";
+import { tileBiome } from "./world.js";
+import type { BiomeKind, BoardState, RenderUnit, Tile } from "./types.js";
+
+type BiomeStyle = {
+  top: string;
+  side: string;
+};
+
+const biomeStyles = {
+  cinder: {
+    top: colors.cinderTile,
+    side: colors.cinderTileSide,
+  },
+  fen: {
+    top: colors.fenTile,
+    side: colors.fenTileSide,
+  },
+  heath: {
+    top: colors.heathTile,
+    side: colors.heathTileSide,
+  },
+  ridge: {
+    top: colors.ridgeTile,
+    side: colors.ridgeTileSide,
+  },
+} satisfies Record<BiomeKind, BiomeStyle>;
 
 export function tileStyle(tile: Tile, boardState: BoardState, level: number): TerrainStyle {
   if (isPlannedMoveTarget(tile, boardState.units)) {
@@ -24,13 +49,19 @@ export function tileStyle(tile: Tile, boardState: BoardState, level: number): Te
     return terrainStyle(colors.hoveredTile, colors.tileSideRight, level);
   }
 
-  return terrainStyle(colors.tile, colors.tileSideRight, level);
+  return biomeTerrainStyle(tile, level);
 }
 
 function movementTileStyle(tile: Tile, boardState: BoardState, level: number): TerrainStyle {
   const top = sameTile(boardState.hoveredTile, tile) ? colors.hoveredMovementTile : colors.movementTile;
 
   return terrainStyle(top, colors.movementTileSideRight, level);
+}
+
+function biomeTerrainStyle(tile: Tile, level: number): TerrainStyle {
+  const style = biomeStyles[tileBiome(tile)];
+
+  return terrainStyle(style.top, style.side, level);
 }
 
 function terrainStyle(top: string, side: string, level: number): TerrainStyle {

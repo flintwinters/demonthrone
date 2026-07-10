@@ -3,6 +3,17 @@ export type Tile = {
   y: number;
 };
 
+export type BiomeKind = "cinder" | "fen" | "heath" | "ridge";
+export type TerrainKind = "floor" | "boulder" | "brush";
+
+export type Terrain = {
+  kind: TerrainKind;
+  biome: BiomeKind;
+  blocksMovement: boolean;
+  blocksSight: boolean;
+  sightCost: number;
+};
+
 export type HeightTile = Tile & {
   height: number;
 };

@@ -1,5 +1,24 @@
 import * as THREE from "three";
 import { colors, terrainHeight } from "./constants.js";
+import { tileBiome } from "./world.js";
+const biomeStyles = {
+    cinder: {
+        top: colors.cinderTile,
+        side: colors.cinderTileSide,
+    },
+    fen: {
+        top: colors.fenTile,
+        side: colors.fenTileSide,
+    },
+    heath: {
+        top: colors.heathTile,
+        side: colors.heathTileSide,
+    },
+    ridge: {
+        top: colors.ridgeTile,
+        side: colors.ridgeTileSide,
+    },
+};
 export function tileStyle(tile, boardState, level) {
     if (isPlannedMoveTarget(tile, boardState.units)) {
         return terrainStyle(colors.moveTarget, colors.movementTileSideRight, level);
@@ -16,11 +35,15 @@ export function tileStyle(tile, boardState, level) {
     if (sameTile(boardState.hoveredTile, tile)) {
         return terrainStyle(colors.hoveredTile, colors.tileSideRight, level);
     }
-    return terrainStyle(colors.tile, colors.tileSideRight, level);
+    return biomeTerrainStyle(tile, level);
 }
 function movementTileStyle(tile, boardState, level) {
     const top = sameTile(boardState.hoveredTile, tile) ? colors.hoveredMovementTile : colors.movementTile;
     return terrainStyle(top, colors.movementTileSideRight, level);
+}
+function biomeTerrainStyle(tile, level) {
+    const style = biomeStyles[tileBiome(tile)];
+    return terrainStyle(style.top, style.side, level);
 }
 function terrainStyle(top, side, level) {
     return {
