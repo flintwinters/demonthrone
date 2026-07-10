@@ -10,7 +10,6 @@ export type Terrain = {
   kind: TerrainKind;
   biome: BiomeKind;
   blocksMovement: boolean;
-  blocksSight: boolean;
   sightCost: number;
 };
 
@@ -84,5 +83,4 @@ export type BoardState = {
   selectedUnitId: string | null;
   tileHeight: TileHeight;
   isMovementTile: TilePredicate;
-  isTileVisible: TilePredicate;
 };

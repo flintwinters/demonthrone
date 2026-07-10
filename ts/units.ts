@@ -1,10 +1,6 @@
 import { colors } from "./constants.js";
 import type { HeightTile, Tile, Unit } from "./types.js";
 
-type PlannedUnit = Unit & {
-  target: Tile;
-};
-
 export const units: Unit[] = [
   {
     id: "vanguard",
@@ -36,10 +32,6 @@ export const selection: { unitId: string | null } = {
 
 export function selectedUnit(): Unit | null {
   return units.find((unit) => unit.id === selection.unitId) ?? null;
-}
-
-export function plannedUnits(): PlannedUnit[] {
-  return units.filter(hasTarget);
 }
 
 export function clickBoardTile(
@@ -88,8 +80,4 @@ function assignSelectedTarget(
 
 function unitAt(tile: Tile): Unit | null {
   return units.find((unit) => unit.x === tile.x && unit.y === tile.y) ?? null;
-}
-
-function hasTarget(unit: Unit): unit is PlannedUnit {
-  return unit.target !== null;
 }

@@ -52,19 +52,16 @@ const terrainTraits = {
     floor: {
         kind: "floor",
         blocksMovement: false,
-        blocksSight: false,
         sightCost: 1,
     },
     boulder: {
         kind: "boulder",
         blocksMovement: true,
-        blocksSight: true,
         sightCost: Number.POSITIVE_INFINITY,
     },
     brush: {
         kind: "brush",
         blocksMovement: false,
-        blocksSight: false,
         sightCost: 2,
     },
 };
@@ -80,9 +77,6 @@ export function tileTerrain(tile) {
 }
 export function isObstacleTile(tile) {
     return tileTerrain(tile).blocksMovement;
-}
-export function isSightBlockingTile(tile) {
-    return tileTerrain(tile).blocksSight;
 }
 export function sightCost(tile) {
     return tileTerrain(tile).sightCost;

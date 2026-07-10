@@ -24,7 +24,6 @@ export function boardState(
     selectedUnitId: selection.unitId,
     tileHeight,
     isMovementTile,
-    isTileVisible: (tile) => canSeeTile(tile, enemies),
   };
 }
 

@@ -2,7 +2,7 @@ import { boardState, canSeeTile, enrichTile } from "./board-state.js";
 import { devicePixelRatio, gridFromScreen, screenFromGrid, view } from "./camera.js";
 import { terrainHeight } from "./constants.js";
 import { attackUnits, moveEnemies, randomEnemies } from "./enemies.js";
-import { l1Distance } from "./grid.js";
+import { l1Distance, sameTile } from "./grid.js";
 import { connectInput } from "./input.js";
 import { canReachTile } from "./movement.js";
 import { isObstacleTile } from "./obstacles.js";
@@ -126,10 +126,6 @@ function unitScreenPoint(unit: Unit): ScreenPoint {
 
 function screenDistance(first: ScreenPoint, second: ScreenPoint): number {
   return Math.hypot(first.x - second.x, first.y - second.y);
-}
-
-function sameTile(first: Tile | null, second: Tile | null): boolean {
-  return first?.x === second?.x && first?.y === second?.y;
 }
 
 function pickRadius(): number {

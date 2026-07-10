@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { colors, terrainHeight } from "./constants.js";
+import { sameTile } from "./grid.js";
 import type { TerrainStyle } from "./terrain-mesh.js";
 import { tileBiome } from "./world.js";
 import type { BiomeKind, BoardState, RenderUnit, Tile } from "./types.js";
@@ -96,8 +97,4 @@ function isPlannedMoveStart(tile: Tile, units: RenderUnit[]): boolean {
 
 function isPlannedMoveTarget(tile: Tile, units: RenderUnit[]): boolean {
   return units.some((unit) => unit.target && sameTile(unit.target, tile));
-}
-
-function sameTile(first: Tile | null, second: Tile): boolean {
-  return first?.x === second.x && first?.y === second.y;
 }

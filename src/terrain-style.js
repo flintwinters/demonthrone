@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { colors, terrainHeight } from "./constants.js";
+import { sameTile } from "./grid.js";
 import { tileBiome } from "./world.js";
 const biomeStyles = {
     cinder: {
@@ -72,7 +73,4 @@ function isPlannedMoveStart(tile, units) {
 }
 function isPlannedMoveTarget(tile, units) {
     return units.some((unit) => unit.target && sameTile(unit.target, tile));
-}
-function sameTile(first, second) {
-    return first?.x === second.x && first?.y === second.y;
 }

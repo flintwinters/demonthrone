@@ -1,5 +1,5 @@
 import { lineSightCost } from "./sight-cost.js";
-import { tileKey } from "./grid.js";
+import { sameTile } from "./grid.js";
 import type { Tile, TileHeight, TileSightCost, Unit } from "./types.js";
 
 export function isVisibleTile(
@@ -23,5 +23,5 @@ function canUnitSeeTile(
 }
 
 function blocksSightFrom(unit: Unit, sightBlockers: Tile[]): (tile: Tile) => boolean {
-  return (tile) => tileKey(tile) !== tileKey(unit) && sightBlockers.some((blocker) => tileKey(blocker) === tileKey(tile));
+  return (tile) => !sameTile(tile, unit) && sightBlockers.some((blocker) => sameTile(blocker, tile));
 }

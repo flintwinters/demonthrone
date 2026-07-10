@@ -1,5 +1,5 @@
 import { colors } from "./constants.js";
-import { l1Distance, tileKey } from "./grid.js";
+import { cardinalDirections, l1Distance, neighborTile, sameTile } from "./grid.js";
 const enemyCount = 5;
 const maxSpawnAttempts = 500;
 const spawnBounds = {
@@ -8,12 +8,6 @@ const spawnBounds = {
     minY: 0,
     maxY: 13,
 };
-const directions = [
-    { x: 1, y: 0 },
-    { x: -1, y: 0 },
-    { x: 0, y: 1 },
-    { x: 0, y: -1 },
-];
 const enemyStats = {
     sight: 5,
     movement: 1,
@@ -95,8 +89,8 @@ function moveEnemy(enemy, enemies, units, isBlockedTile) {
     }
 }
 function bestStep(enemy, target, enemies, units, isBlockedTile) {
-    const candidates = directions
-        .map((direction) => ({ x: enemy.x + direction.x, y: enemy.y + direction.y }))
+    const candidates = cardinalDirections
+        .map((direction) => neighborTile(enemy, direction))
         .filter((tile) => canEnemyEnter(tile, enemies, units, isBlockedTile));
     return candidates.reduce((best, tile) => closerTile(best, tile, target), enemy);
 }
@@ -110,7 +104,4 @@ function closerTile(best, tile, target) {
 }
 function isAttacked(unit, enemies) {
     return enemies.some((enemy) => l1Distance(enemy, unit) <= enemy.attackRange);
-}
-function sameTile(first, second) {
-    return tileKey(first) === tileKey(second);
 }

@@ -1,11 +1,5 @@
-import { l1Distance, tileKey } from "./grid.js";
+import { cardinalDirections, l1Distance, neighborTile, tileKey } from "./grid.js";
 const maxUpwardStepHeight = 2;
-const directions = [
-    { x: 1, y: 0 },
-    { x: -1, y: 0 },
-    { x: 0, y: 1 },
-    { x: 0, y: -1 },
-];
 export function canReachTile(start, target, limit, isBlockedTile, tileHeight) {
     let frontier = [start];
     const visited = new Set([tileKey(start)]);
@@ -28,8 +22,8 @@ function nextFrontier(frontier, target, limit, isBlockedTile, tileHeight, visite
     return next;
 }
 function appendNeighbors(tile, target, limit, isBlockedTile, tileHeight, visited, next) {
-    for (const direction of directions) {
-        appendReachableTile(tile, { x: tile.x + direction.x, y: tile.y + direction.y }, target, limit, isBlockedTile, tileHeight, visited, next);
+    for (const direction of cardinalDirections) {
+        appendReachableTile(tile, neighborTile(tile, direction), target, limit, isBlockedTile, tileHeight, visited, next);
     }
 }
 function appendReachableTile(previous, tile, target, limit, isBlockedTile, tileHeight, visited, next) {

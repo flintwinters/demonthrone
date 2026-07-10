@@ -29,9 +29,6 @@ export const selection = {
 export function selectedUnit() {
     return units.find((unit) => unit.id === selection.unitId) ?? null;
 }
-export function plannedUnits() {
-    return units.filter(hasTarget);
-}
 export function clickBoardTile(tile, canTargetTile) {
     const unit = unitAt(tile);
     if (unit) {
@@ -63,7 +60,4 @@ function assignSelectedTarget(tile, canTargetTile) {
 }
 function unitAt(tile) {
     return units.find((unit) => unit.x === tile.x && unit.y === tile.y) ?? null;
-}
-function hasTarget(unit) {
-    return unit.target !== null;
 }

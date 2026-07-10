@@ -16,7 +16,6 @@ export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMov
         selectedUnitId: selection.unitId,
         tileHeight,
         isMovementTile,
-        isTileVisible: (tile) => canSeeTile(tile, enemies),
     };
 }
 export function canSeeTile(tile, enemies) {
