@@ -1,7 +1,7 @@
 import { l1Distance } from "./grid.js";
 const downhillDistanceDiscount = 0.25;
 const uphillHeightPenalty = 1;
-export function lineSightCost(start, end, sightCost, tileHeight) {
+export function lineSightCost(start, end, sightCost, tileHeight, isSightBlocked) {
     const steps = Math.max(Math.abs(end.x - start.x), Math.abs(end.y - start.y));
     let cost = 0;
     let previous = start;
@@ -9,6 +9,9 @@ export function lineSightCost(start, end, sightCost, tileHeight) {
         const current = linePoint(start, end, step, steps);
         cost += segmentSightCost(previous, current, tileHeight);
         if (step < steps) {
+            if (isSightBlocked(current)) {
+                return Number.POSITIVE_INFINITY;
+            }
             cost += sightCost(current) - 1;
         }
         previous = current;

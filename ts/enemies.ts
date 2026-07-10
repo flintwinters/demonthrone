@@ -16,6 +16,12 @@ const directions = [
   { x: 0, y: 1 },
   { x: 0, y: -1 },
 ];
+const enemyStats = {
+  sight: 5,
+  movement: 1,
+  attackRange: 1,
+  health: 1,
+};
 
 export function randomEnemies(units: Unit[], isBlockedTile: TilePredicate): Enemy[] {
   const enemies: Enemy[] = [];
@@ -36,6 +42,7 @@ export function randomEnemies(units: Unit[], isBlockedTile: TilePredicate): Enem
 
     enemies.push({
       ...tile,
+      ...enemyStats,
       id: `enemy-${enemies.length + 1}`,
       color: colors.enemy,
     });
@@ -46,21 +53,19 @@ export function randomEnemies(units: Unit[], isBlockedTile: TilePredicate): Enem
 
 export function moveEnemies(enemies: Enemy[], units: Unit[], isBlockedTile: TilePredicate): void {
   for (const enemy of enemies) {
-    const target = closestUnit(enemy, units);
-
-    if (!target) {
-      return;
-    }
-
-    moveEnemy(enemy, target, enemies, units, isBlockedTile);
+    moveEnemy(enemy, enemies, units, isBlockedTile);
   }
 }
 
-export function destroyAdjacentUnits(units: Unit[], enemies: Enemy[]): Unit[] {
+export function attackUnits(units: Unit[], enemies: Enemy[]): Unit[] {
   const destroyed: Unit[] = [];
 
   for (let index = units.length - 1; index >= 0; index -= 1) {
-    if (enemies.some((enemy) => l1Distance(enemy, units[index]) === 1)) {
+    if (isAttacked(units[index], enemies)) {
+      units[index].health -= 1;
+    }
+
+    if (units[index].health <= 0) {
       const [unit] = units.splice(index, 1);
 
       destroyed.push(unit);
@@ -103,19 +108,26 @@ function closestUnit(enemy: Enemy, units: Unit[]): Unit | null {
 
 function moveEnemy(
   enemy: Enemy,
-  target: Unit,
   enemies: Enemy[],
   units: Unit[],
   isBlockedTile: TilePredicate,
 ): void {
-  const next = bestStep(enemy, target, enemies, units, isBlockedTile);
+  for (let step = 0; step < enemy.movement; step += 1) {
+    const target = closestUnit(enemy, units);
 
-  enemy.x = next.x;
-  enemy.y = next.y;
+    if (!target) {
+      return;
+    }
+
+    const next = bestStep(enemy, target, enemies, units, isBlockedTile);
+
+    enemy.x = next.x;
+    enemy.y = next.y;
+  }
 }
 
 function bestStep(
-  enemy: Enemy,
+  enemy: Tile,
   target: Unit,
   enemies: Enemy[],
   units: Unit[],
@@ -136,6 +148,10 @@ function canEnemyEnter(tile: Tile, enemies: Enemy[], units: Unit[], isBlockedTil
 
 function closerTile(best: Tile, tile: Tile, target: Unit): Tile {
   return l1Distance(tile, target) < l1Distance(best, target) ? tile : best;
+}
+
+function isAttacked(unit: Unit, enemies: Enemy[]): boolean {
+  return enemies.some((enemy) => l1Distance(enemy, unit) <= enemy.attackRange);
 }
 
 function sameTile(first: Tile, second: Tile): boolean {

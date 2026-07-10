@@ -7,15 +7,20 @@ export type HeightTile = Tile & {
   height: number;
 };
 
-export type Unit = Tile & {
+export type CharacterStats = {
+  sight: number;
+  movement: number;
+  attackRange: number;
+  health: number;
+};
+
+export type Unit = Tile & CharacterStats & {
   id: string;
   color: string;
-  lineOfSight: number;
-  movement: number;
   target: Tile | null;
 };
 
-export type Enemy = Tile & {
+export type Enemy = Tile & CharacterStats & {
   id: string;
   color: string;
 };
@@ -60,6 +65,7 @@ export type BoardState = {
   hoveredTile: HeightTile | null;
   units: RenderUnit[];
   enemies: RenderEnemy[];
+  sightBlockers: Tile[];
   tombstones: RenderTombstone[];
   isObstacleTile: TilePredicate;
   isBrushTile: TilePredicate;

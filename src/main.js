@@ -1,7 +1,7 @@
 import { boardState, canSeeTile, enrichTile } from "./board-state.js";
 import { devicePixelRatio, gridFromScreen, screenFromGrid, view } from "./camera.js";
 import { terrainHeight } from "./constants.js";
-import { destroyAdjacentUnits, moveEnemies, randomEnemies } from "./enemies.js";
+import { attackUnits, moveEnemies, randomEnemies } from "./enemies.js";
 import { l1Distance } from "./grid.js";
 import { connectInput } from "./input.js";
 import { canReachTile } from "./movement.js";
@@ -37,11 +37,11 @@ function resize() {
     draw();
 }
 function selectTile(tile) {
-    selectedTile = tile && canSeeTile(tile) ? clickBoardTile(enrichTile(tile), canMoveToTile) : null;
+    selectedTile = tile && canSeeTile(tile, enemies) ? clickBoardTile(enrichTile(tile), canMoveToTile) : null;
     draw();
 }
 function hoverTile(tile) {
-    const nextTile = tile && canSeeTile(tile) ? enrichTile(tile) : null;
+    const nextTile = tile && canSeeTile(tile, enemies) ? enrichTile(tile) : null;
     if (sameTile(hoveredTile, nextTile)) {
         return;
     }
@@ -57,7 +57,7 @@ function canSelectedUnitMoveTo(tile) {
 }
 function canMoveToTile(tile, unit) {
     const distance = l1Distance(tile, unit);
-    return canSeeTile(tile)
+    return canSeeTile(tile, enemies)
         && !isMovementBlocked(tile)
         && distance <= unit.movement
         && canReachTile(unit, tile, unit.movement, isMovementBlocked);
@@ -66,7 +66,7 @@ function pickUnitTile(point) {
     let nearest = null;
     let nearestDistance = pickRadius();
     for (const unit of units) {
-        if (!canSeeTile(unit)) {
+        if (!canSeeTile(unit, enemies)) {
             continue;
         }
         const distance = screenDistance(point, unitScreenPoint(unit));
@@ -111,7 +111,7 @@ function go() {
     tombstones.length = 0;
     commitPlannedMoves();
     moveEnemies(enemies, units, isObstacleTile);
-    tombstones.push(...destroyAdjacentUnits(units, enemies).map(unitTile));
+    tombstones.push(...attackUnits(units, enemies).map(unitTile));
     syncSelection();
     draw();
 }

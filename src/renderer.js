@@ -11,7 +11,7 @@ const state = {
     current: null,
 };
 export function drawGrid(canvas, boardState) {
-    const tiles = visibleTiles(boardState.units, boardState.sightCost, boardState.tileHeight);
+    const tiles = visibleTiles(boardState.units, boardState.sightBlockers, boardState.sightCost, boardState.tileHeight);
     const renderState = initializeRenderer(canvas);
     configureViewCamera(canvas, renderState.camera);
     resetRoot(renderState);

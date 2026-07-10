@@ -8,18 +8,19 @@ export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMov
         hoveredTile,
         units: renderableUnits(),
         enemies: renderableEnemies(enemies),
-        tombstones: renderableTombstones(tombstones),
+        sightBlockers: sightBlockers(enemies),
+        tombstones: renderableTombstones(tombstones, enemies),
         isObstacleTile,
         isBrushTile,
         sightCost,
         selectedUnitId: selection.unitId,
         tileHeight,
         isMovementTile,
-        isTileVisible: canSeeTile,
+        isTileVisible: (tile) => canSeeTile(tile, enemies),
     };
 }
-export function canSeeTile(tile) {
-    return isVisibleTile(tile, units, sightCost, tileHeight);
+export function canSeeTile(tile, enemies) {
+    return isVisibleTile(tile, units, sightBlockers(enemies), sightCost, tileHeight);
 }
 export function enrichTile(tile) {
     return {
@@ -36,17 +37,20 @@ function renderableUnits() {
 }
 function renderableEnemies(enemies) {
     return enemies
-        .filter(canSeeTile)
+        .filter((enemy) => canSeeTile(enemy, enemies))
         .map((enemy) => ({
         ...enemy,
         height: tileHeight(enemy),
     }));
 }
-function renderableTombstones(tombstones) {
+function renderableTombstones(tombstones, enemies) {
     return tombstones
-        .filter(canSeeTile)
+        .filter((tombstone) => canSeeTile(tombstone, enemies))
         .map((tombstone) => ({
         ...tombstone,
         height: tileHeight(tombstone),
     }));
+}
+function sightBlockers(enemies) {
+    return [...units, ...enemies];
 }

@@ -16,19 +16,20 @@ export function boardState(
     hoveredTile,
     units: renderableUnits(),
     enemies: renderableEnemies(enemies),
-    tombstones: renderableTombstones(tombstones),
+    sightBlockers: sightBlockers(enemies),
+    tombstones: renderableTombstones(tombstones, enemies),
     isObstacleTile,
     isBrushTile,
     sightCost,
     selectedUnitId: selection.unitId,
     tileHeight,
     isMovementTile,
-    isTileVisible: canSeeTile,
+    isTileVisible: (tile) => canSeeTile(tile, enemies),
   };
 }
 
-export function canSeeTile(tile: Tile): boolean {
-  return isVisibleTile(tile, units, sightCost, tileHeight);
+export function canSeeTile(tile: Tile, enemies: Enemy[]): boolean {
+  return isVisibleTile(tile, units, sightBlockers(enemies), sightCost, tileHeight);
 }
 
 export function enrichTile(tile: Tile): HeightTile {
@@ -48,18 +49,22 @@ function renderableUnits(): RenderUnit[] {
 
 function renderableEnemies(enemies: Enemy[]): RenderEnemy[] {
   return enemies
-    .filter(canSeeTile)
+    .filter((enemy) => canSeeTile(enemy, enemies))
     .map((enemy) => ({
       ...enemy,
       height: tileHeight(enemy),
     }));
 }
 
-function renderableTombstones(tombstones: Tile[]): RenderTombstone[] {
+function renderableTombstones(tombstones: Tile[], enemies: Enemy[]): RenderTombstone[] {
   return tombstones
-    .filter(canSeeTile)
+    .filter((tombstone) => canSeeTile(tombstone, enemies))
     .map((tombstone) => ({
       ...tombstone,
       height: tileHeight(tombstone),
     }));
+}
+
+function sightBlockers(enemies: Enemy[]): Tile[] {
+  return [...units, ...enemies];
 }
