@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { terrainHeight } from "./constants.js";
 import { tileKey } from "./grid.js";
 import { terrainBatchSurface } from "./terrain-batch.js";
-import { tileBaseStyle } from "./terrain-style.js";
+import { tileStyle } from "./terrain-style.js";
 import { boulders, brushPatch } from "./terrain-props.js";
 import { tileTerrain } from "./world.js";
 export function terrainLayer(boardState, tiles) {
@@ -14,15 +14,40 @@ export function terrainLayer(boardState, tiles) {
     return group;
 }
 export function terrainSignature(tiles, boardState) {
-    return tiles.map((tile) => `${tileKey(tile)}:${boardState.tileHeight(tile)}`).join("|");
+    return [
+        tiles.map((tile) => `${tileKey(tile)}:${boardState.tileHeight(tile)}`).join("|"),
+        styleSignature(boardState),
+    ].join("#");
 }
 function addTerrainSurfaces(group, boardState, tiles, levels, heights) {
     const styles = new Map();
     for (const tile of tiles) {
         const level = levels.get(tileKey(tile)) ?? 0;
-        styles.set(tileKey(tile), tileBaseStyle(tile, level));
+        styles.set(tileKey(tile), tileStyle(tile, boardState, level));
     }
     group.add(terrainBatchSurface(tiles, styles, heights));
+}
+function styleSignature(boardState) {
+    return [
+        boardState.selectedUnitId ?? "",
+        tileSignature(boardState.selectedTile),
+        tileSignature(boardState.hoveredTile),
+        unitsSignature(boardState.units),
+    ].join("|");
+}
+function tileSignature(tile) {
+    return tile ? `${tile.x}:${tile.y}` : "";
+}
+function unitsSignature(units) {
+    return units.map(unitStyleSignature).join(";");
+}
+function unitStyleSignature(unit) {
+    return [
+        unit.id,
+        unit.x,
+        unit.y,
+        tileSignature(unit.target),
+    ].join(":");
 }
 function addTerrainProps(group, boardState, tiles) {
     const props = collectProps(boardState, tiles);
