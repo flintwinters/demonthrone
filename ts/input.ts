@@ -1,5 +1,6 @@
 import { gridFromScreen, panBy, rotateAt, view, viewportCenter, zoomAt } from "./camera.js";
 import { dragThreshold, mousePitchSpeed, mouseRotateSpeed, wheelDeltaLineMode } from "./constants.js";
+import { createHoverScheduler } from "./hover.js";
 import { endPinch, handlePinch, startPinch, type PinchStart } from "./pinch.js";
 import type { PointerMap, ScreenPoint, Tile, TileHeight } from "./types.js";
 
@@ -34,11 +35,12 @@ export function connectInput(
   let dragStart: DragStart | null = null;
   let pinchStart: PinchStart | null = null;
   let rotateStart: RotateStart | null = null;
+  const hover = createHoverScheduler(onHoverTile, point => tileAtPoint(canvas, point, heightAt, screenTileAt));
 
   function pointerDown(event: PointerEvent): void {
     const point = pointerPosition(canvas, event);
 
-    onHoverTile(null);
+    hover.clear();
     activePointers.set(event.pointerId, point);
 
     if (activePointers.size > 1) {
@@ -63,7 +65,7 @@ export function connectInput(
     updatePointer(canvas, activePointers, event);
 
     if (event.pointerType === "mouse" && activePointers.size === 0) {
-      onHoverTile(tileAtPointer(canvas, event, heightAt, screenTileAt));
+      hover.schedule(pointerPosition(canvas, event));
       return;
     }
 
@@ -108,7 +110,7 @@ export function connectInput(
     pinchStart = endPinch(activePointers);
     dragStart = null;
     rotateStart = null;
-    onHoverTile(null);
+    hover.clear();
   }
 
   function wheel(event: WheelEvent): void {
@@ -116,6 +118,7 @@ export function connectInput(
     const point = pointerPosition(canvas, event);
     const deltaY = normalizedWheelDeltaY(event);
     const zoomFactor = Math.exp(-deltaY * 0.001);
+    hover.clear();
     zoomAt(canvas, point.x, point.y, view.zoom * zoomFactor);
     onViewChange();
   }
@@ -124,7 +127,7 @@ export function connectInput(
   canvas.addEventListener("pointermove", pointerMove);
   canvas.addEventListener("pointerup", pointerUp);
   canvas.addEventListener("pointercancel", pointerCancel);
-  canvas.addEventListener("pointerleave", () => onHoverTile(null));
+  canvas.addEventListener("pointerleave", hover.clear);
   canvas.addEventListener("wheel", wheel, { passive: false });
   canvas.addEventListener("contextmenu", suppressContextMenu);
 }
@@ -202,17 +205,15 @@ function selectTile(
     return;
   }
 
-  onSelectTile(tileAtPointer(canvas, event, heightAt, screenTileAt));
+  onSelectTile(tileAtPoint(canvas, pointerPosition(canvas, event), heightAt, screenTileAt));
 }
 
-function tileAtPointer(
+function tileAtPoint(
   canvas: HTMLCanvasElement,
-  event: PointerEvent,
+  point: ScreenPoint,
   heightAt: TileHeight | null,
   screenTileAt: ScreenTilePicker | null,
 ): Tile {
-  const point = pointerPosition(canvas, event);
-
   return screenTileAt ? screenTileAt(point) : gridFromScreen(canvas, point.x, point.y, heightAt);
 }
 

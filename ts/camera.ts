@@ -29,6 +29,13 @@ export const view: {
 };
 
 const worldUp = new THREE.Vector3(0, 0, 1);
+const screenRayCamera = createViewCamera();
+const screenRayResult: ScreenRay = {
+  origin: new THREE.Vector3(),
+  direction: new THREE.Vector3(),
+};
+const projectedPoint = new THREE.Vector3();
+const projectionCamera = createViewCamera();
 
 export function createViewCamera(): THREE.OrthographicCamera {
   return new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, cameraDistance * 3);
@@ -120,7 +127,7 @@ export function devicePixelRatio(): number {
 }
 
 export function screenFromGrid(canvas: HTMLCanvasElement, x: number, y: number, z = 0): ScreenPoint {
-  return projectWorldPoint(canvas, new THREE.Vector3(x, y, z));
+  return projectWorldPoint(canvas, projectedPoint.set(x, y, z));
 }
 
 function topGridPointFromScreen(
@@ -129,8 +136,11 @@ function topGridPointFromScreen(
   screenY: number,
   heightAt: TileHeight,
 ): THREE.Vector3 {
+  const ray = screenRay(canvas, screenX, screenY);
+  const point = new THREE.Vector3();
+
   for (let z = terrainHeight.max; z >= terrainHeight.min; z -= 1) {
-    const point = worldPointAtHeight(canvas, screenX, screenY, visualHeight(z));
+    pointAtRayHeight(ray, visualHeight(z), point);
     const tile = { x: Math.floor(point.x), y: Math.floor(point.y) };
 
     if (heightAt(tile) === z) {
@@ -138,7 +148,7 @@ function topGridPointFromScreen(
     }
   }
 
-  return worldPointAtHeight(canvas, screenX, screenY, visualHeight(terrainHeight.min));
+  return pointAtRayHeight(ray, visualHeight(terrainHeight.min), point);
 }
 
 function worldPointAtHeight(
@@ -148,9 +158,8 @@ function worldPointAtHeight(
   height: number,
 ): THREE.Vector3 {
   const ray = screenRay(canvas, screenX, screenY);
-  const distance = (height - ray.origin.z) / ray.direction.z;
 
-  return ray.origin.clone().add(ray.direction.multiplyScalar(distance));
+  return pointAtRayHeight(ray, height, new THREE.Vector3());
 }
 
 function anchorView(canvas: HTMLCanvasElement, screenX: number, screenY: number, before: THREE.Vector3): void {
@@ -162,33 +171,36 @@ function anchorView(canvas: HTMLCanvasElement, screenX: number, screenY: number,
 
 function screenRay(canvas: HTMLCanvasElement, screenX: number, screenY: number): ScreenRay {
   const viewport = viewportSize(canvas);
-  const camera = createViewCamera();
-  const origin = new THREE.Vector3();
-  const direction = new THREE.Vector3();
-  const pointer = new THREE.Vector2(
-    screenX / viewport.width * 2 - 1,
-    -(screenY / viewport.height) * 2 + 1,
-  );
+  const pointerX = screenX / viewport.width * 2 - 1;
+  const pointerY = -(screenY / viewport.height) * 2 + 1;
 
-  configureViewCamera(canvas, camera);
-  origin.set(pointer.x, pointer.y, -1).unproject(camera);
-  direction.set(pointer.x, pointer.y, 1).unproject(camera).sub(origin).normalize();
+  configureViewCamera(canvas, screenRayCamera);
+  screenRayResult.origin.set(pointerX, pointerY, -1).unproject(screenRayCamera);
+  screenRayResult.direction
+    .set(pointerX, pointerY, 1)
+    .unproject(screenRayCamera)
+    .sub(screenRayResult.origin)
+    .normalize();
 
-  return { origin, direction };
+  return screenRayResult;
 }
 
 function projectWorldPoint(canvas: HTMLCanvasElement, point: THREE.Vector3): ScreenPoint {
   const viewport = viewportSize(canvas);
-  const camera = createViewCamera();
-  const projected = point.clone();
 
-  configureViewCamera(canvas, camera);
-  projected.project(camera);
+  configureViewCamera(canvas, projectionCamera);
+  point.project(projectionCamera);
 
   return {
-    x: (projected.x + 1) * viewport.width / 2,
-    y: (1 - projected.y) * viewport.height / 2,
+    x: (point.x + 1) * viewport.width / 2,
+    y: (1 - point.y) * viewport.height / 2,
   };
+}
+
+function pointAtRayHeight(ray: ScreenRay, height: number, target: THREE.Vector3): THREE.Vector3 {
+  const distance = (height - ray.origin.z) / ray.direction.z;
+
+  return target.copy(ray.direction).multiplyScalar(distance).add(ray.origin);
 }
 
 function cameraTarget(): THREE.Vector3 {
