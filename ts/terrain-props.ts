@@ -4,9 +4,9 @@ import { material } from "./render-materials.js";
 import type { BiomeKind, Tile } from "./types.js";
 
 const brushGeometry = new THREE.BufferGeometry().setFromPoints([
-  new THREE.Vector3(-0.28, 0, 0),
-  new THREE.Vector3(0.28, 0, 0),
-  new THREE.Vector3(0, 0, 0.42),
+  new THREE.Vector3(-0.32, -0.08, 0.02),
+  new THREE.Vector3(0.32, -0.08, 0.02),
+  new THREE.Vector3(0, 0.28, 0.02),
 ]);
 const brushMaterials = new Map<BiomeKind, THREE.MeshBasicMaterial>();
 
