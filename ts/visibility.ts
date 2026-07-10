@@ -1,8 +1,14 @@
 import { lineSightCost } from "./sight-cost.js";
-import { sameTile } from "./grid.js";
+import { sameTile, tileKey } from "./grid.js";
 import type { Tile, TileHeight, TileSightCost, Unit } from "./types.js";
 
 const boulderSightClearance = 3;
+
+export type SightContext = {
+  sightCost: TileSightCost;
+  tileHeight: TileHeight;
+  blockerKeys: Set<string>;
+};
 
 export function isVisibleTile(
   tile: Tile,
@@ -11,27 +17,39 @@ export function isVisibleTile(
   sightCost: TileSightCost,
   tileHeight: TileHeight,
 ): boolean {
-  return units.some((unit) => canUnitSeeTile(unit, tile, sightBlockers, sightCost, tileHeight));
+  const context = sightContext(sightBlockers, sightCost, tileHeight);
+
+  return units.some((unit) => canUnitSeeTile(unit, tile, context));
 }
 
-function canUnitSeeTile(
+export function canUnitSeeTile(
   unit: Unit,
   tile: Tile,
-  sightBlockers: Tile[],
-  sightCost: TileSightCost,
-  tileHeight: TileHeight,
+  context: SightContext,
 ): boolean {
   return lineSightCost(
     unit,
     tile,
-    terrainSightCostFrom(unit, sightCost, tileHeight),
-    tileHeight,
-    blocksSightFrom(unit, sightBlockers),
+    terrainSightCostFrom(unit, context.sightCost, context.tileHeight),
+    context.tileHeight,
+    blocksSightFrom(unit, context.blockerKeys),
   ) <= unit.sight;
 }
 
-function blocksSightFrom(unit: Unit, sightBlockers: Tile[]): (tile: Tile) => boolean {
-  return (tile) => !sameTile(tile, unit) && sightBlockers.some((blocker) => sameTile(blocker, tile));
+export function sightContext(
+  sightBlockers: Tile[],
+  sightCost: TileSightCost,
+  tileHeight: TileHeight,
+): SightContext {
+  return {
+    sightCost,
+    tileHeight,
+    blockerKeys: new Set(sightBlockers.map(tileKey)),
+  };
+}
+
+function blocksSightFrom(unit: Unit, blockerKeys: Set<string>): (tile: Tile) => boolean {
+  return (tile) => !sameTile(tile, unit) && blockerKeys.has(tileKey(tile));
 }
 
 function terrainSightCostFrom(unit: Unit, sightCost: TileSightCost, tileHeight: TileHeight): TileSightCost {

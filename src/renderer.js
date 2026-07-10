@@ -14,8 +14,8 @@ unitGeometry.userData.shared = true;
 enemyGeometry.userData.shared = true;
 tombstoneGeometry.userData.shared = true;
 export function drawGrid(canvas, boardState) {
-    const tiles = visibleTiles(boardState.units, boardState.sightBlockers, boardState.sightCost, boardState.tileHeight);
     const renderState = initializeRenderer(canvas);
+    const tiles = syncVisibleTiles(renderState, boardState);
     configureViewCamera(canvas, renderState.camera);
     syncTerrain(renderState, boardState, tiles);
     clearRoot(renderState.dynamicRoot);
@@ -36,6 +36,7 @@ function initializeRenderer(canvas) {
         camera: createViewCamera(),
         root: new THREE.Group(),
         dynamicRoot: new THREE.Group(),
+        visibleCache: null,
         terrainCache: null,
     };
     configureRendererSize(renderState.renderer, canvas);
@@ -46,6 +47,24 @@ function initializeRenderer(canvas) {
     renderState.scene.add(directionalLight());
     state.current = renderState;
     return renderState;
+}
+function syncVisibleTiles(renderState, boardState) {
+    const signature = visibilitySignature(boardState);
+    if (renderState.visibleCache?.signature === signature) {
+        return renderState.visibleCache.tiles;
+    }
+    const tiles = visibleTiles(boardState.units, boardState.sightBlockers, boardState.sightCost, boardState.tileHeight);
+    renderState.visibleCache = { signature, tiles };
+    return tiles;
+}
+function visibilitySignature(boardState) {
+    return [
+        tileListSignature(boardState.units),
+        tileListSignature(boardState.sightBlockers),
+    ].join("|");
+}
+function tileListSignature(tiles) {
+    return tiles.map((tile) => `${tile.x}:${tile.y}`).join(";");
 }
 function configureRendererSize(renderer, canvas) {
     renderer.setPixelRatio(devicePixelRatio());

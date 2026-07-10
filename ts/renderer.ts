@@ -12,7 +12,13 @@ type RenderState = {
   camera: THREE.OrthographicCamera;
   root: THREE.Group;
   dynamicRoot: THREE.Group;
+  visibleCache: VisibleCache | null;
   terrainCache: TerrainCache | null;
+};
+
+type VisibleCache = {
+  signature: string;
+  tiles: Tile[];
 };
 
 type TerrainCache = {
@@ -32,8 +38,8 @@ enemyGeometry.userData.shared = true;
 tombstoneGeometry.userData.shared = true;
 
 export function drawGrid(canvas: HTMLCanvasElement, boardState: BoardState): void {
-  const tiles = visibleTiles(boardState.units, boardState.sightBlockers, boardState.sightCost, boardState.tileHeight);
   const renderState = initializeRenderer(canvas);
+  const tiles = syncVisibleTiles(renderState, boardState);
 
   configureViewCamera(canvas, renderState.camera);
   syncTerrain(renderState, boardState, tiles);
@@ -57,6 +63,7 @@ function initializeRenderer(canvas: HTMLCanvasElement): RenderState {
     camera: createViewCamera(),
     root: new THREE.Group(),
     dynamicRoot: new THREE.Group(),
+    visibleCache: null,
     terrainCache: null,
   };
 
@@ -68,6 +75,30 @@ function initializeRenderer(canvas: HTMLCanvasElement): RenderState {
   renderState.scene.add(directionalLight());
   state.current = renderState;
   return renderState;
+}
+
+function syncVisibleTiles(renderState: RenderState, boardState: BoardState): Tile[] {
+  const signature = visibilitySignature(boardState);
+
+  if (renderState.visibleCache?.signature === signature) {
+    return renderState.visibleCache.tiles;
+  }
+
+  const tiles = visibleTiles(boardState.units, boardState.sightBlockers, boardState.sightCost, boardState.tileHeight);
+
+  renderState.visibleCache = { signature, tiles };
+  return tiles;
+}
+
+function visibilitySignature(boardState: BoardState): string {
+  return [
+    tileListSignature(boardState.units),
+    tileListSignature(boardState.sightBlockers),
+  ].join("|");
+}
+
+function tileListSignature(tiles: readonly Tile[]): string {
+  return tiles.map((tile) => `${tile.x}:${tile.y}`).join(";");
 }
 
 function configureRendererSize(renderer: THREE.WebGLRenderer, canvas: HTMLCanvasElement): void {

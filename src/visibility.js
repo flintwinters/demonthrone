@@ -1,14 +1,22 @@
 import { lineSightCost } from "./sight-cost.js";
-import { sameTile } from "./grid.js";
+import { sameTile, tileKey } from "./grid.js";
 const boulderSightClearance = 3;
 export function isVisibleTile(tile, units, sightBlockers, sightCost, tileHeight) {
-    return units.some((unit) => canUnitSeeTile(unit, tile, sightBlockers, sightCost, tileHeight));
+    const context = sightContext(sightBlockers, sightCost, tileHeight);
+    return units.some((unit) => canUnitSeeTile(unit, tile, context));
 }
-function canUnitSeeTile(unit, tile, sightBlockers, sightCost, tileHeight) {
-    return lineSightCost(unit, tile, terrainSightCostFrom(unit, sightCost, tileHeight), tileHeight, blocksSightFrom(unit, sightBlockers)) <= unit.sight;
+export function canUnitSeeTile(unit, tile, context) {
+    return lineSightCost(unit, tile, terrainSightCostFrom(unit, context.sightCost, context.tileHeight), context.tileHeight, blocksSightFrom(unit, context.blockerKeys)) <= unit.sight;
 }
-function blocksSightFrom(unit, sightBlockers) {
-    return (tile) => !sameTile(tile, unit) && sightBlockers.some((blocker) => sameTile(blocker, tile));
+export function sightContext(sightBlockers, sightCost, tileHeight) {
+    return {
+        sightCost,
+        tileHeight,
+        blockerKeys: new Set(sightBlockers.map(tileKey)),
+    };
+}
+function blocksSightFrom(unit, blockerKeys) {
+    return (tile) => !sameTile(tile, unit) && blockerKeys.has(tileKey(tile));
 }
 function terrainSightCostFrom(unit, sightCost, tileHeight) {
     const viewerHeight = tileHeight(unit);
