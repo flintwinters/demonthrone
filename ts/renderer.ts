@@ -7,7 +7,7 @@ import { tileStyle } from "./terrain-style.js";
 import { terrainSurface } from "./terrain-mesh.js";
 import { boulder, brush } from "./terrain-props.js";
 import { visibleTiles } from "./tiles.js";
-import type { BoardState, HeightTile, RenderEnemy, RenderPiece, RenderUnit, Tile } from "./types.js";
+import type { BoardState, HeightTile, RenderEnemy, RenderPiece, RenderTombstone, RenderUnit, Tile } from "./types.js";
 
 type RenderState = {
   renderer: THREE.WebGLRenderer;
@@ -28,6 +28,7 @@ export function drawGrid(canvas: HTMLCanvasElement, boardState: BoardState): voi
   resetRoot(renderState);
   addTerrain(renderState, boardState, tiles);
   addObstacles(renderState, boardState, tiles);
+  addTombstones(renderState, boardState.tombstones);
   addPlannedUnits(renderState, boardState.units);
   addEnemies(renderState, boardState.enemies);
   addUnits(renderState, boardState.units, boardState.selectedUnitId);
@@ -105,6 +106,12 @@ function addEnemies(renderState: RenderState, enemies: RenderEnemy[]): void {
   }
 }
 
+function addTombstones(renderState: RenderState, tombstones: RenderTombstone[]): void {
+  for (const tombstone of tombstones) {
+    renderState.root.add(tombstoneMesh(tombstone));
+  }
+}
+
 function addPlannedUnits(renderState: RenderState, units: RenderUnit[]): void {
   for (const unit of units) {
     if (unit.target) {
@@ -137,6 +144,13 @@ function enemyMesh(enemy: RenderEnemy): THREE.Mesh {
 
   mesh.position.set(enemy.x + 0.5, enemy.y + 0.5, visualHeight(enemy.height) + 0.25);
   mesh.rotation.x = Math.PI / 2;
+  return mesh;
+}
+
+function tombstoneMesh(tombstone: RenderTombstone): THREE.Mesh {
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 8), material(colors.tombstone));
+
+  mesh.position.set(tombstone.x + 0.5, tombstone.y + 0.5, visualHeight(tombstone.height) + 0.16);
   return mesh;
 }
 

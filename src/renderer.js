@@ -17,6 +17,7 @@ export function drawGrid(canvas, boardState) {
     resetRoot(renderState);
     addTerrain(renderState, boardState, tiles);
     addObstacles(renderState, boardState, tiles);
+    addTombstones(renderState, boardState.tombstones);
     addPlannedUnits(renderState, boardState.units);
     addEnemies(renderState, boardState.enemies);
     addUnits(renderState, boardState.units, boardState.selectedUnitId);
@@ -81,6 +82,11 @@ function addEnemies(renderState, enemies) {
         renderState.root.add(enemyMesh(enemy));
     }
 }
+function addTombstones(renderState, tombstones) {
+    for (const tombstone of tombstones) {
+        renderState.root.add(tombstoneMesh(tombstone));
+    }
+}
 function addPlannedUnits(renderState, units) {
     for (const unit of units) {
         if (unit.target) {
@@ -108,6 +114,11 @@ function enemyMesh(enemy) {
     const mesh = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.5, 5), material(enemy.color));
     mesh.position.set(enemy.x + 0.5, enemy.y + 0.5, visualHeight(enemy.height) + 0.25);
     mesh.rotation.x = Math.PI / 2;
+    return mesh;
+}
+function tombstoneMesh(tombstone) {
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 8), material(colors.tombstone));
+    mesh.position.set(tombstone.x + 0.5, tombstone.y + 0.5, visualHeight(tombstone.height) + 0.16);
     return mesh;
 }
 function unitMaterial(color, opacity) {

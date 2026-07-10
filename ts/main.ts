@@ -30,9 +30,10 @@ const rotateRightButton = requiredElement<HTMLButtonElement>("#rotate-right");
 let selectedTile: HeightTile | null = null;
 let hoveredTile: HeightTile | null = null;
 const enemies = randomEnemies(units, isObstacleTile);
+const tombstones: Tile[] = [];
 
 function draw(): void {
-  drawGrid(canvas, boardState(selectedTile, hoveredTile, enemies, canSelectedUnitMoveTo));
+  drawGrid(canvas, boardState(selectedTile, hoveredTile, enemies, tombstones, canSelectedUnitMoveTo));
   syncGoButton();
 }
 
@@ -149,11 +150,19 @@ function go(): void {
     return;
   }
 
+  tombstones.length = 0;
   commitPlannedMoves();
   moveEnemies(enemies, units, isObstacleTile);
-  destroyAdjacentUnits(units, enemies);
+  tombstones.push(...destroyAdjacentUnits(units, enemies).map(unitTile));
   syncSelection();
   draw();
+}
+
+function unitTile(unit: Unit): Tile {
+  return {
+    x: unit.x,
+    y: unit.y,
+  };
 }
 
 function syncSelection(): void {

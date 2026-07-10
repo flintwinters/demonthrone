@@ -44,11 +44,14 @@ export function moveEnemies(enemies, units, isBlockedTile) {
     }
 }
 export function destroyAdjacentUnits(units, enemies) {
+    const destroyed = [];
     for (let index = units.length - 1; index >= 0; index -= 1) {
         if (enemies.some((enemy) => l1Distance(enemy, units[index]) === 1)) {
-            units.splice(index, 1);
+            const [unit] = units.splice(index, 1);
+            destroyed.push(unit);
         }
     }
+    return destroyed;
 }
 function randomSpawnTile() {
     return {

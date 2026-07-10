@@ -2,12 +2,13 @@ import { isObstacleTile } from "./obstacles.js";
 import { isBrushTile, sightCost, tileHeight } from "./world.js";
 import { selection, units } from "./units.js";
 import { isVisibleTile } from "./visibility.js";
-import type { BoardState, Enemy, HeightTile, RenderEnemy, RenderUnit, Tile, TilePredicate } from "./types.js";
+import type { BoardState, Enemy, HeightTile, RenderEnemy, RenderTombstone, RenderUnit, Tile, TilePredicate } from "./types.js";
 
 export function boardState(
   selectedTile: HeightTile | null,
   hoveredTile: HeightTile | null,
   enemies: Enemy[],
+  tombstones: Tile[],
   isMovementTile: TilePredicate,
 ): BoardState {
   return {
@@ -15,6 +16,7 @@ export function boardState(
     hoveredTile,
     units: renderableUnits(),
     enemies: renderableEnemies(enemies),
+    tombstones: renderableTombstones(tombstones),
     isObstacleTile,
     isBrushTile,
     sightCost,
@@ -50,5 +52,14 @@ function renderableEnemies(enemies: Enemy[]): RenderEnemy[] {
     .map((enemy) => ({
       ...enemy,
       height: tileHeight(enemy),
+    }));
+}
+
+function renderableTombstones(tombstones: Tile[]): RenderTombstone[] {
+  return tombstones
+    .filter(canSeeTile)
+    .map((tombstone) => ({
+      ...tombstone,
+      height: tileHeight(tombstone),
     }));
 }

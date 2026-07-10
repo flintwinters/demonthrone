@@ -35,6 +35,10 @@ export type RenderEnemy = Enemy & {
   height: number;
 };
 
+export type RenderTombstone = Tile & {
+  height: number;
+};
+
 export type TilePredicate = (tile: Tile) => boolean;
 export type TileHeight = (tile: Tile) => number;
 export type TileSightCost = (tile: Tile) => number;
@@ -56,6 +60,7 @@ export type BoardState = {
   hoveredTile: HeightTile | null;
   units: RenderUnit[];
   enemies: RenderEnemy[];
+  tombstones: RenderTombstone[];
   isObstacleTile: TilePredicate;
   isBrushTile: TilePredicate;
   sightCost: TileSightCost;

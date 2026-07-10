@@ -2,12 +2,13 @@ import { isObstacleTile } from "./obstacles.js";
 import { isBrushTile, sightCost, tileHeight } from "./world.js";
 import { selection, units } from "./units.js";
 import { isVisibleTile } from "./visibility.js";
-export function boardState(selectedTile, hoveredTile, enemies, isMovementTile) {
+export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMovementTile) {
     return {
         selectedTile,
         hoveredTile,
         units: renderableUnits(),
         enemies: renderableEnemies(enemies),
+        tombstones: renderableTombstones(tombstones),
         isObstacleTile,
         isBrushTile,
         sightCost,
@@ -39,5 +40,13 @@ function renderableEnemies(enemies) {
         .map((enemy) => ({
         ...enemy,
         height: tileHeight(enemy),
+    }));
+}
+function renderableTombstones(tombstones) {
+    return tombstones
+        .filter(canSeeTile)
+        .map((tombstone) => ({
+        ...tombstone,
+        height: tileHeight(tombstone),
     }));
 }

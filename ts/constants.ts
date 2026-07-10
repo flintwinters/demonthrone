@@ -57,4 +57,5 @@ export const colors = {
   unitOne: "#fb4934",
   unitTwo: "#b8bb26",
   enemy: "#d3869b",
+  tombstone: "#928374",
 };
