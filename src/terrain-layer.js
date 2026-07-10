@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import { terrainHeight } from "./constants.js";
 import { tileKey } from "./grid.js";
+import { terrainBatchSurface } from "./terrain-batch.js";
 import { tileBaseStyle } from "./terrain-style.js";
-import { terrainSurface } from "./terrain-mesh.js";
 import { boulder, brush } from "./terrain-props.js";
 import { tileTerrain } from "./world.js";
 export function terrainLayer(boardState, tiles) {
@@ -17,11 +17,12 @@ export function terrainSignature(tiles, boardState) {
     return tiles.map((tile) => `${tileKey(tile)}:${boardState.tileHeight(tile)}`).join("|");
 }
 function addTerrainSurfaces(group, boardState, tiles, levels, heights) {
+    const styles = new Map();
     for (const tile of tiles) {
         const level = levels.get(tileKey(tile)) ?? 0;
-        const height = heights.get(tileKey(tile)) ?? 0;
-        group.add(terrainSurface(tile, height, tileBaseStyle(tile, level), heights));
+        styles.set(tileKey(tile), tileBaseStyle(tile, level));
     }
+    group.add(terrainBatchSurface(tiles, styles, heights));
 }
 function addTerrainProps(group, boardState, tiles) {
     for (const tile of tiles) {

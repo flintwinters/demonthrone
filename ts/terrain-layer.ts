@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import { terrainHeight } from "./constants.js";
 import { tileKey } from "./grid.js";
+import { terrainBatchSurface } from "./terrain-batch.js";
 import { tileBaseStyle } from "./terrain-style.js";
-import { terrainSurface } from "./terrain-mesh.js";
 import { boulder, brush } from "./terrain-props.js";
 import { tileTerrain } from "./world.js";
 import type { BoardState, Tile } from "./types.js";
@@ -28,12 +28,15 @@ function addTerrainSurfaces(
   levels: Map<string, number>,
   heights: Map<string, number>,
 ): void {
+  const styles = new Map<string, ReturnType<typeof tileBaseStyle>>();
+
   for (const tile of tiles) {
     const level = levels.get(tileKey(tile)) ?? 0;
-    const height = heights.get(tileKey(tile)) ?? 0;
 
-    group.add(terrainSurface(tile, height, tileBaseStyle(tile, level), heights));
+    styles.set(tileKey(tile), tileBaseStyle(tile, level));
   }
+
+  group.add(terrainBatchSurface(tiles, styles, heights));
 }
 
 function addTerrainProps(group: THREE.Group, boardState: BoardState, tiles: Tile[]): void {
