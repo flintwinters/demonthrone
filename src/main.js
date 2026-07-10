@@ -59,7 +59,7 @@ function canMoveToTile(tile, unit) {
     return canSeeTile(tile, enemies)
         && !isMovementBlocked(tile)
         && distance <= unit.movement
-        && canReachTile(unit, tile, unit.movement, isMovementBlocked);
+        && canReachTile(unit, tile, unit.movement, isMovementBlocked, tileHeight);
 }
 function pickUnitTile(point) {
     let nearest = null;

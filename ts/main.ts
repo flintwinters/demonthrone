@@ -80,7 +80,7 @@ function canMoveToTile(tile: Tile, unit: Unit): boolean {
   return canSeeTile(tile, enemies)
     && !isMovementBlocked(tile)
     && distance <= unit.movement
-    && canReachTile(unit, tile, unit.movement, isMovementBlocked);
+    && canReachTile(unit, tile, unit.movement, isMovementBlocked, tileHeight);
 }
 
 function pickUnitTile(point: ScreenPoint): Tile | null {
