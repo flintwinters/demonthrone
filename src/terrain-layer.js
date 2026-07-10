@@ -3,7 +3,7 @@ import { terrainHeight } from "./constants.js";
 import { tileKey } from "./grid.js";
 import { terrainBatchSurface } from "./terrain-batch.js";
 import { tileBaseStyle } from "./terrain-style.js";
-import { boulder, brush } from "./terrain-props.js";
+import { boulders, brushPatch } from "./terrain-props.js";
 import { tileTerrain } from "./world.js";
 export function terrainLayer(boardState, tiles) {
     const group = new THREE.Group();
@@ -25,18 +25,35 @@ function addTerrainSurfaces(group, boardState, tiles, levels, heights) {
     group.add(terrainBatchSurface(tiles, styles, heights));
 }
 function addTerrainProps(group, boardState, tiles) {
-    for (const tile of tiles) {
-        addTerrainProp(group, boardState, tile);
+    const props = collectProps(boardState, tiles);
+    if (props.boulders.length > 0) {
+        group.add(boulders(props.boulders));
+    }
+    for (const [biome, placements] of props.brushes) {
+        group.add(brushPatch(biome, placements));
     }
 }
-function addTerrainProp(group, boardState, tile) {
+function collectProps(boardState, tiles) {
+    const props = { boulders: [], brushes: new Map() };
+    for (const tile of tiles) {
+        collectProp(props, boardState, tile);
+    }
+    return props;
+}
+function collectProp(props, boardState, tile) {
     const height = visualHeight(boardState.tileHeight(tile));
+    const placement = { tile, height };
     if (boardState.isObstacleTile(tile)) {
-        group.add(boulder(tile, height));
+        props.boulders.push(placement);
     }
     if (boardState.isBrushTile(tile)) {
-        group.add(brush(tile, height, tileTerrain(tile).biome));
+        appendBrush(props.brushes, tileTerrain(tile).biome, placement);
     }
+}
+function appendBrush(brushes, biome, placement) {
+    const placements = brushes.get(biome) ?? [];
+    placements.push(placement);
+    brushes.set(biome, placements);
 }
 function tileLevels(boardState, tiles) {
     return new Map(tiles.map((tile) => [tileKey(tile), boardState.tileHeight(tile)]));

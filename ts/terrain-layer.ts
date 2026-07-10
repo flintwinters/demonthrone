@@ -3,9 +3,9 @@ import { terrainHeight } from "./constants.js";
 import { tileKey } from "./grid.js";
 import { terrainBatchSurface } from "./terrain-batch.js";
 import { tileBaseStyle } from "./terrain-style.js";
-import { boulder, brush } from "./terrain-props.js";
+import { boulders, brushPatch, type PropPlacement } from "./terrain-props.js";
 import { tileTerrain } from "./world.js";
-import type { BoardState, Tile } from "./types.js";
+import type { BiomeKind, BoardState, Tile } from "./types.js";
 
 export function terrainLayer(boardState: BoardState, tiles: Tile[]): THREE.Group {
   const group = new THREE.Group();
@@ -40,21 +40,56 @@ function addTerrainSurfaces(
 }
 
 function addTerrainProps(group: THREE.Group, boardState: BoardState, tiles: Tile[]): void {
-  for (const tile of tiles) {
-    addTerrainProp(group, boardState, tile);
+  const props = collectProps(boardState, tiles);
+
+  if (props.boulders.length > 0) {
+    group.add(boulders(props.boulders));
+  }
+
+  for (const [biome, placements] of props.brushes) {
+    group.add(brushPatch(biome, placements));
   }
 }
 
-function addTerrainProp(group: THREE.Group, boardState: BoardState, tile: Tile): void {
+function collectProps(
+  boardState: BoardState,
+  tiles: Tile[],
+): { boulders: PropPlacement[]; brushes: Map<BiomeKind, PropPlacement[]> } {
+  const props = { boulders: [] as PropPlacement[], brushes: new Map<BiomeKind, PropPlacement[]>() };
+
+  for (const tile of tiles) {
+    collectProp(props, boardState, tile);
+  }
+
+  return props;
+}
+
+function collectProp(
+  props: { boulders: PropPlacement[]; brushes: Map<BiomeKind, PropPlacement[]> },
+  boardState: BoardState,
+  tile: Tile,
+): void {
   const height = visualHeight(boardState.tileHeight(tile));
+  const placement = { tile, height };
 
   if (boardState.isObstacleTile(tile)) {
-    group.add(boulder(tile, height));
+    props.boulders.push(placement);
   }
 
   if (boardState.isBrushTile(tile)) {
-    group.add(brush(tile, height, tileTerrain(tile).biome));
+    appendBrush(props.brushes, tileTerrain(tile).biome, placement);
   }
+}
+
+function appendBrush(
+  brushes: Map<BiomeKind, PropPlacement[]>,
+  biome: BiomeKind,
+  placement: PropPlacement,
+): void {
+  const placements = brushes.get(biome) ?? [];
+
+  placements.push(placement);
+  brushes.set(biome, placements);
 }
 
 function tileLevels(boardState: BoardState, tiles: Tile[]): Map<string, number> {
