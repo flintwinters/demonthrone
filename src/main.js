@@ -8,7 +8,6 @@ import { canReachTile } from "./movement.js";
 import { isObstacleTile } from "./obstacles.js";
 import { drawGrid } from "./renderer.js";
 import { connectRotationControls } from "./rotation-controls.js";
-import { connectViewCube } from "./view-cube.js";
 import { tileHeight } from "./world.js";
 import { clickBoardTile, commitPlannedMoves, selection, selectedUnit, units, } from "./units.js";
 const unitPickRadius = 30;
@@ -135,7 +134,6 @@ function handleKeyDown(event) {
 }
 connectInput(canvas, selectTile, hoverTile, draw, tileHeight, pickSelectableTile);
 connectRotationControls(canvas, { left: rotateLeftButton, right: rotateRightButton }, draw);
-connectViewCube(canvas, draw);
 goButton.addEventListener("click", go);
 window.addEventListener("keydown", handleKeyDown);
 window.addEventListener("resize", resize);

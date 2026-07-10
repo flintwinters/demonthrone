@@ -53,56 +53,6 @@ canvas {
   outline-offset: 2px;
 }
 
-.view-cube {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  width: 76px;
-  height: 76px;
-  transform: rotateX(58deg) rotateZ(-38deg);
-  transform-style: preserve-3d;
-}
-
-.view-face {
-  position: absolute;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 1px solid #504945;
-  background: #282828;
-  color: #ebdbb2;
-  font: 700 10px/1 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  text-transform: uppercase;
-}
-
-.view-face:active {
-  background: #3c3836;
-  color: #fabd2f;
-}
-
-.view-face:focus-visible {
-  outline: 2px solid #fabd2f;
-  outline-offset: 2px;
-}
-
-.view-face-top {
-  left: 16px;
-  top: 0;
-  transform: translateZ(22px);
-}
-
-.view-face-front {
-  left: 16px;
-  top: 44px;
-  transform: rotateX(-90deg) translateZ(22px);
-}
-
-.view-face-right {
-  left: 60px;
-  top: 44px;
-  transform: rotateY(90deg) translateZ(22px);
-}
-
 .go-button {
   position: fixed;
   right: 14px;
