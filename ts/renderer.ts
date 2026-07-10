@@ -7,6 +7,7 @@ import { tileStyle } from "./terrain-style.js";
 import { terrainSurface } from "./terrain-mesh.js";
 import { boulder, brush } from "./terrain-props.js";
 import { visibleTiles } from "./tiles.js";
+import { tileTerrain } from "./world.js";
 import type { BoardState, HeightTile, RenderEnemy, RenderPiece, RenderTombstone, RenderUnit, Tile } from "./types.js";
 
 type RenderState = {
@@ -89,7 +90,7 @@ function addObstacles(renderState: RenderState, boardState: BoardState, tiles: T
     }
 
     if (boardState.isBrushTile(tile)) {
-      renderState.root.add(brush(tile, visualHeight(boardState.tileHeight(tile))));
+      renderState.root.add(brush(tile, visualHeight(boardState.tileHeight(tile)), tileTerrain(tile).biome));
     }
   }
 }

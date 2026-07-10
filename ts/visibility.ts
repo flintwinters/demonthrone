@@ -2,6 +2,8 @@ import { lineSightCost } from "./sight-cost.js";
 import { sameTile } from "./grid.js";
 import type { Tile, TileHeight, TileSightCost, Unit } from "./types.js";
 
+const boulderSightClearance = 3;
+
 export function isVisibleTile(
   tile: Tile,
   units: Unit[],
@@ -19,9 +21,29 @@ function canUnitSeeTile(
   sightCost: TileSightCost,
   tileHeight: TileHeight,
 ): boolean {
-  return lineSightCost(unit, tile, sightCost, tileHeight, blocksSightFrom(unit, sightBlockers)) <= unit.sight;
+  return lineSightCost(
+    unit,
+    tile,
+    terrainSightCostFrom(unit, sightCost, tileHeight),
+    tileHeight,
+    blocksSightFrom(unit, sightBlockers),
+  ) <= unit.sight;
 }
 
 function blocksSightFrom(unit: Unit, sightBlockers: Tile[]): (tile: Tile) => boolean {
   return (tile) => !sameTile(tile, unit) && sightBlockers.some((blocker) => sameTile(blocker, tile));
+}
+
+function terrainSightCostFrom(unit: Unit, sightCost: TileSightCost, tileHeight: TileHeight): TileSightCost {
+  const viewerHeight = tileHeight(unit);
+
+  return (tile) => {
+    const cost = sightCost(tile);
+
+    if (cost === Number.POSITIVE_INFINITY && viewerHeight - tileHeight(tile) > boulderSightClearance) {
+      return 1;
+    }
+
+    return cost;
+  };
 }

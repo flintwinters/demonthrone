@@ -7,6 +7,7 @@ import { tileStyle } from "./terrain-style.js";
 import { terrainSurface } from "./terrain-mesh.js";
 import { boulder, brush } from "./terrain-props.js";
 import { visibleTiles } from "./tiles.js";
+import { tileTerrain } from "./world.js";
 const state = {
     current: null,
 };
@@ -68,7 +69,7 @@ function addObstacles(renderState, boardState, tiles) {
             renderState.root.add(boulder(tile, visualHeight(boardState.tileHeight(tile))));
         }
         if (boardState.isBrushTile(tile)) {
-            renderState.root.add(brush(tile, visualHeight(boardState.tileHeight(tile))));
+            renderState.root.add(brush(tile, visualHeight(boardState.tileHeight(tile)), tileTerrain(tile).biome));
         }
     }
 }

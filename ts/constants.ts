@@ -1,3 +1,5 @@
+import type { BiomeKind } from "./types.js";
+
 export const tile = {
   width: 1,
   height: 1,
@@ -54,11 +56,20 @@ export const colors = {
   movementTileSideRight: "#4c7f73",
   movementTileStroke: "#8ec07c",
   moveTarget: "#458588",
-  brush: "#79740e",
-  brushDark: "#3c3836",
+  brushCinder: "#98971a",
+  brushFen: "#8ec07c",
+  brushHeath: "#b8bb26",
+  brushRidge: "#689d6a",
   boulder: "#665c54",
   unitOne: "#fb4934",
   unitTwo: "#b8bb26",
   enemy: "#d3869b",
   tombstone: "#928374",
 };
+
+export const foliageColors = {
+  cinder: colors.brushCinder,
+  fen: colors.brushFen,
+  heath: colors.brushHeath,
+  ridge: colors.brushRidge,
+} satisfies Record<BiomeKind, string>;
