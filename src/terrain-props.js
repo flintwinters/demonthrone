@@ -6,10 +6,12 @@ const brushGeometry = new THREE.BufferGeometry().setFromPoints([
     new THREE.Vector3(0.32, -0.08, 0.02),
     new THREE.Vector3(0, 0.28, 0.02),
 ]);
+const boulderGeometry = new THREE.DodecahedronGeometry(0.34, 0);
 const brushMaterials = new Map();
+brushGeometry.userData.shared = true;
+boulderGeometry.userData.shared = true;
 export function boulder(tile, height) {
-    const geometry = new THREE.DodecahedronGeometry(0.34, 0);
-    const mesh = new THREE.Mesh(geometry, material(colors.boulder));
+    const mesh = new THREE.Mesh(boulderGeometry, material(colors.boulder));
     mesh.position.set(tile.x + 0.5, tile.y + 0.5, height + 0.32);
     mesh.rotation.set(0.3, 0.1, tile.x * 0.7 + tile.y * 0.2);
     return mesh;

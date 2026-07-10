@@ -8,20 +8,26 @@ import { terrainSurface } from "./terrain-mesh.js";
 import { boulder, brush } from "./terrain-props.js";
 import { visibleTiles } from "./tiles.js";
 import { tileTerrain } from "./world.js";
+const unitGeometry = new THREE.SphereGeometry(0.24, 16, 10);
+const enemyGeometry = new THREE.ConeGeometry(0.24, 0.5, 5);
+const tombstoneGeometry = new THREE.SphereGeometry(0.15, 12, 8);
 const state = {
     current: null,
 };
+unitGeometry.userData.shared = true;
+enemyGeometry.userData.shared = true;
+tombstoneGeometry.userData.shared = true;
 export function drawGrid(canvas, boardState) {
     const tiles = visibleTiles(boardState.units, boardState.sightBlockers, boardState.sightCost, boardState.tileHeight);
     const renderState = initializeRenderer(canvas);
     configureViewCamera(canvas, renderState.camera);
-    resetRoot(renderState);
+    clearRoot(renderState.root);
     addTerrain(renderState, boardState, tiles);
     addObstacles(renderState, boardState, tiles);
     addTombstones(renderState, boardState.tombstones);
     addPlannedUnits(renderState, boardState.units);
     addEnemies(renderState, boardState.enemies);
-    addUnits(renderState, boardState.units, boardState.selectedUnitId);
+    addUnits(renderState, boardState.units);
     renderState.renderer.render(renderState.scene, renderState.camera);
 }
 function initializeRenderer(canvas) {
@@ -47,11 +53,9 @@ function configureRendererSize(renderer, canvas) {
     renderer.setPixelRatio(devicePixelRatio());
     renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 }
-function resetRoot(renderState) {
-    disposeGroup(renderState.root);
-    renderState.scene.remove(renderState.root);
-    renderState.root = new THREE.Group();
-    renderState.scene.add(renderState.root);
+function clearRoot(root) {
+    disposeGroup(root);
+    root.clear();
 }
 function addTerrain(renderState, boardState, tiles) {
     const tileLevels = new Map(tiles.map((tile) => [tileKey(tile), boardState.tileHeight(tile)]));
@@ -73,9 +77,9 @@ function addObstacles(renderState, boardState, tiles) {
         }
     }
 }
-function addUnits(renderState, units, selectedUnitId) {
+function addUnits(renderState, units) {
     for (const unit of units) {
-        renderState.root.add(unitMesh(unit, unit.id === selectedUnitId, 1));
+        renderState.root.add(unitMesh(unit, 1));
     }
 }
 function addEnemies(renderState, enemies) {
@@ -91,34 +95,26 @@ function addTombstones(renderState, tombstones) {
 function addPlannedUnits(renderState, units) {
     for (const unit of units) {
         if (unit.target) {
-            renderState.root.add(unitMesh(plannedUnit(unit, unit.target), false, 0.42));
+            renderState.root.add(unitMeshAt(unit, unit.target, 0.42));
         }
     }
 }
-function plannedUnit(unit, target) {
-    return {
-        ...unit,
-        x: target.x,
-        y: target.y,
-        height: target.height,
-    };
+function unitMesh(unit, opacity) {
+    return unitMeshAt(unit, unit, opacity);
 }
-function unitMesh(unit, isSelected, opacity) {
-    const group = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 10), unitMaterial(unit.color, opacity));
-    body.position.z = visualHeight(unit.height) + 0.38;
-    group.position.set(unit.x + 0.5, unit.y + 0.5, 0);
-    group.add(body);
-    return group;
+function unitMeshAt(unit, tile, opacity) {
+    const mesh = new THREE.Mesh(unitGeometry, unitMaterial(unit.color, opacity));
+    mesh.position.set(tile.x + 0.5, tile.y + 0.5, visualHeight(tile.height) + 0.38);
+    return mesh;
 }
 function enemyMesh(enemy) {
-    const mesh = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.5, 5), material(enemy.color));
+    const mesh = new THREE.Mesh(enemyGeometry, material(enemy.color));
     mesh.position.set(enemy.x + 0.5, enemy.y + 0.5, visualHeight(enemy.height) + 0.25);
     mesh.rotation.x = Math.PI / 2;
     return mesh;
 }
 function tombstoneMesh(tombstone) {
-    const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 8), material(colors.tombstone));
+    const mesh = new THREE.Mesh(tombstoneGeometry, material(colors.tombstone));
     mesh.position.set(tombstone.x + 0.5, tombstone.y + 0.5, visualHeight(tombstone.height) + 0.16);
     return mesh;
 }
@@ -135,11 +131,14 @@ function visualHeight(height) {
 }
 function disposeGroup(group) {
     group.traverse((object) => {
-        if (object instanceof THREE.Mesh) {
+        if (object instanceof THREE.Mesh && isDisposableGeometry(object.geometry)) {
             object.geometry.dispose();
         }
-        if (object instanceof THREE.LineSegments) {
+        if (object instanceof THREE.LineSegments && isDisposableGeometry(object.geometry)) {
             object.geometry.dispose();
         }
     });
+}
+function isDisposableGeometry(geometry) {
+    return geometry.userData.shared !== true;
 }

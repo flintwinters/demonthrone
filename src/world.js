@@ -1,6 +1,8 @@
 import { terrainHeight } from "./constants.js";
 import { BiomeProfile, HeightComponent, HeightProfile, NoiseLayer, SafeZone, TerrainType } from "./domain.js";
+import { tileKey } from "./grid.js";
 const worldSeed = 0x5eed;
+const worldDataCacheLimit = 8192;
 const layers = {
     elevation: new NoiseLayer({ scale: 0.055, seed: worldSeed ^ 0x1234 }),
     moisture: new NoiseLayer({ scale: 0.06, seed: worldSeed ^ 0x4321 }),
@@ -44,23 +46,74 @@ const terrainTraits = {
     boulder: new TerrainType("boulder", true, Number.POSITIVE_INFINITY),
     brush: new TerrainType("brush", false, 2),
 };
+const worldDataCache = new Map();
 export function tileTerrain(tile) {
-    const biome = tileBiome(tile);
-    if (isSafeTile(tile)) {
-        return terrainFor("floor", biome);
-    }
-    if (isBoulderTile(tile)) {
-        return terrainFor("boulder", biome);
-    }
-    return terrainFor(isBrushTile(tile) ? "brush" : "floor", biome);
+    return { ...worldData(tile).terrain };
 }
 export function isObstacleTile(tile) {
-    return tileTerrain(tile).blocksMovement;
+    return worldData(tile).terrain.blocksMovement;
 }
 export function sightCost(tile) {
-    return tileTerrain(tile).sightCost;
+    return worldData(tile).terrain.sightCost;
 }
 export function tileBiome(tile) {
+    return worldData(tile).biome;
+}
+export function isBoulderTile(tile) {
+    return worldData(tile).isBoulder;
+}
+export function isBrushTile(tile) {
+    return worldData(tile).isBrush;
+}
+export function tileHeight(tile) {
+    return worldData(tile).height;
+}
+function terrainFor(kind, biomeKind) {
+    return terrainTraits[kind].terrain(biomes[biomeKind]);
+}
+function biome(kind, profile, boulder, brush, sight) {
+    return new BiomeProfile(kind, profile, boulder, brush, sight);
+}
+function height(base, components) {
+    return new HeightProfile(base, components);
+}
+function worldData(tile) {
+    const key = tileKey(tile);
+    const cached = worldDataCache.get(key);
+    if (cached !== undefined) {
+        worldDataCache.delete(key);
+        worldDataCache.set(key, cached);
+        return cached;
+    }
+    const data = createWorldData(tile);
+    cacheWorldData(key, data);
+    return data;
+}
+function createWorldData(tile) {
+    const biome = classifyBiome(tile);
+    const biomeProfile = biomes[biome];
+    const isSafe = isSafeTile(tile);
+    const isBoulder = !isSafe && layers.boulder.value(tile) > biomeProfile.boulderThreshold;
+    const isBrush = !isSafe && !isBoulder && layers.brush.value(tile) > biomeProfile.brushThreshold;
+    const terrain = terrainFor(terrainKind(isBoulder, isBrush), biome);
+    return {
+        biome,
+        height: heightAt(tile, biomeProfile),
+        isBoulder,
+        isBrush,
+        terrain,
+    };
+}
+function cacheWorldData(key, data) {
+    if (worldDataCache.size >= worldDataCacheLimit) {
+        const oldestKey = worldDataCache.keys().next().value;
+        if (oldestKey !== undefined) {
+            worldDataCache.delete(oldestKey);
+        }
+    }
+    worldDataCache.set(key, data);
+}
+function classifyBiome(tile) {
     const elevation = layers.elevation.value(tile);
     const moisture = layers.moisture.value(tile);
     const ridge = layers.ridge.value(tile);
@@ -72,28 +125,16 @@ export function tileBiome(tile) {
     }
     return moisture < 0.35 ? "cinder" : "heath";
 }
-export function isBoulderTile(tile) {
-    return !isSafeTile(tile) && layers.boulder.value(tile) > biomeAt(tile).boulderThreshold;
+function terrainKind(isBoulder, isBrush) {
+    if (isBoulder) {
+        return "boulder";
+    }
+    return isBrush ? "brush" : "floor";
 }
-export function isBrushTile(tile) {
-    return !isSafeTile(tile) && !isBoulderTile(tile) && layers.brush.value(tile) > biomeAt(tile).brushThreshold;
-}
-export function tileHeight(tile) {
+function heightAt(tile, biomeProfile) {
     const range = terrainHeight.max - terrainHeight.min;
-    const value = biomeAt(tile).height.value(tile);
+    const value = biomeProfile.height.value(tile);
     return terrainHeight.min + Math.round(clamp(value) * range);
-}
-function terrainFor(kind, biomeKind) {
-    return terrainTraits[kind].terrain(biomes[biomeKind]);
-}
-function biome(kind, profile, boulder, brush, sight) {
-    return new BiomeProfile(kind, profile, boulder, brush, sight);
-}
-function height(base, components) {
-    return new HeightProfile(base, components);
-}
-function biomeAt(tile) {
-    return biomes[tileBiome(tile)];
 }
 function clamp(value) {
     return Math.max(0, Math.min(1, value));

@@ -17,22 +17,29 @@ type RenderState = {
   root: THREE.Group;
 };
 
+const unitGeometry = new THREE.SphereGeometry(0.24, 16, 10);
+const enemyGeometry = new THREE.ConeGeometry(0.24, 0.5, 5);
+const tombstoneGeometry = new THREE.SphereGeometry(0.15, 12, 8);
 const state: { current: RenderState | null } = {
   current: null,
 };
+
+unitGeometry.userData.shared = true;
+enemyGeometry.userData.shared = true;
+tombstoneGeometry.userData.shared = true;
 
 export function drawGrid(canvas: HTMLCanvasElement, boardState: BoardState): void {
   const tiles = visibleTiles(boardState.units, boardState.sightBlockers, boardState.sightCost, boardState.tileHeight);
   const renderState = initializeRenderer(canvas);
 
   configureViewCamera(canvas, renderState.camera);
-  resetRoot(renderState);
+  clearRoot(renderState.root);
   addTerrain(renderState, boardState, tiles);
   addObstacles(renderState, boardState, tiles);
   addTombstones(renderState, boardState.tombstones);
   addPlannedUnits(renderState, boardState.units);
   addEnemies(renderState, boardState.enemies);
-  addUnits(renderState, boardState.units, boardState.selectedUnitId);
+  addUnits(renderState, boardState.units);
   renderState.renderer.render(renderState.scene, renderState.camera);
 }
 
@@ -63,11 +70,9 @@ function configureRendererSize(renderer: THREE.WebGLRenderer, canvas: HTMLCanvas
   renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
 }
 
-function resetRoot(renderState: RenderState): void {
-  disposeGroup(renderState.root);
-  renderState.scene.remove(renderState.root);
-  renderState.root = new THREE.Group();
-  renderState.scene.add(renderState.root);
+function clearRoot(root: THREE.Group): void {
+  disposeGroup(root);
+  root.clear();
 }
 
 function addTerrain(renderState: RenderState, boardState: BoardState, tiles: Tile[]): void {
@@ -95,9 +100,9 @@ function addObstacles(renderState: RenderState, boardState: BoardState, tiles: T
   }
 }
 
-function addUnits(renderState: RenderState, units: RenderUnit[], selectedUnitId: string | null): void {
+function addUnits(renderState: RenderState, units: RenderUnit[]): void {
   for (const unit of units) {
-    renderState.root.add(unitMesh(unit, unit.id === selectedUnitId, 1));
+    renderState.root.add(unitMesh(unit, 1));
   }
 }
 
@@ -116,32 +121,24 @@ function addTombstones(renderState: RenderState, tombstones: RenderTombstone[]):
 function addPlannedUnits(renderState: RenderState, units: RenderUnit[]): void {
   for (const unit of units) {
     if (unit.target) {
-      renderState.root.add(unitMesh(plannedUnit(unit, unit.target), false, 0.42));
+      renderState.root.add(unitMeshAt(unit, unit.target, 0.42));
     }
   }
 }
 
-function plannedUnit(unit: RenderUnit, target: HeightTile): RenderUnit {
-  return {
-    ...unit,
-    x: target.x,
-    y: target.y,
-    height: target.height,
-  };
+function unitMesh(unit: RenderPiece, opacity: number): THREE.Mesh {
+  return unitMeshAt(unit, unit, opacity);
 }
 
-function unitMesh(unit: RenderPiece, isSelected: boolean, opacity: number): THREE.Group {
-  const group = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 10), unitMaterial(unit.color, opacity));
+function unitMeshAt(unit: RenderPiece, tile: HeightTile, opacity: number): THREE.Mesh {
+  const mesh = new THREE.Mesh(unitGeometry, unitMaterial(unit.color, opacity));
 
-  body.position.z = visualHeight(unit.height) + 0.38;
-  group.position.set(unit.x + 0.5, unit.y + 0.5, 0);
-  group.add(body);
-  return group;
+  mesh.position.set(tile.x + 0.5, tile.y + 0.5, visualHeight(tile.height) + 0.38);
+  return mesh;
 }
 
 function enemyMesh(enemy: RenderEnemy): THREE.Mesh {
-  const mesh = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.5, 5), material(enemy.color));
+  const mesh = new THREE.Mesh(enemyGeometry, material(enemy.color));
 
   mesh.position.set(enemy.x + 0.5, enemy.y + 0.5, visualHeight(enemy.height) + 0.25);
   mesh.rotation.x = Math.PI / 2;
@@ -149,7 +146,7 @@ function enemyMesh(enemy: RenderEnemy): THREE.Mesh {
 }
 
 function tombstoneMesh(tombstone: RenderTombstone): THREE.Mesh {
-  const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 8), material(colors.tombstone));
+  const mesh = new THREE.Mesh(tombstoneGeometry, material(colors.tombstone));
 
   mesh.position.set(tombstone.x + 0.5, tombstone.y + 0.5, visualHeight(tombstone.height) + 0.16);
   return mesh;
@@ -172,12 +169,16 @@ function visualHeight(height: number): number {
 
 function disposeGroup(group: THREE.Group): void {
   group.traverse((object) => {
-    if (object instanceof THREE.Mesh) {
+    if (object instanceof THREE.Mesh && isDisposableGeometry(object.geometry)) {
       object.geometry.dispose();
     }
 
-    if (object instanceof THREE.LineSegments) {
+    if (object instanceof THREE.LineSegments && isDisposableGeometry(object.geometry)) {
       object.geometry.dispose();
     }
   });
+}
+
+function isDisposableGeometry(geometry: THREE.BufferGeometry): boolean {
+  return geometry.userData.shared !== true;
 }
