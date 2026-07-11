@@ -16,13 +16,13 @@ export const selection = {
 export function selectedUnit() {
     return units.find((unit) => unit.id === selection.unitId) ?? null;
 }
-export function clickBoardTile(tile, canTargetTile) {
+export function clickBoardTile(tile, canTargetTile, onTarget) {
     const unit = unitAt(tile);
     if (unit) {
         selection.unitId = unit.id;
         return tile;
     }
-    return assignSelectedTarget(tile, canTargetTile);
+    return assignSelectedTarget(tile, canTargetTile, onTarget);
 }
 export function commitPlannedMoves() {
     for (const unit of units) {
@@ -37,9 +37,10 @@ export function commitPlannedMoves() {
         selection.unitId = null;
     }
 }
-function assignSelectedTarget(tile, canTargetTile) {
+function assignSelectedTarget(tile, canTargetTile, onTarget) {
     const unit = selectedUnit();
     if (unit && canTargetTile(tile, unit)) {
+        onTarget(unit, tile);
         unit.target = { x: tile.x, y: tile.y };
         return tile;
     }

@@ -61,6 +61,7 @@ export const colors = {
   brushHeath: "#b8bb26",
   brushRidge: "#689d6a",
   boulder: "#665c54",
+  pushable: "#d79921",
   unitOne: "#fb4934",
   unitTwo: "#b8bb26",
   enemy: "#d3869b",

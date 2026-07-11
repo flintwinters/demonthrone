@@ -2,9 +2,10 @@ import * as THREE from "three";
 import { configureViewCamera, createViewCamera, devicePixelRatio } from "./camera.js";
 import { colors, terrainHeight } from "./constants.js";
 import { material, transparentMaterial } from "./render-materials.js";
+import { pushableMeshes } from "./pushable-render.js";
 import { terrainLayer, terrainSignature } from "./terrain-layer.js";
 import { visibleTiles } from "./tiles.js";
-import type { BoardState, HeightTile, RenderEnemy, RenderPiece, RenderTombstone, RenderUnit, Tile } from "./types.js";
+import type { BoardState, HeightTile, RenderEnemy, RenderPiece, RenderPushable, RenderTombstone, RenderUnit, Tile } from "./types.js";
 
 type RenderState = {
   renderer: THREE.WebGLRenderer;
@@ -29,9 +30,7 @@ type TerrainCache = {
 const unitGeometry = new THREE.SphereGeometry(0.24, 16, 10);
 const enemyGeometry = new THREE.ConeGeometry(0.24, 0.5, 5);
 const tombstoneGeometry = new THREE.SphereGeometry(0.15, 12, 8);
-const state: { current: RenderState | null } = {
-  current: null,
-};
+const state: { current: RenderState | null } = { current: null };
 
 unitGeometry.userData.shared = true;
 enemyGeometry.userData.shared = true;
@@ -45,10 +44,17 @@ export function drawGrid(canvas: HTMLCanvasElement, boardState: BoardState): voi
   syncTerrain(renderState, boardState, tiles);
   clearRoot(renderState.dynamicRoot);
   addTombstones(renderState, boardState.tombstones);
+  addPushables(renderState, boardState.pushables);
   addPlannedUnits(renderState, boardState.units);
   addEnemies(renderState, boardState.enemies);
   addUnits(renderState, boardState.units);
   renderState.renderer.render(renderState.scene, renderState.camera);
+}
+
+function addPushables(renderState: RenderState, pushables: RenderPushable[]): void {
+  for (const pushable of pushables) {
+    renderState.dynamicRoot.add(...pushableMeshes(pushable));
+  }
 }
 
 function initializeRenderer(canvas: HTMLCanvasElement): RenderState {

@@ -1,8 +1,9 @@
 import { isObstacleTile } from "./obstacles.js";
+import { pushables } from "./pushables.js";
 import { isBrushTile, sightCost, tileHeight } from "./world.js";
 import { selection, units } from "./units.js";
 import { isVisibleTile } from "./visibility.js";
-import type { BoardState, Enemy, HeightTile, RenderEnemy, RenderTombstone, RenderUnit, Tile, TilePredicate } from "./types.js";
+import type { BoardState, Enemy, HeightTile, RenderEnemy, RenderPushable, RenderTombstone, RenderUnit, Tile, TilePredicate } from "./types.js";
 
 export function boardState(
   selectedTile: HeightTile | null,
@@ -18,6 +19,7 @@ export function boardState(
     enemies: renderableEnemies(enemies),
     sightBlockers: sightBlockers(enemies),
     tombstones: renderableTombstones(tombstones, enemies),
+    pushables: renderablePushables(),
     isObstacleTile,
     isBrushTile,
     sightCost,
@@ -25,6 +27,14 @@ export function boardState(
     tileHeight,
     isMovementTile,
   };
+}
+
+function renderablePushables(): RenderPushable[] {
+  return pushables.map((pushable) => ({
+    ...pushable,
+    height: tileHeight(pushable),
+    target: pushable.target ? enrichTile(pushable.target) : null,
+  }));
 }
 
 export function canSeeTile(tile: Tile, enemies: Enemy[]): boolean {

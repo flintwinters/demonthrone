@@ -25,6 +25,7 @@ export function selectedUnit(): Unit | null {
 export function clickBoardTile(
   tile: HeightTile,
   canTargetTile: (tile: Tile, unit: Unit) => boolean,
+  onTarget: (unit: Unit, tile: Tile) => void,
 ): HeightTile | null {
   const unit = unitAt(tile);
 
@@ -33,7 +34,7 @@ export function clickBoardTile(
     return tile;
   }
 
-  return assignSelectedTarget(tile, canTargetTile);
+  return assignSelectedTarget(tile, canTargetTile, onTarget);
 }
 
 export function commitPlannedMoves(): void {
@@ -55,10 +56,12 @@ export function commitPlannedMoves(): void {
 function assignSelectedTarget(
   tile: HeightTile,
   canTargetTile: (tile: Tile, unit: Unit) => boolean,
+  onTarget: (unit: Unit, tile: Tile) => void,
 ): HeightTile | null {
   const unit = selectedUnit();
 
   if (unit && canTargetTile(tile, unit)) {
+    onTarget(unit, tile);
     unit.target = { x: tile.x, y: tile.y };
     return tile;
   }

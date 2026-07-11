@@ -35,6 +35,12 @@ export type Enemy = Tile & CharacterStats & {
   color: string;
 };
 
+export type Pushable = Tile & {
+  id: string;
+  target: Tile | null;
+  pushedByUnitId: string | null;
+};
+
 export type RenderPiece = Tile & {
   id: string;
   color: string;
@@ -52,6 +58,11 @@ export type RenderEnemy = Enemy & {
 
 export type RenderTombstone = Tile & {
   height: number;
+};
+
+export type RenderPushable = Pushable & {
+  height: number;
+  target: HeightTile | null;
 };
 
 export type TilePredicate = (tile: Tile) => boolean;
@@ -77,6 +88,7 @@ export type BoardState = {
   enemies: RenderEnemy[];
   sightBlockers: Tile[];
   tombstones: RenderTombstone[];
+  pushables: RenderPushable[];
   isObstacleTile: TilePredicate;
   isBrushTile: TilePredicate;
   sightCost: TileSightCost;

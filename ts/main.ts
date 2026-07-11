@@ -5,7 +5,8 @@ import { attackUnits, moveEnemies, randomEnemies } from "./enemies.js";
 import { l1Distance, sameTile } from "./grid.js";
 import { connectInput } from "./input.js";
 import { canReachTile } from "./movement.js";
-import { isObstacleTile } from "./obstacles.js";
+import { isBoardObstacle } from "./obstacles.js";
+import { canPushTo, clearPlannedPush, commitPlannedPushes, isPushableTile, planPush, pushables } from "./pushables.js";
 import { drawGrid } from "./renderer.js";
 import { connectRotationControls } from "./rotation-controls.js";
 import { tileHeight } from "./world.js";
@@ -28,7 +29,7 @@ const rotateLeftButton = requiredElement<HTMLButtonElement>("#rotate-left");
 const rotateRightButton = requiredElement<HTMLButtonElement>("#rotate-right");
 let selectedTile: HeightTile | null = null;
 let hoveredTile: HeightTile | null = null;
-const enemies = randomEnemies(units, isObstacleTile);
+const enemies = randomEnemies(units, isBoardObstacle);
 const tombstones: Tile[] = [];
 
 function draw(): void {
@@ -49,7 +50,9 @@ function resize(): void {
 }
 
 function selectTile(tile: Tile): void {
-  selectedTile = tile && canSeeTile(tile, enemies) ? clickBoardTile(enrichTile(tile), canMoveToTile) : null;
+  selectedTile = tile && canSeeTile(tile, enemies)
+    ? clickBoardTile(enrichTile(tile), canMoveToTile, assignMoveTarget)
+    : null;
   draw();
 }
 
@@ -78,9 +81,18 @@ function canMoveToTile(tile: Tile, unit: Unit): boolean {
   const distance = l1Distance(tile, unit);
 
   return canSeeTile(tile, enemies)
-    && !isMovementBlocked(tile)
     && distance <= unit.movement
-    && canReachTile(unit, tile, unit.movement, isMovementBlocked, tileHeight);
+    && (canPushTo(unit, tile, isPushDestinationBlocked, tileHeight)
+      || (!isMovementBlocked(tile)
+        && canReachTile(unit, tile, unit.movement, isMovementBlocked, tileHeight)));
+}
+
+function assignMoveTarget(unit: Unit, tile: Tile): void {
+  clearPlannedPush(unit.id);
+
+  if (isPushableTile(tile)) {
+    planPush(unit, tile);
+  }
 }
 
 function pickUnitTile(point: ScreenPoint): Tile | null {
@@ -108,7 +120,13 @@ function terrainTileAt(point: ScreenPoint): Tile {
 }
 
 function isMovementBlocked(tile: Tile): boolean {
-  return isObstacleTile(tile) || isOccupiedTile(tile);
+  return isBoardObstacle(tile) || isOccupiedTile(tile);
+}
+
+function isPushDestinationBlocked(tile: Tile): boolean {
+  return isMovementBlocked(tile)
+    || units.some((unit) => sameTile(unit.target, tile))
+    || pushables.some((pushable) => sameTile(pushable.target, tile));
 }
 
 function isOccupiedTile(tile: Tile): boolean {
@@ -147,7 +165,8 @@ function go(): void {
 
   tombstones.length = 0;
   commitPlannedMoves();
-  moveEnemies(enemies, units, isObstacleTile);
+  commitPlannedPushes();
+  moveEnemies(enemies, units, isBoardObstacle);
   tombstones.push(...attackUnits(units, enemies).map(unitTile));
   syncSelection();
   draw();

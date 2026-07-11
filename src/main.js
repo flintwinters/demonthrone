@@ -5,7 +5,8 @@ import { attackUnits, moveEnemies, randomEnemies } from "./enemies.js";
 import { l1Distance, sameTile } from "./grid.js";
 import { connectInput } from "./input.js";
 import { canReachTile } from "./movement.js";
-import { isObstacleTile } from "./obstacles.js";
+import { isBoardObstacle } from "./obstacles.js";
+import { canPushTo, clearPlannedPush, commitPlannedPushes, isPushableTile, planPush, pushables } from "./pushables.js";
 import { drawGrid } from "./renderer.js";
 import { connectRotationControls } from "./rotation-controls.js";
 import { tileHeight } from "./world.js";
@@ -19,7 +20,7 @@ const rotateLeftButton = requiredElement("#rotate-left");
 const rotateRightButton = requiredElement("#rotate-right");
 let selectedTile = null;
 let hoveredTile = null;
-const enemies = randomEnemies(units, isObstacleTile);
+const enemies = randomEnemies(units, isBoardObstacle);
 const tombstones = [];
 function draw() {
     drawGrid(canvas, boardState(selectedTile, hoveredTile, enemies, tombstones, canSelectedUnitMoveTo));
@@ -36,7 +37,9 @@ function resize() {
     draw();
 }
 function selectTile(tile) {
-    selectedTile = tile && canSeeTile(tile, enemies) ? clickBoardTile(enrichTile(tile), canMoveToTile) : null;
+    selectedTile = tile && canSeeTile(tile, enemies)
+        ? clickBoardTile(enrichTile(tile), canMoveToTile, assignMoveTarget)
+        : null;
     draw();
 }
 function hoverTile(tile) {
@@ -57,9 +60,16 @@ function canSelectedUnitMoveTo(tile) {
 function canMoveToTile(tile, unit) {
     const distance = l1Distance(tile, unit);
     return canSeeTile(tile, enemies)
-        && !isMovementBlocked(tile)
         && distance <= unit.movement
-        && canReachTile(unit, tile, unit.movement, isMovementBlocked, tileHeight);
+        && (canPushTo(unit, tile, isPushDestinationBlocked, tileHeight)
+            || (!isMovementBlocked(tile)
+                && canReachTile(unit, tile, unit.movement, isMovementBlocked, tileHeight)));
+}
+function assignMoveTarget(unit, tile) {
+    clearPlannedPush(unit.id);
+    if (isPushableTile(tile)) {
+        planPush(unit, tile);
+    }
 }
 function pickUnitTile(point) {
     let nearest = null;
@@ -80,7 +90,12 @@ function terrainTileAt(point) {
     return gridFromScreen(canvas, point.x, point.y, tileHeight);
 }
 function isMovementBlocked(tile) {
-    return isObstacleTile(tile) || isOccupiedTile(tile);
+    return isBoardObstacle(tile) || isOccupiedTile(tile);
+}
+function isPushDestinationBlocked(tile) {
+    return isMovementBlocked(tile)
+        || units.some((unit) => sameTile(unit.target, tile))
+        || pushables.some((pushable) => sameTile(pushable.target, tile));
 }
 function isOccupiedTile(tile) {
     return units.some((unit) => sameTile(unit, tile)) || enemies.some((enemy) => sameTile(enemy, tile));
@@ -106,7 +121,8 @@ function go() {
     }
     tombstones.length = 0;
     commitPlannedMoves();
-    moveEnemies(enemies, units, isObstacleTile);
+    commitPlannedPushes();
+    moveEnemies(enemies, units, isBoardObstacle);
     tombstones.push(...attackUnits(units, enemies).map(unitTile));
     syncSelection();
     draw();
