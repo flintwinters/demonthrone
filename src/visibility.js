@@ -20,6 +20,14 @@ export function sightContext(sightBlockers, sightCost, tileHeight, isBoulderTile
         boulderHeight: sightGeometry.boulderHeight,
     };
 }
+export function memoizedSightContext(context) {
+    return {
+        ...context,
+        sightCost: memoizedTileValue(context.sightCost),
+        tileHeight: memoizedTileValue(context.tileHeight),
+        isBoulderTile: memoizedTileValue(context.isBoulderTile),
+    };
+}
 function canSeePoint(unit, target, context) {
     const source = pointAbove(unit, context, sightGeometry.eyeHeight);
     const horizontal = Math.hypot(target.x - source.x, target.y - source.y);
@@ -41,6 +49,18 @@ function blockerMap(blockers) {
         grouped.set(key, [...grouped.get(key) ?? [], blocker]);
     }
     return grouped;
+}
+function memoizedTileValue(valueAt) {
+    const values = new Map();
+    return (tile) => {
+        const key = tileKey(tile);
+        const existing = values.get(key);
+        if (existing !== undefined)
+            return existing;
+        const value = valueAt(tile);
+        values.set(key, value);
+        return value;
+    };
 }
 function visualHeight(height) {
     return height * terrainHeight.visualScale;

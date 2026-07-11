@@ -4,6 +4,7 @@ import { colors } from "./constants.js";
 const materials: Map<string, THREE.MeshLambertMaterial> = new Map();
 const transparentMaterials: Map<string, THREE.MeshLambertMaterial> = new Map();
 const terrainMaterials: Map<string, THREE.MeshLambertMaterial> = new Map();
+const lineMaterials: Map<string, THREE.LineBasicMaterial> = new Map();
 
 export const edgeMaterial = new THREE.LineBasicMaterial({
   color: colors.tileEdge,
@@ -13,9 +14,29 @@ export const edgeMaterial = new THREE.LineBasicMaterial({
 
 export const selectedOutlineMaterial = new THREE.LineBasicMaterial({
   color: colors.selectedTileOutline,
-  transparent: true,
-  opacity: 1,
+  transparent: false,
+  depthTest: false,
+  depthWrite: false,
 });
+
+export function lineMaterial(color: string): THREE.LineBasicMaterial {
+  const existing = lineMaterials.get(color);
+
+  if (existing) {
+    return existing;
+  }
+
+  const created = new THREE.LineBasicMaterial({
+    color,
+    transparent: true,
+    opacity: 0.98,
+    depthTest: false,
+    depthWrite: false,
+  });
+
+  lineMaterials.set(color, created);
+  return created;
+}
 
 export function material(color: string): THREE.MeshLambertMaterial {
   const existing = materials.get(color);

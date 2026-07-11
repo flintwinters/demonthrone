@@ -67,7 +67,7 @@ test("shadowcast work grows quadratically with sight radius", () => {
     samples += 1;
     return 1;
   } });
-  assert.equal(samples <= 20 * radius ** 2, true);
+  assert.equal(samples <= 4 * radius ** 2, true);
 });
 
 test("character-height range fields include flat adjacent tiles", () => {

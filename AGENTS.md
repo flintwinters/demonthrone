@@ -8,6 +8,7 @@
 - Performance state: terrain faces are batched in `ts/terrain-batch.ts`, boulder/brush props render through `InstancedMesh` in `ts/terrain-props.ts`, and renderer visibility results are cached across camera/hover redraws in `ts/renderer.ts`.
 - Visibility fields use cached octant shadowcasting with fixed angular bins, slope-scaled weighted range cost, and vertical terrain/boulder/character horizons in quadratic work; attacker-specific entity LOS retains the exact native 3D supercover ray traversal.
 - Movement and attack overlays are cached per-unit fields: movement uses one obstacle-aware weighted flood fill, while attacks reuse the 3D shadowcasting geometry with attack range as the budget and unit traversal cost.
+- Visibility recomputation memoizes procedural tile properties across all teammates, uses one angular bin per outer-radius tile, skips out-of-radius samples before world lookup, and relies on a bounded 32,768-tile world-data cache sized to retain several overlapping sight fields during movement.
 - Python backend lives in `backend/`, uses only the standard library, tolerates clients disconnecting during static responses, serves the static frontend, and exposes `/api/health` plus `/api/game/new`.
 - Verification gate: run `npm run check`; ESLint enforces cyclomatic complexity and file length limits.
 - Backend verification gate: run `python -m unittest discover`.

@@ -27,7 +27,7 @@ function appendShadowcastField(origin, range, targetOffset, context, seen, tiles
     }
 }
 function sweepOctant(origin, range, targetOffset, context, octant, radius, seen, tiles) {
-    const bins = radius * 2 + 1;
+    const bins = radius + 1;
     const sweep = createSweep(bins, context.tileHeight(origin) + sightGeometry.eyeHeight, targetOffset);
     for (let depth = 1; depth <= radius; depth += 1) {
         for (let bin = 0; bin < bins; bin += 1) {
@@ -45,6 +45,8 @@ function visitBin(origin, range, context, octant, depth, bin, sweep, seen, tiles
     const minor = Math.min(depth, Math.floor(angularSlope * (depth + 1)));
     const tile = projectTile(origin, octant, depth, minor);
     const horizontal = Math.hypot(depth, minor);
+    if (horizontal > range)
+        return;
     const step = Math.hypot(1, angularSlope);
     const terrainCost = finiteSightCost(context.sightCost(tile));
     sweep.costs[bin] += step * terrainCost;

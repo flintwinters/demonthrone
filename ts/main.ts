@@ -20,6 +20,7 @@ import { isInspectableTerrain, selectedObjectStatus, selectVisibleEntityTile } f
 import { tileHeight, tileTerrain } from "./world.js";
 import { connectTurnControl } from "./turn-control.js";
 import { canTakeAction, cancelAction, resetActions } from "./teammate-turns.js";
+import { plannedSelectionLines } from "./selection-visuals.js";
 import {
   clearUnitSelection,
   clickBoardTile,
@@ -44,6 +45,7 @@ function draw(): void {
   drawGrid(canvas, boardState(
     selectedTile, hoveredTile, enemies, tombstones, canInteractionTargetTile, canSelectedUnitAttackTile,
     enchantmentSelection.source()?.id ?? null,
+    plannedSelectionLines(enchantmentSelection, hoveredTile, units, enemies, pushables, enrichTile),
   ));
   goButton.hidden = units.length === 0;
   selectionStatus.value = selectedObjectStatus(

@@ -18,6 +18,12 @@ export type HeightTile = Tile & {
   height: number;
 };
 
+export type SelectionArc = {
+  start: HeightTile;
+  end: HeightTile;
+  color: string;
+};
+
 export type Point3 = {
   x: number;
   y: number;
@@ -118,6 +124,7 @@ export type PointerMap = Map<number, ScreenPoint>;
 export type BoardState = {
   selectedTile: HeightTile | null;
   hoveredTile: HeightTile | null;
+  selectionLines: readonly SelectionArc[];
   units: RenderUnit[];
   visibleTiles: Tile[];
   enemies: RenderEnemy[];

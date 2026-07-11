@@ -74,7 +74,7 @@ export const terrainTraits = {
   water: new TerrainType("water", true, 0.1, Number.POSITIVE_INFINITY),
 } satisfies Record<TerrainKind, TerrainType>;
 
-export const worldDataCacheLimit = 8192;
+export const worldDataCacheLimit = 32768;
 export const basinConfig = {
   cellSize: 10,
   radius: 6,

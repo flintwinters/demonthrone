@@ -47,6 +47,15 @@ export function sightContext(
   };
 }
 
+export function memoizedSightContext(context: SightContext): SightContext {
+  return {
+    ...context,
+    sightCost: memoizedTileValue(context.sightCost),
+    tileHeight: memoizedTileValue(context.tileHeight),
+    isBoulderTile: memoizedTileValue(context.isBoulderTile),
+  };
+}
+
 function canSeePoint(unit: Unit, target: Point3, context: SightContext): boolean {
   const source = pointAbove(unit, context, sightGeometry.eyeHeight);
   const horizontal = Math.hypot(target.x - source.x, target.y - source.y);
@@ -74,6 +83,21 @@ function blockerMap(blockers: SightBlocker[]): Map<string, SightBlocker[]> {
     grouped.set(key, [...grouped.get(key) ?? [], blocker]);
   }
   return grouped;
+}
+
+function memoizedTileValue<Value>(valueAt: (tile: Tile) => Value): (tile: Tile) => Value {
+  const values = new Map<string, Value>();
+
+  return (tile) => {
+    const key = tileKey(tile);
+    const existing = values.get(key);
+
+    if (existing !== undefined) return existing;
+    const value = valueAt(tile);
+
+    values.set(key, value);
+    return value;
+  };
 }
 
 function visualHeight(height: number): number {

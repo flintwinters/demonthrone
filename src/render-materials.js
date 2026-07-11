@@ -3,6 +3,7 @@ import { colors } from "./constants.js";
 const materials = new Map();
 const transparentMaterials = new Map();
 const terrainMaterials = new Map();
+const lineMaterials = new Map();
 export const edgeMaterial = new THREE.LineBasicMaterial({
     color: colors.tileEdge,
     transparent: true,
@@ -10,9 +11,25 @@ export const edgeMaterial = new THREE.LineBasicMaterial({
 });
 export const selectedOutlineMaterial = new THREE.LineBasicMaterial({
     color: colors.selectedTileOutline,
-    transparent: true,
-    opacity: 1,
+    transparent: false,
+    depthTest: false,
+    depthWrite: false,
 });
+export function lineMaterial(color) {
+    const existing = lineMaterials.get(color);
+    if (existing) {
+        return existing;
+    }
+    const created = new THREE.LineBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.98,
+        depthTest: false,
+        depthWrite: false,
+    });
+    lineMaterials.set(color, created);
+    return created;
+}
 export function material(color) {
     const existing = materials.get(color);
     if (existing) {

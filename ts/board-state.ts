@@ -7,7 +7,7 @@ import { canUnitSeeEntity, sightContext } from "./visibility.js";
 import { isBoulderTile, isBrushTile, sightCost, tileHeight } from "./world.js";
 import type {
   BoardState, DamageableEntity, Enemy, HeightTile, RenderEnemy, RenderPushable,
-  RenderTombstone, RenderUnit, Tile, TilePredicate, Unit,
+  RenderTombstone, RenderUnit, SelectionArc, Tile, TilePredicate, Unit,
 } from "./types.js";
 
 export function boardState(
@@ -18,12 +18,14 @@ export function boardState(
   isMovementTile: TilePredicate,
   isAttackTile: TilePredicate,
   enchantmentSourceId: string | null = null,
+  selectionLines: readonly SelectionArc[] = [],
 ): BoardState {
   const visibility = visibilityState(enemies);
 
   return {
     selectedTile,
     hoveredTile,
+    selectionLines,
     units: renderableUnits(),
     visibleTiles: visibility.tiles,
     enemies: renderableEnemies(enemies, visibility.keys),

@@ -5,6 +5,7 @@ import { terrainBatchSurface } from "./terrain-batch.js";
 import { tileStyle } from "./terrain-style.js";
 import { boulders, brushPatch, type PropPlacement } from "./terrain-props.js";
 import { tileTerrain } from "./world.js";
+import { selectionOutlineConfig } from "./selection-visuals.js";
 import { selectedOutlineMaterial } from "./render-materials.js";
 import type { BiomeKind, BoardState, HeightTile, RenderUnit, Tile } from "./types.js";
 
@@ -65,8 +66,8 @@ function appendOutlineTile(
 function selectionOutlineGeometry(selectedTiles: readonly Tile[], heights: Map<string, number>): THREE.BufferGeometry {
   const geometry = new THREE.BufferGeometry();
   const positions: number[] = [];
-
-  const outlineOffset = 0.0025;
+  const outlineInset = selectionOutlineConfig.edgeInset;
+  const outlineZOffset = selectionOutlineConfig.zLift;
 
   for (const tile of selectedTiles) {
     const height = heights.get(tileKey(tile));
@@ -75,19 +76,21 @@ function selectionOutlineGeometry(selectedTiles: readonly Tile[], heights: Map<s
       continue;
     }
 
-    const z = height + outlineOffset;
-    const x = tile.x;
-    const y = tile.y;
+    const z = height + outlineZOffset;
+    const x0 = tile.x - outlineInset;
+    const y0 = tile.y - outlineInset;
+    const x1 = tile.x + 1 + outlineInset;
+    const y1 = tile.y + 1 + outlineInset;
 
     positions.push(
-      x, y, z,
-      x + 1, y, z,
-      x + 1, y, z,
-      x + 1, y + 1, z,
-      x + 1, y + 1, z,
-      x, y + 1, z,
-      x, y + 1, z,
-      x, y, z,
+      x0, y0, z,
+      x1, y0, z,
+      x1, y0, z,
+      x1, y1, z,
+      x1, y1, z,
+      x0, y1, z,
+      x0, y1, z,
+      x0, y0, z,
     );
   }
 

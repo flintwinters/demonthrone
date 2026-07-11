@@ -5,11 +5,12 @@ import { pushables } from "./pushables.js";
 import { selection, units } from "./units.js";
 import { canUnitSeeEntity, sightContext } from "./visibility.js";
 import { isBoulderTile, isBrushTile, sightCost, tileHeight } from "./world.js";
-export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMovementTile, isAttackTile, enchantmentSourceId = null) {
+export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMovementTile, isAttackTile, enchantmentSourceId = null, selectionLines = []) {
     const visibility = visibilityState(enemies);
     return {
         selectedTile,
         hoveredTile,
+        selectionLines,
         units: renderableUnits(),
         visibleTiles: visibility.tiles,
         enemies: renderableEnemies(enemies, visibility.keys),
