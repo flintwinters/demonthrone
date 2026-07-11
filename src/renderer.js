@@ -7,7 +7,7 @@ import { addSelectionVisuals } from "./selection-render.js";
 import { pushableMeshes } from "./pushable-render.js";
 import { terrainLayer, terrainSignature } from "./terrain-layer.js";
 const tombstoneGeometry = new THREE.SphereGeometry(0.15, 12, 8);
-const hemisphereLightIntensity = 2.8;
+const hemisphereLightIntensity = 4.2;
 const directionalLightIntensity = 3.5;
 const state = { current: null };
 tombstoneGeometry.userData.shared = true;
