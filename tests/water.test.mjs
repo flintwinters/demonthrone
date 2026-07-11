@@ -10,31 +10,40 @@ import {
   tileTerrain,
 } from "../src/world.js";
 
-function findWaterTile() {
+function waterTiles() {
+  const tiles = [];
+
   for (let y = -30; y <= 30; y += 1) {
     for (let x = -30; x <= 30; x += 1) {
       if (isWaterTile({ x, y })) {
-        return { x, y };
+        tiles.push({ x, y });
       }
     }
   }
 
-  throw new Error("Expected the configured world region to contain water.");
+  return tiles;
 }
 
-test("water is flat impassable terrain without obstacle props", () => {
-  const tile = findWaterTile();
+test("water is impassable terrain without obstacle props", () => {
+  const [tile] = waterTiles();
+
+  assert.notEqual(tile, undefined, "Expected the configured world region to contain water.");
   const terrain = tileTerrain(tile);
 
   assert.equal(terrain.kind, "water");
   assert.equal(terrain.blocksMovement, true);
   assert.equal(terrain.sightCost, 0.1);
   assert.equal(terrain.movementCost, Number.POSITIVE_INFINITY);
-  assert.equal(tileHeight(tile), 0);
   assert.equal(isObstacleTile(tile), true);
   assert.equal(isBoulderTile(tile), false);
   assert.equal(isBrushTile(tile), false);
   assert.equal(isWaterTile({ x: 5, y: 7 }), false);
+});
+
+test("water bodies retain noise-generated elevation", () => {
+  const heights = new Set(waterTiles().map(tileHeight));
+
+  assert.equal(heights.size > 1, true);
 });
 
 test("water greatly extends line-of-sight traversal distance", () => {

@@ -56,7 +56,7 @@ function createWorldData(tile) {
     const terrain = terrainFor(terrainKind(isWater, isIce, isBoulder, isBrush), biome);
     return {
         biome,
-        height: isWater || isIce ? terrainHeight.min : heightAt(tile, biomeProfile),
+        height: heightAt(tile, biomeProfile),
         isBoulder,
         isBrush,
         isWater,
@@ -117,8 +117,11 @@ function terrainKind(isWater, isIce, isBoulder, isBrush) {
 }
 function heightAt(tile, biomeProfile) {
     const range = terrainHeight.max - terrainHeight.min;
-    const value = biomeProfile.height.value(tile);
+    const value = contrastHeight(biomeProfile.height.value(tile));
     return terrainHeight.min + Math.round(clamp(value) * range);
+}
+function contrastHeight(value) {
+    return 0.5 + (value - 0.5) * terrainHeight.contrast;
 }
 function clamp(value) {
     return Math.max(0, Math.min(1, value));

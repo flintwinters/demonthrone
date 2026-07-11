@@ -15,7 +15,7 @@ function findIceTile() {
   throw new Error("Expected the configured world region to contain ice.");
 }
 
-test("ice is flat passable terrain with water-equivalent sight cost", () => {
+test("ice is passable terrain with water-equivalent sight cost", () => {
   const tile = findIceTile();
   const terrain = tileTerrain(tile);
 
@@ -23,7 +23,7 @@ test("ice is flat passable terrain with water-equivalent sight cost", () => {
   assert.equal(terrain.blocksMovement, false);
   assert.equal(terrain.sightCost, 0.1);
   assert.equal(terrain.movementCost, 0.5);
-  assert.equal(tileHeight(tile), 0);
+  assert.equal(Number.isInteger(tileHeight(tile)), true);
 });
 
 test("ice doubles reachable distance for the same movement budget", () => {
