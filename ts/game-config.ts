@@ -1,6 +1,7 @@
-import { colors } from "./constants.js";
 import { BiomeProfile, HeightComponent, HeightProfile, NoiseLayer, SafeZone, TerrainType } from "./domain.js";
-import type { BiomeKind, CharacterStats, TerrainKind } from "./types.js";
+import type { BiomeKind, TerrainKind } from "./types.js";
+
+export { enemyConfig, teammateConfigs } from "./character-config.js";
 
 export const worldSeed = 0x5eed;
 
@@ -111,53 +112,6 @@ export const entityGeneration = {
   },
 };
 
-export type TileSpawn = { x: number; y: number };
-export type TeammateConfig = {
-  id: string;
-  type: string;
-  spawn: TileSpawn;
-  color: string;
-  stats: CharacterStats;
-};
-
-export const teammateConfigs: readonly TeammateConfig[] = [
-  {
-    id: "vanguard",
-    type: "vanguard",
-    spawn: { x: 5, y: 7 },
-    color: colors.unitOne,
-    stats: {
-      sight: 50,
-      movement: 3,
-      attackRange: 1,
-      health: 1,
-    },
-  },
-  {
-    id: "warden",
-    type: "warden",
-    spawn: { x: 8, y: 6 },
-    color: colors.unitTwo,
-    stats: {
-      sight: 50,
-      movement: 3,
-      attackRange: 1,
-      health: 1,
-    },
-  },
-];
-
-export const enemyConfig = {
-  type: "pursuer",
-  color: colors.enemy,
-  stats: {
-    sight: 5,
-    movement: 1,
-    attackRange: 1,
-    health: 1,
-  },
-};
-
 export const movementConfig = { maxUpwardStepHeight: 2 };
 
 export const pushableConfig = {
@@ -179,6 +133,8 @@ export const piecePickerConfig = {
 };
 
 export const hydrologyConfig = { anchorCacheLimit: 2048 };
+
+export const gameOverConfig = { revealRadius: 20 };
 
 function biome(
   kind: BiomeKind,

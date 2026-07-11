@@ -19,8 +19,9 @@ export function boardState(
   isAttackTile: TilePredicate,
   enchantmentSourceId: string | null = null,
   selectionLines: readonly SelectionArc[] = [],
+  revealCenter: Tile | null = null,
 ): BoardState {
-  const visibility = visibilityState(enemies);
+  const visibility = visibilityState(enemies, revealCenter);
 
   return {
     selectedTile,
@@ -54,8 +55,8 @@ function renderablePushables(visible: Set<string>, enchantmentSourceId: string |
     }));
 }
 
-export function canSeeTile(tile: Tile, enemies: Enemy[]): boolean {
-  return visibilityState(enemies).keys.has(tileKey(tile));
+export function canSeeTile(tile: Tile, enemies: Enemy[], revealCenter: Tile | null = null): boolean {
+  return visibilityState(enemies, revealCenter).keys.has(tileKey(tile));
 }
 
 export function canUnitSee(unit: Unit, target: DamageableEntity, enemies: Enemy[]): boolean {

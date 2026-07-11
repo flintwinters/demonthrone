@@ -84,6 +84,15 @@ canvas {
   font: 700 14px/1.2 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
+.game-over {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  color: #fb4934;
+  font: 700 14px/1 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  transform: translateX(-50%);
+}
+
 @media (any-pointer: coarse) {
   .rotate-controls {
     position: fixed;

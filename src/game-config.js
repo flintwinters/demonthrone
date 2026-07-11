@@ -1,5 +1,5 @@
-import { colors } from "./constants.js";
 import { BiomeProfile, HeightComponent, HeightProfile, NoiseLayer, SafeZone, TerrainType } from "./domain.js";
+export { enemyConfig, teammateConfigs } from "./character-config.js";
 export const worldSeed = 0x5eed;
 export const layers = {
     elevation: new NoiseLayer({ scale: 0.055, seed: worldSeed ^ 0x1234 }),
@@ -97,42 +97,6 @@ export const entityGeneration = {
         threshold: 0.65,
     },
 };
-export const teammateConfigs = [
-    {
-        id: "vanguard",
-        type: "vanguard",
-        spawn: { x: 5, y: 7 },
-        color: colors.unitOne,
-        stats: {
-            sight: 50,
-            movement: 3,
-            attackRange: 1,
-            health: 1,
-        },
-    },
-    {
-        id: "warden",
-        type: "warden",
-        spawn: { x: 8, y: 6 },
-        color: colors.unitTwo,
-        stats: {
-            sight: 50,
-            movement: 3,
-            attackRange: 1,
-            health: 1,
-        },
-    },
-];
-export const enemyConfig = {
-    type: "pursuer",
-    color: colors.enemy,
-    stats: {
-        sight: 5,
-        movement: 1,
-        attackRange: 1,
-        health: 1,
-    },
-};
 export const movementConfig = { maxUpwardStepHeight: 2 };
 export const pushableConfig = {
     maxUpwardPushHeight: 2,
@@ -150,6 +114,7 @@ export const piecePickerConfig = {
     pieceHeight: 0.3,
 };
 export const hydrologyConfig = { anchorCacheLimit: 2048 };
+export const gameOverConfig = { revealRadius: 20 };
 function biome(kind, profile, boulder, brush, sight, water) {
     return new BiomeProfile(kind, profile, boulder, brush, sight, water);
 }

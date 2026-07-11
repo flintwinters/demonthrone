@@ -8,6 +8,7 @@ import { materializeEntities } from "./entity-generation.js";
 import { captureFollowerPositions, dispelDestroyedPushable, followPositionHistory } from "./enchantment.js";
 import { EnchantmentSelection } from "./enchantment-selection.js";
 import { sameTile, tileKey } from "./grid.js";
+import { GameOverState } from "./game-over.js";
 import { connectInput } from "./input.js";
 import { cancelAttackForMovement, clearInteraction, handleEnchantmentClick } from "./interaction.js";
 import { requiredElement } from "./dom.js";
@@ -41,13 +42,16 @@ let hoveredTile: HeightTile | null = null;
 const enemies: Enemy[] = [];
 const tombstones: Tile[] = [];
 const enchantmentSelection = new EnchantmentSelection();
+const gameOver = new GameOverState(requiredElement<HTMLOutputElement>("#game-over"));
 function draw(): void {
   drawGrid(canvas, boardState(
     selectedTile, hoveredTile, enemies, tombstones, canInteractionTargetTile, canSelectedUnitAttackTile,
     enchantmentSelection.source()?.id ?? null,
     plannedSelectionLines(enchantmentSelection, hoveredTile, units, enemies, pushables, enrichTile),
+    gameOver.center,
   ));
   goButton.hidden = units.length === 0;
+  gameOver.syncStatus();
   selectionStatus.value = selectedObjectStatus(
     selectedUnit(), enchantmentSelection.source(), selectedTile, [...units, ...enemies, ...pushables],
     (tile) => tileTerrain(tile).kind,
@@ -81,7 +85,7 @@ function selectTile(tile: Tile): void {
   const unit = selectedUnit();
   const attackTarget = isPushInteraction(tile, unit) ? null : tryPlanAttack(
     tile, unit, [...enemies, ...pushables],
-    (candidate) => Boolean(unit && unitActionFields(unit).attack.has(tileKey(candidate))),
+    (candidate) => Boolean(unit && actionFields(unit, enemies, isMovementBlocked).attack.has(tileKey(candidate))),
   );
 
   if (attackTarget) {
@@ -94,7 +98,7 @@ function selectTile(tile: Tile): void {
     tile,
     units,
     [...units, ...enemies, ...pushables],
-    (candidate) => canSeeTile(candidate, enemies),
+    (candidate) => canSeeTile(candidate, enemies, gameOver.center),
     enrichTile,
     (candidate) => clickBoardTile(candidate, canMoveToTile, assignMoveTarget),
     (candidate) => isInspectableTerrain(tileTerrain(candidate).kind),
@@ -103,7 +107,7 @@ function selectTile(tile: Tile): void {
 }
 
 function hoverTile(tile: Tile | null): void {
-  const nextTile = tile && canSeeTile(tile, enemies) ? enrichTile(tile) : null;
+  const nextTile = tile && canSeeTile(tile, enemies, gameOver.center) ? enrichTile(tile) : null;
 
   if (sameTile(hoveredTile, nextTile)) {
     return;
@@ -115,7 +119,8 @@ function hoverTile(tile: Tile | null): void {
 
 function pickSelectableTile(point: ScreenPoint): Tile {
   const piece = pickPieceTile(
-    canvas, point, [...units, ...enemies, ...pushables], (tile) => canSeeTile(tile, enemies), tileHeight,
+    canvas, point, [...units, ...enemies, ...pushables],
+    (tile) => canSeeTile(tile, enemies, gameOver.center), tileHeight,
   );
 
   return piece ?? gridFromScreen(canvas, point.x, point.y, tileHeight);
@@ -135,13 +140,15 @@ function canSelectedUnitAttackTile(tile: Tile): boolean {
   const unit = selectedUnit();
 
   return Boolean(unit && canPlanAttack(
-    unit, tile, [...enemies, ...pushables], (candidate) => unitActionFields(unit).attack.has(tileKey(candidate)),
+    unit, tile, [...enemies, ...pushables],
+    (candidate) => actionFields(unit, enemies, isMovementBlocked).attack.has(tileKey(candidate)),
   ));
 }
 
 function conflictsWithUnitAction(tile: Tile, unit: Unit): boolean {
   return canMoveToTile(tile, unit) || canPlanAttack(
-    unit, tile, [...enemies, ...pushables], (candidate) => unitActionFields(unit).attack.has(tileKey(candidate)),
+    unit, tile, [...enemies, ...pushables],
+    (candidate) => actionFields(unit, enemies, isMovementBlocked).attack.has(tileKey(candidate)),
   );
 }
 
@@ -150,14 +157,10 @@ function canMoveToTile(tile: Tile, unit: Unit): boolean {
 }
 
 function canMoveIgnoringAction(tile: Tile, unit: Unit): boolean {
-  return canSeeTile(tile, enemies)
+  return canSeeTile(tile, enemies, gameOver.center)
     && (canPushTo(unit, tile, isPushDestinationBlocked, tileHeight)
       || (!isMovementBlocked(tile)
-        && unitActionFields(unit).movement.has(tileKey(tile))));
-}
-
-function unitActionFields(unit: Unit): ReturnType<typeof actionFields> {
-  return actionFields(unit, enemies, isMovementBlocked);
+        && actionFields(unit, enemies, isMovementBlocked).movement.has(tileKey(tile))));
 }
 
 function isPushInteraction(tile: Tile, unit: Unit | null): boolean {
@@ -174,17 +177,15 @@ function assignMoveTarget(unit: Unit, tile: Tile): void {
 }
 
 function isMovementBlocked(tile: Tile): boolean {
-  return isBoardObstacle(tile) || isOccupiedTile(tile);
+  return isBoardObstacle(tile)
+    || units.some((unit) => sameTile(unit, tile))
+    || enemies.some((enemy) => sameTile(enemy, tile));
 }
 
 function isPushDestinationBlocked(tile: Tile): boolean {
   return isMovementBlocked(tile)
     || units.some((unit) => sameTile(unit.target, tile))
     || pushables.some((pushable) => sameTile(pushable.target, tile));
-}
-
-function isOccupiedTile(tile: Tile): boolean {
-  return units.some((unit) => sameTile(unit, tile)) || enemies.some((enemy) => sameTile(enemy, tile));
 }
 
 function go(): void {
@@ -202,7 +203,10 @@ function go(): void {
   tombstones.push(...resolveAttacks(
     units, enemies, pushables, target => dispelDestroyedPushable(target, units),
   ));
-  tombstones.push(...attackUnits(units, enemies).map(({ x, y }) => ({ x, y })));
+  const defeatedUnits = attackUnits(units, enemies);
+
+  tombstones.push(...defeatedUnits.map(({ x, y }) => ({ x, y })));
+  gameOver.recordDefeated(defeatedUnits, units);
   materializeEntities(units, enemies);
   moveEnemies(enemies, units, isBoardObstacle);
   resetActions();

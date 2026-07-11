@@ -82,6 +82,7 @@ export const colors = {
   enchantedPushable: "#b8bb26",
   unitOne: "#fe5f55",
   unitTwo: "#d5d83d",
+  unitThree: "#d65d0e",
   enemy: "#e6a4ba",
   tombstone: "#a89984",
   health: "#fbf1c7",

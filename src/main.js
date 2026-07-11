@@ -8,6 +8,7 @@ import { materializeEntities } from "./entity-generation.js";
 import { captureFollowerPositions, dispelDestroyedPushable, followPositionHistory } from "./enchantment.js";
 import { EnchantmentSelection } from "./enchantment-selection.js";
 import { sameTile, tileKey } from "./grid.js";
+import { GameOverState } from "./game-over.js";
 import { connectInput } from "./input.js";
 import { cancelAttackForMovement, clearInteraction, handleEnchantmentClick } from "./interaction.js";
 import { requiredElement } from "./dom.js";
@@ -32,9 +33,11 @@ let hoveredTile = null;
 const enemies = [];
 const tombstones = [];
 const enchantmentSelection = new EnchantmentSelection();
+const gameOver = new GameOverState(requiredElement("#game-over"));
 function draw() {
-    drawGrid(canvas, boardState(selectedTile, hoveredTile, enemies, tombstones, canInteractionTargetTile, canSelectedUnitAttackTile, enchantmentSelection.source()?.id ?? null, plannedSelectionLines(enchantmentSelection, hoveredTile, units, enemies, pushables, enrichTile)));
+    drawGrid(canvas, boardState(selectedTile, hoveredTile, enemies, tombstones, canInteractionTargetTile, canSelectedUnitAttackTile, enchantmentSelection.source()?.id ?? null, plannedSelectionLines(enchantmentSelection, hoveredTile, units, enemies, pushables, enrichTile), gameOver.center));
     goButton.hidden = units.length === 0;
+    gameOver.syncStatus();
     selectionStatus.value = selectedObjectStatus(selectedUnit(), enchantmentSelection.source(), selectedTile, [...units, ...enemies, ...pushables], (tile) => tileTerrain(tile).kind);
 }
 function resize() {
@@ -55,17 +58,17 @@ function selectTile(tile) {
         return;
     }
     const unit = selectedUnit();
-    const attackTarget = isPushInteraction(tile, unit) ? null : tryPlanAttack(tile, unit, [...enemies, ...pushables], (candidate) => Boolean(unit && unitActionFields(unit).attack.has(tileKey(candidate))));
+    const attackTarget = isPushInteraction(tile, unit) ? null : tryPlanAttack(tile, unit, [...enemies, ...pushables], (candidate) => Boolean(unit && actionFields(unit, enemies, isMovementBlocked).attack.has(tileKey(candidate))));
     if (attackTarget) {
         selectedTile = enrichTile(attackTarget);
         draw();
         return;
     }
-    selectedTile = selectVisibleEntityTile(tile, units, [...units, ...enemies, ...pushables], (candidate) => canSeeTile(candidate, enemies), enrichTile, (candidate) => clickBoardTile(candidate, canMoveToTile, assignMoveTarget), (candidate) => isInspectableTerrain(tileTerrain(candidate).kind));
+    selectedTile = selectVisibleEntityTile(tile, units, [...units, ...enemies, ...pushables], (candidate) => canSeeTile(candidate, enemies, gameOver.center), enrichTile, (candidate) => clickBoardTile(candidate, canMoveToTile, assignMoveTarget), (candidate) => isInspectableTerrain(tileTerrain(candidate).kind));
     draw();
 }
 function hoverTile(tile) {
-    const nextTile = tile && canSeeTile(tile, enemies) ? enrichTile(tile) : null;
+    const nextTile = tile && canSeeTile(tile, enemies, gameOver.center) ? enrichTile(tile) : null;
     if (sameTile(hoveredTile, nextTile)) {
         return;
     }
@@ -73,7 +76,7 @@ function hoverTile(tile) {
     draw();
 }
 function pickSelectableTile(point) {
-    const piece = pickPieceTile(canvas, point, [...units, ...enemies, ...pushables], (tile) => canSeeTile(tile, enemies), tileHeight);
+    const piece = pickPieceTile(canvas, point, [...units, ...enemies, ...pushables], (tile) => canSeeTile(tile, enemies, gameOver.center), tileHeight);
     return piece ?? gridFromScreen(canvas, point.x, point.y, tileHeight);
 }
 function canInteractionTargetTile(tile) {
@@ -85,22 +88,19 @@ function canInteractionTargetTile(tile) {
 }
 function canSelectedUnitAttackTile(tile) {
     const unit = selectedUnit();
-    return Boolean(unit && canPlanAttack(unit, tile, [...enemies, ...pushables], (candidate) => unitActionFields(unit).attack.has(tileKey(candidate))));
+    return Boolean(unit && canPlanAttack(unit, tile, [...enemies, ...pushables], (candidate) => actionFields(unit, enemies, isMovementBlocked).attack.has(tileKey(candidate))));
 }
 function conflictsWithUnitAction(tile, unit) {
-    return canMoveToTile(tile, unit) || canPlanAttack(unit, tile, [...enemies, ...pushables], (candidate) => unitActionFields(unit).attack.has(tileKey(candidate)));
+    return canMoveToTile(tile, unit) || canPlanAttack(unit, tile, [...enemies, ...pushables], (candidate) => actionFields(unit, enemies, isMovementBlocked).attack.has(tileKey(candidate)));
 }
 function canMoveToTile(tile, unit) {
     return canTakeAction(unit) && canMoveIgnoringAction(tile, unit);
 }
 function canMoveIgnoringAction(tile, unit) {
-    return canSeeTile(tile, enemies)
+    return canSeeTile(tile, enemies, gameOver.center)
         && (canPushTo(unit, tile, isPushDestinationBlocked, tileHeight)
             || (!isMovementBlocked(tile)
-                && unitActionFields(unit).movement.has(tileKey(tile))));
-}
-function unitActionFields(unit) {
-    return actionFields(unit, enemies, isMovementBlocked);
+                && actionFields(unit, enemies, isMovementBlocked).movement.has(tileKey(tile))));
 }
 function isPushInteraction(tile, unit) {
     return Boolean(unit && (sameTile(unit.target, tile)
@@ -113,15 +113,14 @@ function assignMoveTarget(unit, tile) {
     }
 }
 function isMovementBlocked(tile) {
-    return isBoardObstacle(tile) || isOccupiedTile(tile);
+    return isBoardObstacle(tile)
+        || units.some((unit) => sameTile(unit, tile))
+        || enemies.some((enemy) => sameTile(enemy, tile));
 }
 function isPushDestinationBlocked(tile) {
     return isMovementBlocked(tile)
         || units.some((unit) => sameTile(unit.target, tile))
         || pushables.some((pushable) => sameTile(pushable.target, tile));
-}
-function isOccupiedTile(tile) {
-    return units.some((unit) => sameTile(unit, tile)) || enemies.some((enemy) => sameTile(enemy, tile));
 }
 function go() {
     if (units.length === 0) {
@@ -133,7 +132,9 @@ function go() {
     commitPlannedPushes();
     followPositionHistory(units, previousPositions);
     tombstones.push(...resolveAttacks(units, enemies, pushables, target => dispelDestroyedPushable(target, units)));
-    tombstones.push(...attackUnits(units, enemies).map(({ x, y }) => ({ x, y })));
+    const defeatedUnits = attackUnits(units, enemies);
+    tombstones.push(...defeatedUnits.map(({ x, y }) => ({ x, y })));
+    gameOver.recordDefeated(defeatedUnits, units);
     materializeEntities(units, enemies);
     moveEnemies(enemies, units, isBoardObstacle);
     resetActions();
