@@ -1,7 +1,8 @@
 import { boardState, canSeeTile, canUnitSee, enrichTile } from "./board-state.js";
 import { devicePixelRatio, gridFromScreen } from "./camera.js";
 import { resolveAttacks, tryPlanAttack } from "./combat.js";
-import { attackUnits, moveEnemies, perlinEnemies } from "./enemies.js";
+import { attackUnits, moveEnemies } from "./enemies.js";
+import { materializeEntities } from "./entity-generation.js";
 import { captureFollowerPositions, followPositionHistory } from "./enchantment.js";
 import { connectEnchantmentControl } from "./enchantment-control.js";
 import { l1Distance, sameTile } from "./grid.js";
@@ -22,7 +23,7 @@ import {
   selectedUnit,
   units,
 } from "./units.js";
-import type { HeightTile, ScreenPoint, Tile, Unit } from "./types.js";
+import type { Enemy, HeightTile, ScreenPoint, Tile, Unit } from "./types.js";
 
 const canvas = requiredElement<HTMLCanvasElement>("#grid");
 const goButton = requiredElement<HTMLButtonElement>("#go");
@@ -30,7 +31,7 @@ const rotateLeftButton = requiredElement<HTMLButtonElement>("#rotate-left");
 const rotateRightButton = requiredElement<HTMLButtonElement>("#rotate-right");
 let selectedTile: HeightTile | null = null;
 let hoveredTile: HeightTile | null = null;
-const enemies = perlinEnemies(units, isBoardObstacle);
+const enemies: Enemy[] = [];
 const tombstones: Tile[] = [];
 let focusedTile: Tile | null = null;
 const enchantmentControl = connectEnchantmentControl(
@@ -161,6 +162,7 @@ function go(): void {
   followPositionHistory(units, previousPositions);
   tombstones.push(...resolveAttacks(units, enemies));
   tombstones.push(...attackUnits(units, enemies).map(({ x, y }) => ({ x, y })));
+  materializeEntities(units, enemies);
   moveEnemies(enemies, units, isBoardObstacle);
   resetActions();
   syncSelection();
@@ -182,6 +184,7 @@ connectRotationControls(
 );
 connectTurnControl(goButton, go);
 window.addEventListener("resize", resize);
+materializeEntities(units, enemies);
 moveEnemies(enemies, units, isBoardObstacle);
 resize();
 

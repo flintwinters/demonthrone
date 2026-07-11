@@ -1,30 +1,41 @@
-export const entitySpawnBounds = {
-    minX: 0,
-    maxX: 13,
-    minY: 0,
-    maxY: 13,
-};
-export function perlinPlacementTiles(count, bounds, noise, isAvailable) {
-    const candidates = tilesIn(bounds)
-        .filter(isAvailable)
-        .map((tile) => ({ tile, value: noise.value(tile) }))
-        .sort(compareCandidates);
-    if (candidates.length < count) {
-        throw new Error(`Unable to place ${count} entities in ${candidates.length} available tiles.`);
+import { cardinalDirections, neighborTile, tileKey } from "./grid.js";
+export class PerlinSpawnField {
+    noise;
+    threshold;
+    consumedOrigins = new Set();
+    constructor(noise, threshold) {
+        this.noise = noise;
+        this.threshold = threshold;
     }
-    return candidates.slice(0, count).map((candidate) => candidate.tile);
-}
-function tilesIn(bounds) {
-    const tiles = [];
-    for (let y = bounds.minY; y <= bounds.maxY; y += 1) {
-        for (let x = bounds.minX; x <= bounds.maxX; x += 1) {
-            tiles.push({ x, y });
+    materialize(centers, radius, isAvailable) {
+        const visited = new Set();
+        const spawned = [];
+        for (const center of centers) {
+            this.scan(center, radius, visited, isAvailable, spawned);
+        }
+        return spawned;
+    }
+    scan(center, radius, visited, isAvailable, spawned) {
+        for (let y = center.y - radius; y <= center.y + radius; y += 1) {
+            for (let x = center.x - radius; x <= center.x + radius; x += 1) {
+                this.trySpawn({ x, y }, visited, isAvailable, spawned);
+            }
         }
     }
-    return tiles;
-}
-function compareCandidates(first, second) {
-    return second.value - first.value
-        || first.tile.y - second.tile.y
-        || first.tile.x - second.tile.x;
+    trySpawn(tile, visited, isAvailable, spawned) {
+        const key = tileKey(tile);
+        if (visited.has(key) || this.consumedOrigins.has(key)) {
+            return;
+        }
+        visited.add(key);
+        if (isAvailable(tile) && this.isSpawnPeak(tile)) {
+            this.consumedOrigins.add(key);
+            spawned.push(tile);
+        }
+    }
+    isSpawnPeak(tile) {
+        const value = this.noise.value(tile);
+        return value >= this.threshold
+            && cardinalDirections.every((direction) => value > this.noise.value(neighborTile(tile, direction)));
+    }
 }

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { boardState } from "../src/board-state.js";
+import { materializeEntities } from "../src/entity-generation.js";
 import { captureFollowerPositions, followPositionHistory, toggleEnchantment } from "../src/enchantment.js";
 import { canTakeAction, resetActions, spendAction } from "../src/teammate-turns.js";
 import {
@@ -11,6 +12,18 @@ import {
   pushables,
 } from "../src/pushables.js";
 
+materializeEntities([{
+  id: "generator",
+  x: 5,
+  y: 7,
+  color: "#fff",
+  sight: 5,
+  movement: 3,
+  attackRange: 1,
+  health: 3,
+  target: null,
+  attackTargetId: null,
+}], []);
 const initialCrate = pushables[0];
 const unit = {
   id: "test-unit",

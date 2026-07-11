@@ -1,18 +1,14 @@
 import { colors } from "./constants.js";
-import { CharacterTemplate, NoiseLayer } from "./domain.js";
+import { CharacterTemplate } from "./domain.js";
 import { cardinalDirections, l1Distance, neighborTile, sameTile } from "./grid.js";
-import { entitySpawnBounds, perlinPlacementTiles } from "./procedural-placement.js";
-const enemyCount = 5;
-const enemyPlacementNoise = new NoiseLayer({ scale: 0.21, seed: 0x6e6d79 });
 const enemyTemplate = new CharacterTemplate({
     sight: 5,
     movement: 1,
     attackRange: 1,
     health: 1,
 });
-export function perlinEnemies(units, isBlockedTile) {
-    const tiles = perlinPlacementTiles(enemyCount, entitySpawnBounds, enemyPlacementNoise, (tile) => !isBlockedTile(tile) && !units.some((unit) => sameTile(unit, tile)));
-    return tiles.map((tile, index) => enemyTemplate.enemy(`enemy-${index + 1}`, tile, colors.enemy));
+export function createEnemy(id, tile) {
+    return enemyTemplate.enemy(id, tile, colors.enemy);
 }
 export function moveEnemies(enemies, units, isBlockedTile) {
     for (const enemy of enemies) {

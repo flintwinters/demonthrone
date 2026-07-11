@@ -1,55 +1,64 @@
 import type { NoiseLayer } from "./domain.js";
+import { cardinalDirections, neighborTile, tileKey } from "./grid.js";
 import type { Tile, TilePredicate } from "./types.js";
 
-export type TileBounds = {
-  minX: number;
-  maxX: number;
-  minY: number;
-  maxY: number;
-};
+export class PerlinSpawnField {
+  private readonly consumedOrigins = new Set<string>();
 
-export const entitySpawnBounds: TileBounds = {
-  minX: 0,
-  maxX: 13,
-  minY: 0,
-  maxY: 13,
-};
+  constructor(
+    private readonly noise: NoiseLayer,
+    private readonly threshold: number,
+  ) {}
 
-export function perlinPlacementTiles(
-  count: number,
-  bounds: TileBounds,
-  noise: NoiseLayer,
-  isAvailable: TilePredicate,
-): Tile[] {
-  const candidates = tilesIn(bounds)
-    .filter(isAvailable)
-    .map((tile) => ({ tile, value: noise.value(tile) }))
-    .sort(compareCandidates);
+  materialize(centers: readonly Tile[], radius: number, isAvailable: TilePredicate): Tile[] {
+    const visited = new Set<string>();
+    const spawned: Tile[] = [];
 
-  if (candidates.length < count) {
-    throw new Error(`Unable to place ${count} entities in ${candidates.length} available tiles.`);
+    for (const center of centers) {
+      this.scan(center, radius, visited, isAvailable, spawned);
+    }
+
+    return spawned;
   }
 
-  return candidates.slice(0, count).map((candidate) => candidate.tile);
-}
-
-function tilesIn(bounds: TileBounds): Tile[] {
-  const tiles: Tile[] = [];
-
-  for (let y = bounds.minY; y <= bounds.maxY; y += 1) {
-    for (let x = bounds.minX; x <= bounds.maxX; x += 1) {
-      tiles.push({ x, y });
+  private scan(
+    center: Tile,
+    radius: number,
+    visited: Set<string>,
+    isAvailable: TilePredicate,
+    spawned: Tile[],
+  ): void {
+    for (let y = center.y - radius; y <= center.y + radius; y += 1) {
+      for (let x = center.x - radius; x <= center.x + radius; x += 1) {
+        this.trySpawn({ x, y }, visited, isAvailable, spawned);
+      }
     }
   }
 
-  return tiles;
-}
+  private trySpawn(
+    tile: Tile,
+    visited: Set<string>,
+    isAvailable: TilePredicate,
+    spawned: Tile[],
+  ): void {
+    const key = tileKey(tile);
 
-function compareCandidates(
-  first: { tile: Tile; value: number },
-  second: { tile: Tile; value: number },
-): number {
-  return second.value - first.value
-    || first.tile.y - second.tile.y
-    || first.tile.x - second.tile.x;
+    if (visited.has(key) || this.consumedOrigins.has(key)) {
+      return;
+    }
+
+    visited.add(key);
+
+    if (isAvailable(tile) && this.isSpawnPeak(tile)) {
+      this.consumedOrigins.add(key);
+      spawned.push(tile);
+    }
+  }
+
+  private isSpawnPeak(tile: Tile): boolean {
+    const value = this.noise.value(tile);
+
+    return value >= this.threshold
+      && cardinalDirections.every((direction) => value > this.noise.value(neighborTile(tile, direction)));
+  }
 }
