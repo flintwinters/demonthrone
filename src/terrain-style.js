@@ -53,8 +53,8 @@ function priorityTileStyle(tile, boardState, level) {
     return null;
 }
 function isPlannedAttackTarget(tile, boardState) {
-    const enemy = boardState.enemies.find((candidate) => sameTile(candidate, tile));
-    return Boolean(enemy && boardState.units.some((unit) => unit.attackTargetId === enemy.id));
+    const target = [...boardState.enemies, ...boardState.pushables].find((candidate) => sameTile(candidate, tile));
+    return Boolean(target && boardState.units.some((unit) => unit.attackTargetId === target.id));
 }
 function movementTileStyle(tile, boardState, level) {
     const top = sameTile(boardState.hoveredTile, tile) ? colors.hoveredMovementTile : colors.movementTile;

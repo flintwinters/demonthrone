@@ -3,6 +3,13 @@ import { canTakeAction, cancelAction, spendAction } from "./teammate-turns.js";
 export function canAttack(unit, target) {
     return l1Distance(unit, target) <= unit.attackRange;
 }
+export function canPlanAttack(unit, tile, targets, canSee) {
+    const target = targets.find((candidate) => candidate.x === tile.x && candidate.y === tile.y);
+    return Boolean(target
+        && (canTakeAction(unit) || unit.attackTargetId === target.id)
+        && canSee(target)
+        && canAttack(unit, target));
+}
 export function planAttack(unit, target) {
     spendAction(unit);
     unit.attackTargetId = target.id;

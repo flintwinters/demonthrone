@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { colors, foliageColors } from "./constants.js";
+import { deterministicUnit } from "./noise.js";
 import { material } from "./render-materials.js";
 import type { BiomeKind, Tile } from "./types.js";
 
@@ -16,6 +17,9 @@ const brushGeometry = new THREE.BufferGeometry().setFromPoints([
 const boulderGeometry = new THREE.DodecahedronGeometry(0.34, 0);
 const brushMaterials = new Map<BiomeKind, THREE.MeshBasicMaterial>();
 const transform = new THREE.Object3D();
+const foliageHeightSeed = 0x6419;
+const minimumFoliageScale = 0.65;
+const foliageScaleRange = 0.7;
 
 brushGeometry.userData.shared = true;
 boulderGeometry.userData.shared = true;
@@ -44,6 +48,7 @@ function setBoulderTransform(mesh: THREE.InstancedMesh, placement: PropPlacement
 
   transform.position.set(tile.x + 0.5, tile.y + 0.5, height + 0.32);
   transform.rotation.set(0.3, 0.1, tile.x * 0.7 + tile.y * 0.2);
+  transform.scale.setScalar(1);
   transform.updateMatrix();
   mesh.setMatrixAt(index, transform.matrix);
 }
@@ -58,8 +63,13 @@ function setBrushTransform(
 
   transform.position.set(tile.x + 0.5, tile.y + 0.5, height);
   transform.rotation.set(0, 0, rotation);
+  transform.scale.set(1, 1, foliageHeightScale(tile));
   transform.updateMatrix();
   mesh.setMatrixAt(index, transform.matrix);
+}
+
+export function foliageHeightScale(tile: Tile): number {
+  return minimumFoliageScale + deterministicUnit(tile, foliageHeightSeed) * foliageScaleRange;
 }
 
 function brushMaterial(biome: BiomeKind): THREE.MeshBasicMaterial {

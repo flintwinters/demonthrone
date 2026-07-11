@@ -1,12 +1,14 @@
 import { boardState, canSeeTile, canUnitSee, enrichTile } from "./board-state.js";
 import { devicePixelRatio, gridFromScreen } from "./camera.js";
-import { resolveAttacks, tryPlanAttack } from "./combat.js";
+import { connectCancelInput } from "./cancel-input.js";
+import { canPlanAttack, resolveAttacks, tryPlanAttack } from "./combat.js";
 import { attackUnits, moveEnemies } from "./enemies.js";
 import { materializeEntities } from "./entity-generation.js";
 import { captureFollowerPositions, followPositionHistory } from "./enchantment.js";
 import { EnchantmentSelection } from "./enchantment-selection.js";
-import { l1Distance, sameTile } from "./grid.js";
+import { sameTile } from "./grid.js";
 import { connectInput } from "./input.js";
+import { handleEnchantmentClick } from "./interaction.js";
 import { canReachTile } from "./movement.js";
 import { requiredElement } from "./dom.js";
 import { isBoardObstacle } from "./obstacles.js";
@@ -17,8 +19,8 @@ import { connectRotationControls } from "./rotation-controls.js";
 import { isInspectableTerrain, selectedObjectStatus, selectVisibleEntityTile } from "./selection-status.js";
 import { movementCost, tileHeight, tileTerrain } from "./world.js";
 import { connectTurnControl } from "./turn-control.js";
-import { canTakeAction, resetActions } from "./teammate-turns.js";
-import { clickBoardTile, commitPlannedMoves, selectedUnit, syncUnitSelection, units, } from "./units.js";
+import { canTakeAction, cancelAction, resetActions } from "./teammate-turns.js";
+import { clearUnitSelection, clickBoardTile, commitPlannedMoves, selectedUnit, syncUnitSelection, units, } from "./units.js";
 const canvas = requiredElement("#grid");
 const goButton = requiredElement("#go");
 const rotateLeftButton = requiredElement("#rotate-left");
@@ -45,12 +47,14 @@ function resize() {
     draw();
 }
 function selectTile(tile) {
-    if (handleEnchantmentClick(tile)) {
+    const enchantmentClick = handleEnchantmentClick(tile, selectedTile, enchantmentSelection, units, selectedUnit(), conflictsWithUnitAction, enrichTile, clearUnitSelection);
+    if (enchantmentClick.handled) {
+        selectedTile = enchantmentClick.selectedTile;
         draw();
         return;
     }
     const unit = selectedUnit();
-    const attackTarget = tryPlanAttack(tile, unit, enemies, (candidate) => Boolean(unit && canUnitSee(unit, candidate, enemies)));
+    const attackTarget = isPushInteraction(tile, unit) ? null : tryPlanAttack(tile, unit, [...enemies, ...pushables], (candidate) => Boolean(unit && canUnitSee(unit, candidate, enemies)));
     if (attackTarget) {
         selectedTile = enrichTile(attackTarget);
         draw();
@@ -58,22 +62,6 @@ function selectTile(tile) {
     }
     selectedTile = selectVisibleEntityTile(tile, units, [...units, ...enemies, ...pushables], (candidate) => canSeeTile(candidate, enemies), enrichTile, (candidate) => clickBoardTile(candidate, canMoveToTile, assignMoveTarget), (candidate) => isInspectableTerrain(tileTerrain(candidate).kind));
     draw();
-}
-function handleEnchantmentClick(tile) {
-    if (enchantmentSelection.source()) {
-        selectedTile = enchantmentSelection.resolve(tile, units) ? null : selectedTile;
-        return true;
-    }
-    if (!enchantmentSelection.begin(tile)) {
-        return false;
-    }
-    const unit = selectedUnit();
-    if (unit && canMoveToTile(tile, unit)) {
-        enchantmentSelection.clear();
-        return false;
-    }
-    selectedTile = enrichTile(tile);
-    return true;
 }
 function hoverTile(tile) {
     const nextTile = tile && canSeeTile(tile, enemies) ? enrichTile(tile) : null;
@@ -85,7 +73,7 @@ function hoverTile(tile) {
 }
 function pickSelectableTile(point) {
     const piece = pickPieceTile(canvas, point, [...units, ...enemies, ...pushables], (tile) => canSeeTile(tile, enemies), tileHeight);
-    return piece ?? terrainTileAt(point);
+    return piece ?? gridFromScreen(canvas, point.x, point.y, tileHeight);
 }
 function canInteractionTargetTile(tile) {
     if (enchantmentSelection.source()) {
@@ -96,10 +84,10 @@ function canInteractionTargetTile(tile) {
 }
 function canSelectedUnitAttackTile(tile) {
     const unit = selectedUnit();
-    return Boolean(unit
-        && canTakeAction(unit)
-        && canUnitSee(unit, tile, enemies)
-        && l1Distance(unit, tile) <= unit.attackRange);
+    return Boolean(unit && canPlanAttack(unit, tile, [...enemies, ...pushables], (candidate) => canUnitSee(unit, candidate, enemies)));
+}
+function conflictsWithUnitAction(tile, unit) {
+    return canMoveToTile(tile, unit) || canPlanAttack(unit, tile, [...enemies, ...pushables], (candidate) => canUnitSee(unit, candidate, enemies));
 }
 function canMoveToTile(tile, unit) {
     return canTakeAction(unit)
@@ -108,14 +96,15 @@ function canMoveToTile(tile, unit) {
             || (!isMovementBlocked(tile)
                 && canReachTile(unit, tile, unit.movement, isMovementBlocked, tileHeight, movementCost)));
 }
+function isPushInteraction(tile, unit) {
+    return Boolean(unit && (sameTile(unit.target, tile)
+        || canPushTo(unit, tile, isPushDestinationBlocked, tileHeight)));
+}
 function assignMoveTarget(unit, tile) {
     clearPlannedPush(unit.id);
     if (isPushableTile(tile)) {
         planPush(unit, tile);
     }
-}
-function terrainTileAt(point) {
-    return gridFromScreen(canvas, point.x, point.y, tileHeight);
 }
 function isMovementBlocked(tile) {
     return isBoardObstacle(tile) || isOccupiedTile(tile);
@@ -137,7 +126,7 @@ function go() {
     commitPlannedMoves();
     commitPlannedPushes();
     followPositionHistory(units, previousPositions);
-    tombstones.push(...resolveAttacks(units, enemies));
+    tombstones.push(...resolveAttacks(units, enemies, pushables));
     tombstones.push(...attackUnits(units, enemies).map(({ x, y }) => ({ x, y })));
     materializeEntities(units, enemies);
     moveEnemies(enemies, units, isBoardObstacle);
@@ -150,9 +139,20 @@ function go() {
     draw();
 }
 connectInput(canvas, selectTile, hoverTile, draw, tileHeight, pickSelectableTile);
+connectCancelInput(cancelInteraction);
 connectRotationControls(canvas, { left: rotateLeftButton, right: rotateRightButton }, draw);
 connectTurnControl(goButton, go);
 window.addEventListener("resize", resize);
 materializeEntities(units, enemies);
 moveEnemies(enemies, units, isBoardObstacle);
 resize();
+function cancelInteraction() {
+    const unit = selectedUnit();
+    enchantmentSelection.clear();
+    if (unit) {
+        cancelAction(unit);
+        clearUnitSelection();
+    }
+    selectedTile = null;
+    draw();
+}

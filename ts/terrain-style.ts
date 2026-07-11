@@ -74,9 +74,9 @@ function priorityTileStyle(tile: Tile, boardState: BoardState, level: number): T
 }
 
 function isPlannedAttackTarget(tile: Tile, boardState: BoardState): boolean {
-  const enemy = boardState.enemies.find((candidate) => sameTile(candidate, tile));
+  const target = [...boardState.enemies, ...boardState.pushables].find((candidate) => sameTile(candidate, tile));
 
-  return Boolean(enemy && boardState.units.some((unit) => unit.attackTargetId === enemy.id));
+  return Boolean(target && boardState.units.some((unit) => unit.attackTargetId === target.id));
 }
 
 function movementTileStyle(tile: Tile, boardState: BoardState, level: number): TerrainStyle {

@@ -6,6 +6,20 @@ export function canAttack(unit: Unit, target: DamageableEntity): boolean {
   return l1Distance(unit, target) <= unit.attackRange;
 }
 
+export function canPlanAttack(
+  unit: Unit,
+  tile: Tile,
+  targets: readonly DamageableEntity[],
+  canSee: TilePredicate,
+): boolean {
+  const target = targets.find((candidate) => candidate.x === tile.x && candidate.y === tile.y);
+
+  return Boolean(target
+    && (canTakeAction(unit) || unit.attackTargetId === target.id)
+    && canSee(target)
+    && canAttack(unit, target));
+}
+
 export function planAttack(unit: Unit, target: DamageableEntity): void {
   spendAction(unit);
   unit.attackTargetId = target.id;

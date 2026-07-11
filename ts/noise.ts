@@ -29,7 +29,7 @@ function dotGradient(cell: Tile, offset: Tile, seed: number): number {
 }
 
 function gradientAt(cell: Tile, seed: number): Tile {
-  const angle = hashUnit(cell, seed) * Math.PI * 2;
+  const angle = deterministicUnit(cell, seed) * Math.PI * 2;
 
   return {
     x: Math.cos(angle),
@@ -37,7 +37,7 @@ function gradientAt(cell: Tile, seed: number): Tile {
   };
 }
 
-function hashUnit(cell: Tile, seed: number): number {
+export function deterministicUnit(cell: Tile, seed: number): number {
   const hash = Math.imul(cell.x, 374761393) + Math.imul(cell.y, 668265263) + seed;
   const mixed = Math.imul(hash ^ hash >>> 13, 1274126177);
 
