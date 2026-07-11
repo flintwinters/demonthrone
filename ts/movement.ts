@@ -32,6 +32,17 @@ export function canReachTile(
   return false;
 }
 
+export function movementStepCost(
+  previous: Tile,
+  tile: Tile,
+  tileHeight: TileHeight,
+  movementCost: TileMovementCost,
+): number {
+  const heightDelta = tileHeight(tile) - tileHeight(previous);
+
+  return movementCost(tile) * 2 ** heightDelta;
+}
+
 function appendReachableNeighbors(
   current: FrontierEntry,
   limit: number,
@@ -43,7 +54,7 @@ function appendReachableNeighbors(
 ): void {
   for (const direction of cardinalDirections) {
     const tile = neighborTile(current.tile, direction);
-    const cost = current.cost + movementCost(tile);
+    const cost = current.cost + movementStepCost(current.tile, tile, tileHeight, movementCost);
 
     if (isReachableStep(current.tile, tile, cost, limit, isBlockedTile, tileHeight, bestCosts)) {
       bestCosts.set(tileKey(tile), cost);
