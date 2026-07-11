@@ -29,6 +29,8 @@ type TerrainCache = {
 };
 
 const tombstoneGeometry = new THREE.SphereGeometry(0.15, 12, 8);
+const hemisphereLightIntensity = 2.4;
+const directionalLightIntensity = 3;
 const state: { current: RenderState | null } = { current: null };
 
 tombstoneGeometry.userData.shared = true;
@@ -73,7 +75,9 @@ function initializeRenderer(canvas: HTMLCanvasElement): RenderState {
   renderState.renderer.setClearColor(colors.background, 1);
   renderState.scene.add(renderState.root);
   renderState.root.add(renderState.dynamicRoot);
-  renderState.scene.add(new THREE.HemisphereLight(colors.tileStroke, colors.background, 1.7));
+  renderState.scene.add(new THREE.HemisphereLight(
+    colors.tileStroke, colors.background, hemisphereLightIntensity,
+  ));
   renderState.scene.add(directionalLight());
   state.current = renderState;
   return renderState;
@@ -145,7 +149,7 @@ function tombstoneMesh(tombstone: RenderTombstone): THREE.Mesh {
 }
 
 function directionalLight(): THREE.DirectionalLight {
-  const light = new THREE.DirectionalLight(colors.tileStroke, 2.2);
+  const light = new THREE.DirectionalLight(colors.tileStroke, directionalLightIntensity);
 
   light.position.set(-3, -4, 7);
   return light;

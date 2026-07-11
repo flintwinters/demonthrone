@@ -7,6 +7,8 @@ import { pushableMeshes } from "./pushable-render.js";
 import { terrainLayer, terrainSignature } from "./terrain-layer.js";
 import { visibleTiles } from "./tiles.js";
 const tombstoneGeometry = new THREE.SphereGeometry(0.15, 12, 8);
+const hemisphereLightIntensity = 2.4;
+const directionalLightIntensity = 3;
 const state = { current: null };
 tombstoneGeometry.userData.shared = true;
 export function drawGrid(canvas, boardState) {
@@ -44,7 +46,7 @@ function initializeRenderer(canvas) {
     renderState.renderer.setClearColor(colors.background, 1);
     renderState.scene.add(renderState.root);
     renderState.root.add(renderState.dynamicRoot);
-    renderState.scene.add(new THREE.HemisphereLight(colors.tileStroke, colors.background, 1.7));
+    renderState.scene.add(new THREE.HemisphereLight(colors.tileStroke, colors.background, hemisphereLightIntensity));
     renderState.scene.add(directionalLight());
     state.current = renderState;
     return renderState;
@@ -99,7 +101,7 @@ function tombstoneMesh(tombstone) {
     return mesh;
 }
 function directionalLight() {
-    const light = new THREE.DirectionalLight(colors.tileStroke, 2.2);
+    const light = new THREE.DirectionalLight(colors.tileStroke, directionalLightIntensity);
     light.position.set(-3, -4, 7);
     return light;
 }
