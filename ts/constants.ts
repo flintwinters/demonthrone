@@ -35,7 +35,7 @@ export const rotationControlStep = Math.PI / 96;
 export const rotationControlInterval = 16;
 
 export const colors = {
-  background: "#1d2021",
+  background: "#000000",
   tile: "#282828",
   tileSideLeft: "#1d2021",
   tileSideRight: "#3c3836",
