@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { cameraDistance, cameraElevation, cameraElevationLimits, terrainHeight, worldPixelsPerUnit, } from "./constants.js";
+import { cameraDistance, cameraElevation, terrainHeight, worldPixelsPerUnit, } from "./constants.js";
 export const view = {
     targetX: 6.5,
     targetY: 6.5,
@@ -74,7 +74,7 @@ export function zoomAt(canvas, screenX, screenY, nextZoom) {
 export function rotateAt(canvas, screenX, screenY, nextRotation, nextElevation = view.elevation) {
     const before = worldPointAtHeight(canvas, screenX, screenY, 0);
     view.rotation = normalizeRotation(nextRotation);
-    view.elevation = clamp(nextElevation, cameraElevationLimits.min, cameraElevationLimits.max);
+    view.elevation = nextElevation;
     anchorView(canvas, screenX, screenY, before);
 }
 export function devicePixelRatio() {
@@ -140,9 +140,6 @@ function cameraUp() {
     const forward = cameraForward();
     const right = new THREE.Vector3().crossVectors(forward, worldUp).normalize();
     return new THREE.Vector3().crossVectors(right, forward).normalize();
-}
-function clamp(value, min, max) {
-    return Math.min(Math.max(value, min), max);
 }
 function normalizeRotation(rotation) {
     return Math.atan2(Math.sin(rotation), Math.cos(rotation));

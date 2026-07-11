@@ -2,7 +2,6 @@ import * as THREE from "three";
 import {
   cameraDistance,
   cameraElevation,
-  cameraElevationLimits,
   terrainHeight,
   worldPixelsPerUnit,
 } from "./constants.js";
@@ -120,7 +119,7 @@ export function rotateAt(
   const before = worldPointAtHeight(canvas, screenX, screenY, 0);
 
   view.rotation = normalizeRotation(nextRotation);
-  view.elevation = clamp(nextElevation, cameraElevationLimits.min, cameraElevationLimits.max);
+  view.elevation = nextElevation;
   anchorView(canvas, screenX, screenY, before);
 }
 
@@ -222,10 +221,6 @@ function cameraUp(): THREE.Vector3 {
   const right = new THREE.Vector3().crossVectors(forward, worldUp).normalize();
 
   return new THREE.Vector3().crossVectors(right, forward).normalize();
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
 }
 
 function normalizeRotation(rotation: number): number {
