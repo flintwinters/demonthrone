@@ -56,6 +56,7 @@ export class TerrainType {
     readonly kind: TerrainKind,
     readonly blocksMovement: boolean,
     private readonly baseSightCost: number,
+    private readonly baseMovementCost: number,
   ) {}
 
   terrain(biome: BiomeProfile): Terrain {
@@ -64,6 +65,7 @@ export class TerrainType {
       biome: biome.kind,
       blocksMovement: this.blocksMovement,
       sightCost: this.kind === "brush" ? biome.brushSightCost : this.baseSightCost,
+      movementCost: this.baseMovementCost,
     };
   }
 }

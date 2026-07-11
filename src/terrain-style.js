@@ -61,8 +61,12 @@ function movementTileStyle(tile, boardState, level) {
     return terrainStyle(top, colors.movementTileSideRight, level);
 }
 function biomeTerrainStyle(tile, level) {
-    if (tileTerrain(tile).kind === "water") {
+    const terrain = tileTerrain(tile);
+    if (terrain.kind === "water") {
         return terrainStyle(colors.waterTile, colors.waterTileSide, level);
+    }
+    if (terrain.kind === "ice") {
+        return terrainStyle(colors.iceTile, colors.iceTileSide, level);
     }
     const style = biomeStyles[tileBiome(tile)];
     return terrainStyle(style.top, style.side, level);

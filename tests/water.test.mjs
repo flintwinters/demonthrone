@@ -29,6 +29,7 @@ test("water is flat impassable terrain without obstacle props", () => {
   assert.equal(terrain.kind, "water");
   assert.equal(terrain.blocksMovement, true);
   assert.equal(terrain.sightCost, 0.1);
+  assert.equal(terrain.movementCost, Number.POSITIVE_INFINITY);
   assert.equal(tileHeight(tile), 0);
   assert.equal(isObstacleTile(tile), true);
   assert.equal(isBoulderTile(tile), false);

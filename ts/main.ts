@@ -13,7 +13,7 @@ import { pickPieceTile } from "./piece-picker.js";
 import { canPushTo, clearPlannedPush, commitPlannedPushes, isPushableTile, planPush, pushables } from "./pushables.js";
 import { drawGrid } from "./renderer.js";
 import { connectRotationControls } from "./rotation-controls.js";
-import { tileHeight } from "./world.js";
+import { movementCost, tileHeight } from "./world.js";
 import { connectTurnControl } from "./turn-control.js";
 import { canTakeAction, resetActions } from "./teammate-turns.js";
 import {
@@ -112,14 +112,11 @@ function canSelectedUnitAttackTile(tile: Tile): boolean {
 }
 
 function canMoveToTile(tile: Tile, unit: Unit): boolean {
-  const distance = l1Distance(tile, unit);
-
   return canTakeAction(unit)
     && canSeeTile(tile, enemies)
-    && distance <= unit.movement
     && (canPushTo(unit, tile, isPushDestinationBlocked, tileHeight)
       || (!isMovementBlocked(tile)
-        && canReachTile(unit, tile, unit.movement, isMovementBlocked, tileHeight)));
+        && canReachTile(unit, tile, unit.movement, isMovementBlocked, tileHeight, movementCost)));
 }
 
 function assignMoveTarget(unit: Unit, tile: Tile): void {

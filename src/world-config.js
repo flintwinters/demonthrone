@@ -12,6 +12,7 @@ export const layers = {
     boulder: new NoiseLayer({ scale: 0.23, seed: worldSeed ^ 0x2b0d }),
     brush: new NoiseLayer({ scale: 0.31, seed: worldSeed ^ 0x4b1d }),
     water: new NoiseLayer({ scale: 0.075, seed: worldSeed ^ 0x77a3 }),
+    ice: new NoiseLayer({ scale: 0.11, seed: worldSeed ^ 0x1ce5 }),
 };
 export const safeZones = [
     new SafeZone({ x: 5, y: 7 }, 1),
@@ -40,10 +41,11 @@ export const biomes = {
     ]), 0.67, 0.72, 5, 0.88),
 };
 export const terrainTraits = {
-    floor: new TerrainType("floor", false, 1),
-    boulder: new TerrainType("boulder", true, Number.POSITIVE_INFINITY),
-    brush: new TerrainType("brush", false, 2),
-    water: new TerrainType("water", true, 0.1),
+    floor: new TerrainType("floor", false, 1, 1),
+    boulder: new TerrainType("boulder", true, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY),
+    brush: new TerrainType("brush", false, 2, 1),
+    ice: new TerrainType("ice", false, 0.1, 0.5),
+    water: new TerrainType("water", true, 0.1, Number.POSITIVE_INFINITY),
 };
 function biome(kind, profile, boulder, brush, sight, water) {
     return new BiomeProfile(kind, profile, boulder, brush, sight, water);

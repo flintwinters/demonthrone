@@ -1,7 +1,12 @@
-import { cardinalDirections, l1Distance, neighborTile, tileKey } from "./grid.js";
-import type { Tile, TileHeight, TilePredicate } from "./types.js";
+import { cardinalDirections, neighborTile, sameTile, tileKey } from "./grid.js";
+import type { Tile, TileHeight, TileMovementCost, TilePredicate } from "./types.js";
 
 const maxUpwardStepHeight = 2;
+
+type FrontierEntry = {
+  tile: Tile;
+  cost: number;
+};
 
 export function canReachTile(
   start: Tile,
@@ -9,97 +14,67 @@ export function canReachTile(
   limit: number,
   isBlockedTile: TilePredicate,
   tileHeight: TileHeight,
+  movementCost: TileMovementCost,
 ): boolean {
-  let frontier = [start];
-  const visited = new Set([tileKey(start)]);
+  const frontier: FrontierEntry[] = [{ tile: start, cost: 0 }];
+  const bestCosts = new Map([[tileKey(start), 0]]);
 
-  if (l1Distance(start, target) === 0 || l1Distance(start, target) > limit) {
-    return false;
-  }
+  while (frontier.length > 0) {
+    const current = takeCheapest(frontier);
 
-  for (let distance = 0; distance < limit; distance += 1) {
-    frontier = nextFrontier(frontier, target, limit, isBlockedTile, tileHeight, visited);
-
-    if (visited.has(tileKey(target))) {
-      return true;
+    if (sameTile(current.tile, target)) {
+      return current.cost > 0;
     }
+
+    appendReachableNeighbors(current, limit, isBlockedTile, tileHeight, movementCost, bestCosts, frontier);
   }
 
   return false;
 }
 
-function nextFrontier(
-  frontier: Tile[],
-  target: Tile,
+function appendReachableNeighbors(
+  current: FrontierEntry,
   limit: number,
   isBlockedTile: TilePredicate,
   tileHeight: TileHeight,
-  visited: Set<string>,
-): Tile[] {
-  const next: Tile[] = [];
-
-  for (const tile of frontier) {
-    appendNeighbors(tile, target, limit, isBlockedTile, tileHeight, visited, next);
-  }
-
-  return next;
-}
-
-function appendNeighbors(
-  tile: Tile,
-  target: Tile,
-  limit: number,
-  isBlockedTile: TilePredicate,
-  tileHeight: TileHeight,
-  visited: Set<string>,
-  next: Tile[],
+  movementCost: TileMovementCost,
+  bestCosts: Map<string, number>,
+  frontier: FrontierEntry[],
 ): void {
   for (const direction of cardinalDirections) {
-    appendReachableTile(
-      tile,
-      neighborTile(tile, direction),
-      target,
-      limit,
-      isBlockedTile,
-      tileHeight,
-      visited,
-      next,
-    );
+    const tile = neighborTile(current.tile, direction);
+    const cost = current.cost + movementCost(tile);
+
+    if (isReachableStep(current.tile, tile, cost, limit, isBlockedTile, tileHeight, bestCosts)) {
+      bestCosts.set(tileKey(tile), cost);
+      frontier.push({ tile, cost });
+    }
   }
-}
-
-function appendReachableTile(
-  previous: Tile,
-  tile: Tile,
-  target: Tile,
-  limit: number,
-  isBlockedTile: TilePredicate,
-  tileHeight: TileHeight,
-  visited: Set<string>,
-  next: Tile[],
-): void {
-  const key = tileKey(tile);
-
-  if (!isReachableStep(previous, tile, target, limit, isBlockedTile, tileHeight, key, visited)) {
-    return;
-  }
-
-  visited.add(key);
-  next.push(tile);
 }
 
 function isReachableStep(
   previous: Tile,
   tile: Tile,
-  target: Tile,
+  cost: number,
   limit: number,
   isBlockedTile: TilePredicate,
   tileHeight: TileHeight,
-  key: string,
-  visited: Set<string>,
+  bestCosts: Map<string, number>,
 ): boolean {
-  return !visited.has(key)
-    && l1Distance(tile, target) <= limit
+  return cost <= limit
+    && cost < (bestCosts.get(tileKey(tile)) ?? Number.POSITIVE_INFINITY)
     && !isBlockedTile(tile)
     && tileHeight(tile) - tileHeight(previous) <= maxUpwardStepHeight;
+}
+
+function takeCheapest(frontier: FrontierEntry[]): FrontierEntry {
+  let cheapestIndex = 0;
+
+  for (let index = 1; index < frontier.length; index += 1) {
+    if (frontier[index].cost < frontier[cheapestIndex].cost) {
+      cheapestIndex = index;
+    }
+  }
+
+  return frontier.splice(cheapestIndex, 1)[0];
 }

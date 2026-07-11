@@ -49,6 +49,8 @@ export const colors = {
   ridgeTileSide: "#665c54",
   waterTile: "#076678",
   waterTileSide: "#054f5f",
+  iceTile: "#83a598",
+  iceTileSide: "#458588",
   hoveredTile: "#32302f",
   selectedTile: "#3c3836",
   tileStroke: "#928374",

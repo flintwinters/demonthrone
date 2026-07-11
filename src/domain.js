@@ -53,10 +53,12 @@ export class TerrainType {
     kind;
     blocksMovement;
     baseSightCost;
-    constructor(kind, blocksMovement, baseSightCost) {
+    baseMovementCost;
+    constructor(kind, blocksMovement, baseSightCost, baseMovementCost) {
         this.kind = kind;
         this.blocksMovement = blocksMovement;
         this.baseSightCost = baseSightCost;
+        this.baseMovementCost = baseMovementCost;
     }
     terrain(biome) {
         return {
@@ -64,6 +66,7 @@ export class TerrainType {
             biome: biome.kind,
             blocksMovement: this.blocksMovement,
             sightCost: this.kind === "brush" ? biome.brushSightCost : this.baseSightCost,
+            movementCost: this.baseMovementCost,
         };
     }
 }

@@ -12,6 +12,9 @@ export function isObstacleTile(tile) {
 export function sightCost(tile) {
     return worldData(tile).terrain.sightCost;
 }
+export function movementCost(tile) {
+    return worldData(tile).terrain.movementCost;
+}
 export function tileBiome(tile) {
     return worldData(tile).biome;
 }
@@ -23,6 +26,9 @@ export function isBrushTile(tile) {
 }
 export function isWaterTile(tile) {
     return worldData(tile).isWater;
+}
+export function isIceTile(tile) {
+    return worldData(tile).isIce;
 }
 export function tileHeight(tile) {
     return worldData(tile).height;
@@ -46,29 +52,32 @@ function createWorldData(tile) {
     const biome = classifyBiome(tile);
     const biomeProfile = biomes[biome];
     const isSafe = isSafeTile(tile);
-    const { isWater, isBoulder, isBrush } = terrainFeatures(tile, biomeProfile, isSafe);
-    const terrain = terrainFor(terrainKind(isWater, isBoulder, isBrush), biome);
+    const { isWater, isIce, isBoulder, isBrush } = terrainFeatures(tile, biomeProfile, isSafe);
+    const terrain = terrainFor(terrainKind(isWater, isIce, isBoulder, isBrush), biome);
     return {
         biome,
-        height: isWater ? terrainHeight.min : heightAt(tile, biomeProfile),
+        height: isWater || isIce ? terrainHeight.min : heightAt(tile, biomeProfile),
         isBoulder,
         isBrush,
         isWater,
+        isIce,
         terrain,
     };
 }
 function terrainFeatures(tile, biomeProfile, isSafe) {
     if (isSafe) {
-        return { isWater: false, isBoulder: false, isBrush: false };
+        return { isWater: false, isIce: false, isBoulder: false, isBrush: false };
     }
     if (layers.water.value(tile) > biomeProfile.waterThreshold) {
-        return { isWater: true, isBoulder: false, isBrush: false };
+        const isIce = layers.ice.value(tile) > 0.55;
+        return { isWater: !isIce, isIce, isBoulder: false, isBrush: false };
     }
     if (layers.boulder.value(tile) > biomeProfile.boulderThreshold) {
-        return { isWater: false, isBoulder: true, isBrush: false };
+        return { isWater: false, isIce: false, isBoulder: true, isBrush: false };
     }
     return {
         isWater: false,
+        isIce: false,
         isBoulder: false,
         isBrush: layers.brush.value(tile) > biomeProfile.brushThreshold,
     };
@@ -94,9 +103,12 @@ function classifyBiome(tile) {
     }
     return moisture < 0.35 ? "cinder" : "heath";
 }
-function terrainKind(isWater, isBoulder, isBrush) {
+function terrainKind(isWater, isIce, isBoulder, isBrush) {
     if (isWater) {
         return "water";
+    }
+    if (isIce) {
+        return "ice";
     }
     if (isBoulder) {
         return "boulder";

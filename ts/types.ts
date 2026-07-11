@@ -4,13 +4,14 @@ export type Tile = {
 };
 
 export type BiomeKind = "cinder" | "fen" | "heath" | "ridge";
-export type TerrainKind = "floor" | "boulder" | "brush" | "water";
+export type TerrainKind = "floor" | "boulder" | "brush" | "ice" | "water";
 
 export type Terrain = {
   kind: TerrainKind;
   biome: BiomeKind;
   blocksMovement: boolean;
   sightCost: number;
+  movementCost: number;
 };
 
 export type HeightTile = Tile & {
@@ -71,6 +72,7 @@ export type RenderPushable = Pushable & {
 
 export type TilePredicate = (tile: Tile) => boolean;
 export type TileHeight = (tile: Tile) => number;
+export type TileMovementCost = (tile: Tile) => number;
 export type TileSightCost = (tile: Tile) => number;
 
 export type ScreenPoint = {
