@@ -22,22 +22,22 @@ export const biomes = {
         new HeightComponent(layers.heightCinder, "terraced", 0.42),
         new HeightComponent(layers.detail, "crest", 0.16),
         new HeightComponent(layers.elevation, "centered", 0.12),
-    ]), 0.58, 0.78, 2, 0.9),
+    ]), 0.58, 0.78, 4, 0.9),
     fen: biome("fen", height(0.22, [
         new HeightComponent(layers.heightFen, "linear", 0.24),
         new HeightComponent(layers.moisture, "linear", -0.16),
         new HeightComponent(layers.detail, "centered", 0.06),
-    ]), 0.76, 0.5, 3, 0.58),
+    ]), 0.76, 0.5, 6, 0.58),
     heath: biome("heath", height(0.12, [
         new HeightComponent(layers.heightHeath, "linear", 0.52),
         new HeightComponent(layers.elevation, "centered", 0.1),
         new HeightComponent(layers.detail, "centered", 0.14),
-    ]), 0.66, 0.62, 2, 0.78),
+    ]), 0.66, 0.62, 4, 0.78),
     ridge: biome("ridge", height(0.32, [
         new HeightComponent(layers.heightRidge, "crest", 0.34),
         new HeightComponent(layers.ridge, "linear", 0.22),
         new HeightComponent(layers.detail, "centered", 0.28),
-    ]), 0.53, 0.72, 2, 0.88),
+    ]), 0.53, 0.72, 5, 0.88),
 };
 export const terrainTraits = {
     floor: new TerrainType("floor", false, 1),
