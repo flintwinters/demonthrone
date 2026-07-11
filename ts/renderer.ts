@@ -29,8 +29,8 @@ type TerrainCache = {
 };
 
 const tombstoneGeometry = new THREE.SphereGeometry(0.15, 12, 8);
-const hemisphereLightIntensity = 2.4;
-const directionalLightIntensity = 3;
+const hemisphereLightIntensity = 2.8;
+const directionalLightIntensity = 3.5;
 const state: { current: RenderState | null } = { current: null };
 
 tombstoneGeometry.userData.shared = true;

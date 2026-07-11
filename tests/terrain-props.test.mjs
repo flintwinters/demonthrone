@@ -17,4 +17,5 @@ test("foliage uses scene lighting instead of an unlit glowing material", () => {
 
   assert.equal(foliage.material.isMeshLambertMaterial, true);
   assert.equal(foliage.material.isMeshBasicMaterial, undefined);
+  assert.equal(foliage.geometry.hasAttribute("normal"), true);
 });

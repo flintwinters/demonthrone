@@ -21,6 +21,7 @@ const foliageHeightSeed = 0x6419;
 const minimumFoliageScale = 0.65;
 const foliageScaleRange = 0.7;
 
+brushGeometry.computeVertexNormals();
 brushGeometry.userData.shared = true;
 boulderGeometry.userData.shared = true;
 
