@@ -15,7 +15,7 @@ const brushGeometry = new THREE.BufferGeometry().setFromPoints([
   new THREE.Vector3(0, 0, 0.62),
 ]);
 const boulderGeometry = new THREE.DodecahedronGeometry(0.34, 0);
-const brushMaterials = new Map<BiomeKind, THREE.MeshBasicMaterial>();
+const brushMaterials = new Map<BiomeKind, THREE.MeshLambertMaterial>();
 const transform = new THREE.Object3D();
 const foliageHeightSeed = 0x6419;
 const minimumFoliageScale = 0.65;
@@ -72,14 +72,14 @@ export function foliageHeightScale(tile: Tile): number {
   return minimumFoliageScale + deterministicUnit(tile, foliageHeightSeed) * foliageScaleRange;
 }
 
-function brushMaterial(biome: BiomeKind): THREE.MeshBasicMaterial {
+function brushMaterial(biome: BiomeKind): THREE.MeshLambertMaterial {
   const existing = brushMaterials.get(biome);
 
   if (existing) {
     return existing;
   }
 
-  const created = new THREE.MeshBasicMaterial({
+  const created = new THREE.MeshLambertMaterial({
     color: foliageColors[biome],
     side: THREE.DoubleSide,
   });

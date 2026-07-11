@@ -8,7 +8,7 @@ import { captureFollowerPositions, followPositionHistory } from "./enchantment.j
 import { EnchantmentSelection } from "./enchantment-selection.js";
 import { sameTile } from "./grid.js";
 import { connectInput } from "./input.js";
-import { handleEnchantmentClick } from "./interaction.js";
+import { cancelAttackForMovement, handleEnchantmentClick } from "./interaction.js";
 import { canReachTile } from "./movement.js";
 import { requiredElement } from "./dom.js";
 import { isBoardObstacle } from "./obstacles.js";
@@ -54,8 +54,7 @@ function draw(): void {
 
 function resize(): void {
   const pixelRatio = devicePixelRatio();
-  const width = window.innerWidth;
-  const height = window.innerHeight;
+  const { innerWidth: width, innerHeight: height } = window;
 
   canvas.style.width = `${width}px`;
   canvas.style.height = `${height}px`;
@@ -65,6 +64,7 @@ function resize(): void {
 }
 
 function selectTile(tile: Tile): void {
+  cancelAttackForMovement(tile, selectedUnit(), canMoveIgnoringAction, cancelAction);
   const enchantmentClick = handleEnchantmentClick(
     tile, selectedTile, enchantmentSelection, units, selectedUnit(), conflictsWithUnitAction,
     enrichTile, clearUnitSelection,
@@ -144,8 +144,11 @@ function conflictsWithUnitAction(tile: Tile, unit: Unit): boolean {
 }
 
 function canMoveToTile(tile: Tile, unit: Unit): boolean {
-  return canTakeAction(unit)
-    && canSeeTile(tile, enemies)
+  return canTakeAction(unit) && canMoveIgnoringAction(tile, unit);
+}
+
+function canMoveIgnoringAction(tile: Tile, unit: Unit): boolean {
+  return canSeeTile(tile, enemies)
     && (canPushTo(unit, tile, isPushDestinationBlocked, tileHeight)
       || (!isMovementBlocked(tile)
         && canReachTile(unit, tile, unit.movement, isMovementBlocked, tileHeight, movementCost)));
@@ -212,8 +215,7 @@ connectRotationControls(
 );
 connectTurnControl(goButton, go);
 window.addEventListener("resize", resize);
-materializeEntities(units, enemies);
-moveEnemies(enemies, units, isBoardObstacle);
+materializeEntities(units, enemies); moveEnemies(enemies, units, isBoardObstacle);
 resize();
 
 function cancelInteraction(): void {

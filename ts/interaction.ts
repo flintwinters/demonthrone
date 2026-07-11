@@ -29,6 +29,17 @@ export function handleEnchantmentClick(
   );
 }
 
+export function cancelAttackForMovement(
+  tile: Tile,
+  unit: Unit | null,
+  canMove: (tile: Tile, unit: Unit) => boolean,
+  cancelAction: (unit: Unit) => void,
+): void {
+  if (unit?.attackTargetId && canMove(tile, unit)) {
+    cancelAction(unit);
+  }
+}
+
 function beginEnchantment(
   tile: Tile,
   selection: EnchantmentSelection,

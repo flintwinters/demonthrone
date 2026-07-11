@@ -53,3 +53,32 @@ test("out-of-range enemies cannot be targeted", () => {
   assert.equal(tryPlanAttack(target, unit, [target], () => true), null);
   assert.equal(target.health, 2);
 });
+
+test("clicking a planned attack again cancels and refunds it", () => {
+  const unit = teammate("cancel-attacker");
+  const target = enemy("cancel-target", 1);
+
+  assert.equal(tryPlanAttack(target, unit, [target], () => true), target);
+  assert.equal(canTakeAction(unit), false);
+  assert.equal(tryPlanAttack(target, unit, [target], () => true), target);
+  assert.equal(unit.attackTargetId, null);
+  assert.equal(canTakeAction(unit), true);
+});
+
+test("attacks can damage and destroy crates", () => {
+  const unit = teammate("crate-attacker");
+  const crate = {
+    id: "crate-target",
+    entityKind: "object",
+    entityType: "crate",
+    x: 1,
+    y: 0,
+    health: 1,
+  };
+  const crates = [crate];
+
+  planAttack(unit, crate);
+  assert.deepEqual(resolveAttacks([unit], [], crates), [{ x: 1, y: 0 }]);
+  assert.equal(crates.length, 0);
+  resetActions();
+});

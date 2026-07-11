@@ -25,7 +25,7 @@ export function selectedEntityStatus(
   selectedTile: Tile | null,
   entities: readonly Entity[],
 ): string {
-  return entityStatus(selectedUnit ?? selectedSource ?? selectedEntityAt(selectedTile, entities));
+  return entityStatus(selectedSource ?? selectedUnit ?? selectedEntityAt(selectedTile, entities));
 }
 
 export function selectedObjectStatus(
@@ -35,9 +35,65 @@ export function selectedObjectStatus(
   entities: readonly Entity[],
   terrainKind: (tile: Tile) => TerrainKind,
 ): string {
-  const entity = selectedUnit ?? selectedSource ?? selectedEntityAt(selectedTile, entities);
+  const interaction = interactionStatus(selectedUnit, selectedSource, entities);
 
-  return entityStatus(entity) || (selectedTile ? terrainInfo[terrainKind(selectedTile)] ?? "" : "");
+  if (interaction) {
+    return interaction;
+  }
+
+  return selectedInspectionStatus(selectedTile, entities, terrainKind);
+}
+
+function selectedInspectionStatus(
+  tile: Tile | null,
+  entities: readonly Entity[],
+  terrainKind: (tile: Tile) => TerrainKind,
+): string {
+  const entity = selectedEntityAt(tile, entities);
+
+  return entity ? entityStatus(entity) : selectedTerrainStatus(tile, terrainKind);
+}
+
+function interactionStatus(
+  unit: Unit | null,
+  source: Entity | null,
+  entities: readonly Entity[],
+): string {
+  if (source) {
+    return enchantmentStatus(source);
+  }
+
+  return unit ? unitInteractionStatus(unit, entities) : "";
+}
+
+function enchantmentStatus(source: Entity): string {
+  if ("enchanterUnitId" in source && source.enchanterUnitId) {
+    return `${source.entityType} · click again to unbind · elsewhere cancels`;
+  }
+
+  return `${source.entityType} · bind to teammate or green crate · click again to cancel`;
+}
+
+function unitInteractionStatus(unit: Unit, entities: readonly Entity[]): string {
+  const attackTarget = entities.find((entity) => entity.id === unit.attackTargetId);
+  const moveTarget = selectedEntityAt(unit.target, entities);
+
+  if (attackTarget) {
+    return `${unit.entityType} · attack ${attackTarget.entityType} · click target or teammate to cancel`;
+  }
+  if (unit.target) {
+    const action = moveTarget?.entityKind === "object" ? "push" : "move";
+
+    return `${unit.entityType} · ${action} planned · click target or teammate to cancel`;
+  }
+  return `${unit.entityType} · green move · red attack · adjacent crate push`;
+}
+
+function selectedTerrainStatus(
+  tile: Tile | null,
+  terrainKind: (tile: Tile) => TerrainKind,
+): string {
+  return tile ? terrainInfo[terrainKind(tile)] ?? "" : "";
 }
 
 export function isInspectableTerrain(kind: TerrainKind): boolean {

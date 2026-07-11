@@ -54,7 +54,7 @@ function brushMaterial(biome) {
     if (existing) {
         return existing;
     }
-    const created = new THREE.MeshBasicMaterial({
+    const created = new THREE.MeshLambertMaterial({
         color: foliageColors[biome],
         side: THREE.DoubleSide,
     });

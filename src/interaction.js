@@ -7,6 +7,11 @@ export function handleEnchantmentClick(tile, currentTile, selection, units, sele
     selection.clear();
     return beginEnchantment(tile, selection, selectedUnit, conflictsWithUnitAction, enrichTile, clearUnitSelection);
 }
+export function cancelAttackForMovement(tile, unit, canMove, cancelAction) {
+    if (unit?.attackTargetId && canMove(tile, unit)) {
+        cancelAction(unit);
+    }
+}
 function beginEnchantment(tile, selection, unit, conflictsWithUnitAction, enrichTile, clearUnitSelection) {
     if (!selection.begin(tile)) {
         return { handled: false, selectedTile: null };

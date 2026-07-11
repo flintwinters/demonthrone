@@ -9,7 +9,7 @@
 - Python backend lives in `backend/`, uses only the standard library, tolerates clients disconnecting during static responses, serves the static frontend, and exposes `/api/health` plus `/api/game/new`.
 - Verification gate: run `npm run check`; ESLint enforces cyclomatic complexity and file length limits.
 - Backend verification gate: run `python -m unittest discover`.
-- UI direction: dense high-contrast gruvbox dark theme, minimal labels, no animations or transitions.
+- UI direction: dense high-contrast gruvbox dark theme, minimal labels, no animations or transitions; foliage is deliberately much dimmer than other scene objects and participates in scene lighting rather than glowing unlit.
 - The lower-left selection status contains only concise info text for the selected entity or terrain object, with no heading or supplemental statistics; internal brush terrain is labeled `foliage`.
 - Use TypeScript as much as possible. Try not to hand-edit JavaScript.
 - Stop rm-ing __pycache__

@@ -4,6 +4,7 @@ import { boardState } from "../src/board-state.js";
 import { materializeEntities } from "../src/entity-generation.js";
 import { bindEnchantment, captureFollowerPositions, dispelEnchantment, followPositionHistory } from "../src/enchantment.js";
 import { EnchantmentSelection } from "../src/enchantment-selection.js";
+import { handleEnchantmentClick } from "../src/interaction.js";
 import { canTakeAction, resetActions, spendAction } from "../src/teammate-turns.js";
 import {
   canPushTo,
@@ -138,6 +139,32 @@ test("crate-first binding consumes the target teammate's action", () => {
   assert.equal(canTakeAction(unit), false);
   resetActions();
   dispelEnchantment(source, [unit]);
+});
+
+test("an unrelated click cancels binding and remains available to other actions", () => {
+  const source = pushables[0];
+  const binding = new EnchantmentSelection();
+
+  binding.begin(source);
+  const result = handleEnchantmentClick(
+    { x: source.x + 20, y: source.y + 20 }, null, binding, [unit], null,
+    () => false, (tile) => ({ ...tile, height: 0 }), () => {},
+  );
+
+  assert.equal(result.handled, false);
+  assert.equal(binding.source(), null);
+});
+
+test("unit actions take precedence over beginning a crate bind", () => {
+  const source = pushables[0];
+  const binding = new EnchantmentSelection();
+  const result = handleEnchantmentClick(
+    source, null, binding, [unit], unit,
+    () => true, (tile) => ({ ...tile, height: 0 }), () => assert.fail("selection cleared"),
+  );
+
+  assert.equal(result.handled, false);
+  assert.equal(binding.source(), null);
 });
 
 test("spending an enchant action clears movement and push plans for the turn", () => {

@@ -30,7 +30,7 @@ test("status lookup ignores empty selected terrain", () => {
 test("entity status prioritizes explicit gameplay selections", () => {
   const crate = { ...warden, id: "crate-1", entityKind: "object", entityType: "crate" };
 
-  assert.equal(selectedEntityStatus(warden, crate, crate, [warden, crate]), "warden");
+  assert.equal(selectedEntityStatus(warden, crate, crate, [warden, crate]), "crate");
   assert.equal(selectedEntityStatus(null, crate, warden, [warden, crate]), "crate");
 });
 
