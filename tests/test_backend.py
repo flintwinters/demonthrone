@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import unittest
 from http import HTTPStatus
+from http.server import SimpleHTTPRequestHandler
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 from backend.app import (
     BackendConfig,
@@ -65,6 +67,10 @@ class BackendRouteTests(unittest.TestCase):
         payload, status = self.responses.pop()
         self.assertEqual(status, HTTPStatus.NOT_FOUND)
         self.assertEqual(payload["error"]["code"], "not_found")
+
+    def test_disconnected_static_client_does_not_escape_handler(self) -> None:
+        with patch.object(SimpleHTTPRequestHandler, "handle", side_effect=BrokenPipeError):
+            self.handler.handle()
 
 
 if __name__ == "__main__":

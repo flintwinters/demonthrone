@@ -96,6 +96,14 @@ class DemonthroneRequestHandler(SimpleHTTPRequestHandler):
             return
         super().do_GET()
 
+    def handle(self) -> None:
+        """Ignore clients disconnecting before an HTTP response is complete."""
+
+        try:
+            super().handle()
+        except (BrokenPipeError, ConnectionResetError):
+            return
+
     def end_headers(self) -> None:
         """Apply lightweight hardening headers to every response."""
 
