@@ -5,6 +5,7 @@ export function canTakeAction(unit) {
 }
 export function spendAction(unit) {
     unit.target = null;
+    unit.attackTargetId = null;
     clearPlannedPush(unit.id);
     spentUnitIds.add(unit.id);
 }

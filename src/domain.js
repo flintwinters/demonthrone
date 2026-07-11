@@ -88,6 +88,7 @@ export class CharacterTemplate {
             id,
             color,
             target: null,
+            attackTargetId: null,
         };
     }
     enemy(id, tile, color) {

@@ -28,6 +28,7 @@ export type Unit = Tile & CharacterStats & {
   id: string;
   color: string;
   target: Tile | null;
+  attackTargetId: string | null;
 };
 
 export type Enemy = Tile & CharacterStats & {
@@ -98,4 +99,5 @@ export type BoardState = {
   selectedUnitId: string | null;
   tileHeight: TileHeight;
   isMovementTile: TilePredicate;
+  isAttackTile: TilePredicate;
 };

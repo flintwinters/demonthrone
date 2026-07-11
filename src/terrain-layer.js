@@ -47,6 +47,7 @@ function unitStyleSignature(unit) {
         unit.x,
         unit.y,
         tileSignature(unit.target),
+        unit.attackTargetId ?? "",
     ].join(":");
 }
 function addTerrainProps(group, boardState, tiles) {

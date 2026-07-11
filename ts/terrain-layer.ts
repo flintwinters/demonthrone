@@ -65,6 +65,7 @@ function unitStyleSignature(unit: RenderUnit): string {
     unit.x,
     unit.y,
     tileSignature(unit.target),
+    unit.attackTargetId ?? "",
   ].join(":");
 }
 

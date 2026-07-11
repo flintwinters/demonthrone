@@ -2,8 +2,8 @@ import { isObstacleTile } from "./obstacles.js";
 import { pushables } from "./pushables.js";
 import { isBrushTile, sightCost, tileHeight } from "./world.js";
 import { selection, units } from "./units.js";
-import { isVisibleTile } from "./visibility.js";
-export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMovementTile) {
+import { canUnitSeeTile, isVisibleTile, sightContext } from "./visibility.js";
+export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMovementTile, isAttackTile) {
     return {
         selectedTile,
         hoveredTile,
@@ -18,6 +18,7 @@ export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMov
         selectedUnitId: selection.unitId,
         tileHeight,
         isMovementTile,
+        isAttackTile,
     };
 }
 function renderablePushables(enemies) {
@@ -31,6 +32,9 @@ function renderablePushables(enemies) {
 }
 export function canSeeTile(tile, enemies) {
     return isVisibleTile(tile, units, sightBlockers(enemies), sightCost, tileHeight);
+}
+export function canUnitSee(unit, tile, enemies) {
+    return canUnitSeeTile(unit, tile, sightContext(sightBlockers(enemies), sightCost, tileHeight));
 }
 export function enrichTile(tile) {
     return {

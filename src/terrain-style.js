@@ -21,6 +21,26 @@ const biomeStyles = {
     },
 };
 export function tileStyle(tile, boardState, level) {
+    const priority = priorityTileStyle(tile, boardState, level);
+    if (priority) {
+        return priority;
+    }
+    if (boardState.isAttackTile(tile)) {
+        const top = sameTile(boardState.hoveredTile, tile) ? colors.hoveredAttackTile : colors.attackTile;
+        return terrainStyle(top, colors.tileSideRight, level);
+    }
+    if (boardState.isMovementTile(tile)) {
+        return movementTileStyle(tile, boardState, level);
+    }
+    if (sameTile(boardState.hoveredTile, tile)) {
+        return terrainStyle(colors.hoveredTile, colors.tileSideRight, level);
+    }
+    return biomeTerrainStyle(tile, level);
+}
+function priorityTileStyle(tile, boardState, level) {
+    if (isPlannedAttackTarget(tile, boardState)) {
+        return terrainStyle(colors.attackTarget, colors.tileSideRight, level);
+    }
     if (isPlannedMoveTarget(tile, boardState.units)) {
         return terrainStyle(colors.moveTarget, colors.movementTileSideRight, level);
     }
@@ -30,13 +50,11 @@ export function tileStyle(tile, boardState, level) {
     if (sameTile(boardState.selectedTile, tile)) {
         return terrainStyle(colors.selectedTile, colors.tileSideRight, level);
     }
-    if (boardState.isMovementTile(tile)) {
-        return movementTileStyle(tile, boardState, level);
-    }
-    if (sameTile(boardState.hoveredTile, tile)) {
-        return terrainStyle(colors.hoveredTile, colors.tileSideRight, level);
-    }
-    return biomeTerrainStyle(tile, level);
+    return null;
+}
+function isPlannedAttackTarget(tile, boardState) {
+    const enemy = boardState.enemies.find((candidate) => sameTile(candidate, tile));
+    return Boolean(enemy && boardState.units.some((unit) => unit.attackTargetId === enemy.id));
 }
 function movementTileStyle(tile, boardState, level) {
     const top = sameTile(boardState.hoveredTile, tile) ? colors.hoveredMovementTile : colors.movementTile;

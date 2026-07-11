@@ -1,6 +1,6 @@
-import { boardState, canSeeTile, enrichTile } from "./board-state.js";
-import { devicePixelRatio, gridFromScreen, screenFromGrid, view } from "./camera.js";
-import { terrainHeight } from "./constants.js";
+import { boardState, canSeeTile, canUnitSee, enrichTile } from "./board-state.js";
+import { devicePixelRatio, gridFromScreen } from "./camera.js";
+import { resolveAttacks, tryPlanAttack } from "./combat.js";
 import { attackUnits, moveEnemies, perlinEnemies } from "./enemies.js";
 import { captureFollowerPositions, followPositionHistory } from "./enchantment.js";
 import { connectEnchantmentControl } from "./enchantment-control.js";
@@ -8,6 +8,7 @@ import { l1Distance, sameTile } from "./grid.js";
 import { connectInput } from "./input.js";
 import { canReachTile } from "./movement.js";
 import { isBoardObstacle } from "./obstacles.js";
+import { pickPieceTile } from "./piece-picker.js";
 import { canPushTo, clearPlannedPush, commitPlannedPushes, isPushableTile, planPush, pushables } from "./pushables.js";
 import { drawGrid } from "./renderer.js";
 import { connectRotationControls } from "./rotation-controls.js";
@@ -23,10 +24,6 @@ import {
 } from "./units.js";
 import type { HeightTile, ScreenPoint, Tile, Unit } from "./types.js";
 
-const unitPickRadius = 30;
-const unitPickMinRadius = 18;
-const unitPickHeight = 0.3;
-
 const canvas = requiredElement<HTMLCanvasElement>("#grid");
 const goButton = requiredElement<HTMLButtonElement>("#go");
 const rotateLeftButton = requiredElement<HTMLButtonElement>("#rotate-left");
@@ -41,7 +38,9 @@ const enchantmentControl = connectEnchantmentControl(
 );
 
 function draw(): void {
-  drawGrid(canvas, boardState(selectedTile, hoveredTile, enemies, tombstones, canSelectedUnitMoveTo));
+  drawGrid(canvas, boardState(
+    selectedTile, hoveredTile, enemies, tombstones, canSelectedUnitMoveTo, canSelectedUnitAttackTile,
+  ));
   goButton.hidden = units.length === 0;
   enchantmentControl.sync();
 }
@@ -60,6 +59,17 @@ function resize(): void {
 
 function selectTile(tile: Tile): void {
   focusedTile = tile;
+  const unit = selectedUnit();
+  const attackTarget = tryPlanAttack(
+    tile, unit, enemies, (candidate) => Boolean(unit && canUnitSee(unit, candidate, enemies)),
+  );
+
+  if (attackTarget) {
+    selectedTile = enrichTile(attackTarget);
+    draw();
+    return;
+  }
+
   selectedTile = tile && canSeeTile(tile, enemies)
     ? clickBoardTile(enrichTile(tile), canMoveToTile, assignMoveTarget)
     : null;
@@ -78,13 +88,26 @@ function hoverTile(tile: Tile | null): void {
 }
 
 function pickSelectableTile(point: ScreenPoint): Tile {
-  return pickUnitTile(point) ?? terrainTileAt(point);
+  const piece = pickPieceTile(
+    canvas, point, [...units, ...enemies], (tile) => canSeeTile(tile, enemies), tileHeight,
+  );
+
+  return piece ?? terrainTileAt(point);
 }
 
 function canSelectedUnitMoveTo(tile: Tile): boolean {
   const unit = selectedUnit();
 
   return unit ? canMoveToTile(tile, unit) : false;
+}
+
+function canSelectedUnitAttackTile(tile: Tile): boolean {
+  const unit = selectedUnit();
+
+  return Boolean(unit
+    && canTakeAction(unit)
+    && canUnitSee(unit, tile, enemies)
+    && l1Distance(unit, tile) <= unit.attackRange);
 }
 
 function canMoveToTile(tile: Tile, unit: Unit): boolean {
@@ -106,26 +129,6 @@ function assignMoveTarget(unit: Unit, tile: Tile): void {
   }
 }
 
-function pickUnitTile(point: ScreenPoint): Tile | null {
-  let nearest: Unit | null = null;
-  let nearestDistance = pickRadius();
-
-  for (const unit of units) {
-    if (!canSeeTile(unit, enemies)) {
-      continue;
-    }
-
-    const distance = screenDistance(point, unitScreenPoint(unit));
-
-    if (distance < nearestDistance) {
-      nearest = unit;
-      nearestDistance = distance;
-    }
-  }
-
-  return nearest ? { x: nearest.x, y: nearest.y } : null;
-}
-
 function terrainTileAt(point: ScreenPoint): Tile {
   return gridFromScreen(canvas, point.x, point.y, tileHeight);
 }
@@ -144,27 +147,6 @@ function isOccupiedTile(tile: Tile): boolean {
   return units.some((unit) => sameTile(unit, tile)) || enemies.some((enemy) => sameTile(enemy, tile));
 }
 
-function unitScreenPoint(unit: Unit): ScreenPoint {
-  return screenFromGrid(
-    canvas,
-    unit.x + 0.5,
-    unit.y + 0.5,
-    visualHeight(tileHeight(unit)) + unitPickHeight,
-  );
-}
-
-function screenDistance(first: ScreenPoint, second: ScreenPoint): number {
-  return Math.hypot(first.x - second.x, first.y - second.y);
-}
-
-function pickRadius(): number {
-  return Math.max(unitPickMinRadius, unitPickRadius * view.zoom);
-}
-
-function visualHeight(height: number): number {
-  return height * terrainHeight.visualScale;
-}
-
 function go(): void {
   if (units.length === 0) {
     return;
@@ -177,8 +159,9 @@ function go(): void {
   commitPlannedPushes();
 
   followPositionHistory(units, previousPositions);
-  moveEnemies(enemies, units, isBoardObstacle);
+  tombstones.push(...resolveAttacks(units, enemies));
   tombstones.push(...attackUnits(units, enemies).map(({ x, y }) => ({ x, y })));
+  moveEnemies(enemies, units, isBoardObstacle);
   resetActions();
   syncSelection();
   draw();
@@ -199,6 +182,7 @@ connectRotationControls(
 );
 connectTurnControl(goButton, go);
 window.addEventListener("resize", resize);
+moveEnemies(enemies, units, isBoardObstacle);
 resize();
 
 function requiredElement<T extends Element>(selector: string): T {

@@ -9,6 +9,7 @@ export function canTakeAction(unit: Unit): boolean {
 
 export function spendAction(unit: Unit): void {
   unit.target = null;
+  unit.attackTargetId = null;
   clearPlannedPush(unit.id);
   spentUnitIds.add(unit.id);
 }
