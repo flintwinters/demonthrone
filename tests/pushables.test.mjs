@@ -85,6 +85,16 @@ test("crates outside teammate line of sight are not rendered", () => {
   crate.y = original.y;
 });
 
+test("the pending enchantment source is exposed to the renderer", () => {
+  const crate = boardState(null, null, [], [], () => false).pushables[0];
+
+  assert.notEqual(crate, undefined);
+  const renderedCrate = boardState(null, null, [], [], () => false, () => false, crate.id).pushables
+    .find((candidate) => candidate.id === crate.id);
+
+  assert.equal(renderedCrate?.isEnchantmentSource, true);
+});
+
 test("crates bind to an explicitly selected chain target", () => {
   const [first, second, inserted] = pushables;
 

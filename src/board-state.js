@@ -3,7 +3,7 @@ import { pushables } from "./pushables.js";
 import { isBoulderTile, isBrushTile, sightCost, tileHeight } from "./world.js";
 import { selection, units } from "./units.js";
 import { canUnitSeeTile, isVisibleTile, sightContext } from "./visibility.js";
-export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMovementTile, isAttackTile) {
+export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMovementTile, isAttackTile, enchantmentSourceId = null) {
     return {
         selectedTile,
         hoveredTile,
@@ -11,7 +11,7 @@ export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMov
         enemies: renderableEnemies(enemies),
         sightBlockers: sightBlockers(enemies),
         tombstones: renderableTombstones(tombstones, enemies),
-        pushables: renderablePushables(enemies),
+        pushables: renderablePushables(enemies, enchantmentSourceId),
         isObstacleTile,
         isBoulderTile,
         isBrushTile,
@@ -22,12 +22,13 @@ export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMov
         isAttackTile,
     };
 }
-function renderablePushables(enemies) {
+function renderablePushables(enemies, enchantmentSourceId) {
     return pushables
         .filter((pushable) => canSeeTile(pushable, enemies))
         .map((pushable) => ({
         ...pushable,
         height: tileHeight(pushable),
+        isEnchantmentSource: pushable.id === enchantmentSourceId,
         target: pushable.target ? enrichTile(pushable.target) : null,
     }));
 }

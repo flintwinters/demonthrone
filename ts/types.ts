@@ -82,6 +82,7 @@ export type RenderTombstone = Tile & {
 
 export type RenderPushable = Pushable & {
   height: number;
+  isEnchantmentSource: boolean;
   target: HeightTile | null;
 };
 

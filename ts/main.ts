@@ -8,6 +8,7 @@ import { EnchantmentSelection } from "./enchantment-selection.js";
 import { l1Distance, sameTile } from "./grid.js";
 import { connectInput } from "./input.js";
 import { canReachTile } from "./movement.js";
+import { requiredElement } from "./dom.js";
 import { isBoardObstacle } from "./obstacles.js";
 import { pickPieceTile } from "./piece-picker.js";
 import { canPushTo, clearPlannedPush, commitPlannedPushes, isPushableTile, planPush, pushables } from "./pushables.js";
@@ -38,6 +39,7 @@ const enchantmentSelection = new EnchantmentSelection();
 function draw(): void {
   drawGrid(canvas, boardState(
     selectedTile, hoveredTile, enemies, tombstones, canInteractionTargetTile, canSelectedUnitAttackTile,
+    enchantmentSelection.source()?.id ?? null,
   ));
   goButton.hidden = units.length === 0;
 }
@@ -83,10 +85,14 @@ function handleEnchantmentClick(tile: Tile): boolean {
     return true;
   }
 
-  if (selectedUnit() || !enchantmentSelection.begin(tile)) {
+  if (!enchantmentSelection.begin(tile)) {
     return false;
   }
-
+  const unit = selectedUnit();
+  if (unit && canMoveToTile(tile, unit)) {
+    enchantmentSelection.clear();
+    return false;
+  }
   selectedTile = enrichTile(tile);
   return true;
 }
@@ -199,13 +205,3 @@ window.addEventListener("resize", resize);
 materializeEntities(units, enemies);
 moveEnemies(enemies, units, isBoardObstacle);
 resize();
-
-function requiredElement<T extends Element>(selector: string): T {
-  const element = document.querySelector<T>(selector);
-
-  if (!element) {
-    throw new Error(`Missing required element: ${selector}`);
-  }
-
-  return element;
-}

@@ -30,7 +30,9 @@ function pushableMesh(pushable: RenderPushable, tile: HeightTile, opacity: numbe
 }
 
 function crateMaterial(pushable: RenderPushable, opacity: number): THREE.MeshLambertMaterial {
-  const color = pushable.enchanterUnitId ? colors.enchantedPushable : colors.pushable;
+  const color = pushable.isEnchantmentSource
+    ? colors.attackTarget
+    : pushable.enchanterUnitId ? colors.enchantedPushable : colors.pushable;
 
   return opacity < 1 ? transparentMaterial(color, opacity) : material(color);
 }

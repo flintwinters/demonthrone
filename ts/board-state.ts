@@ -12,6 +12,7 @@ export function boardState(
   tombstones: Tile[],
   isMovementTile: TilePredicate,
   isAttackTile: TilePredicate,
+  enchantmentSourceId: string | null = null,
 ): BoardState {
   return {
     selectedTile,
@@ -20,7 +21,7 @@ export function boardState(
     enemies: renderableEnemies(enemies),
     sightBlockers: sightBlockers(enemies),
     tombstones: renderableTombstones(tombstones, enemies),
-    pushables: renderablePushables(enemies),
+    pushables: renderablePushables(enemies, enchantmentSourceId),
     isObstacleTile,
     isBoulderTile,
     isBrushTile,
@@ -32,12 +33,13 @@ export function boardState(
   };
 }
 
-function renderablePushables(enemies: Enemy[]): RenderPushable[] {
+function renderablePushables(enemies: Enemy[], enchantmentSourceId: string | null): RenderPushable[] {
   return pushables
     .filter((pushable) => canSeeTile(pushable, enemies))
     .map((pushable) => ({
       ...pushable,
       height: tileHeight(pushable),
+      isEnchantmentSource: pushable.id === enchantmentSourceId,
       target: pushable.target ? enrichTile(pushable.target) : null,
     }));
 }
