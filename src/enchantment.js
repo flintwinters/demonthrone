@@ -20,6 +20,12 @@ export function dispelEnchantment(source, units) {
     }
     return owner;
 }
+export function dispelDestroyedPushable(target, units) {
+    const pushable = pushables.find((candidate) => candidate.id === target.id);
+    if (pushable) {
+        dispelEnchantment(pushable, units);
+    }
+}
 export function enchantmentOwner(target, units) {
     if (isUnit(target, units)) {
         return target;

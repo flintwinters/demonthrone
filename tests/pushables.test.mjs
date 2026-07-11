@@ -1,8 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { boardState } from "../src/board-state.js";
+import { resolveAttacks } from "../src/combat.js";
 import { materializeEntities } from "../src/entity-generation.js";
-import { bindEnchantment, captureFollowerPositions, dispelEnchantment, followPositionHistory } from "../src/enchantment.js";
+import {
+  bindEnchantment,
+  captureFollowerPositions,
+  dispelDestroyedPushable,
+  dispelEnchantment,
+  followPositionHistory,
+} from "../src/enchantment.js";
 import { EnchantmentSelection } from "../src/enchantment-selection.js";
 import { handleEnchantmentClick } from "../src/interaction.js";
 import { canTakeAction, resetActions, spendAction } from "../src/teammate-turns.js";
@@ -178,4 +185,17 @@ test("spending an enchant action clears movement and push plans for the turn", (
   assert.equal(canTakeAction(unit), false);
   resetActions();
   assert.equal(canTakeAction(unit), true);
+});
+
+test("destroying an enchanted crate dispels its downstream chain", () => {
+  const [destroyed, follower] = pushables;
+
+  bindEnchantment(destroyed, unit, [unit]);
+  bindEnchantment(follower, destroyed, [unit]);
+  destroyed.health = 0;
+  resolveAttacks([], [], pushables, target => dispelDestroyedPushable(target, [unit]));
+
+  assert.equal(pushables.includes(destroyed), false);
+  assert.equal(follower.enchanterUnitId, null);
+  assert.equal(follower.followsId, null);
 });

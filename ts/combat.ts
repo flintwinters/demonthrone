@@ -60,9 +60,10 @@ function toggleAttack(unit: Unit, target: DamageableEntity): boolean {
 export function resolveAttacks(
   units: Unit[],
   targets: DamageableEntity[],
-  ...additionalTargetGroups: DamageableEntity[][]
+  additionalTargets: DamageableEntity[] = [],
+  beforeRemove: (target: DamageableEntity) => void = () => {},
 ): Tile[] {
-  const targetGroups = [targets, ...additionalTargetGroups];
+  const targetGroups = [targets, additionalTargets];
   const allTargets = targetGroups.flat();
 
   for (const unit of units) {
@@ -73,6 +74,7 @@ export function resolveAttacks(
   const destroyed = allTargets.filter((target) => target.health <= 0);
 
   for (const target of destroyed) {
+    beforeRemove(target);
     const group = targetGroups.find((candidates) => candidates.includes(target));
 
     group?.splice(group.indexOf(target), 1);

@@ -12,6 +12,13 @@ export function cancelAttackForMovement(tile, unit, canMove, cancelAction) {
         cancelAction(unit);
     }
 }
+export function clearInteraction(selection, unit, cancelAction, clearUnitSelection) {
+    selection.clear();
+    if (unit) {
+        cancelAction(unit);
+        clearUnitSelection();
+    }
+}
 function beginEnchantment(tile, selection, unit, conflictsWithUnitAction, enrichTile, clearUnitSelection) {
     if (!selection.begin(tile)) {
         return { handled: false, selectedTile: null };

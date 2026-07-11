@@ -40,6 +40,19 @@ export function cancelAttackForMovement(
   }
 }
 
+export function clearInteraction(
+  selection: EnchantmentSelection,
+  unit: Unit | null,
+  cancelAction: (unit: Unit) => void,
+  clearUnitSelection: () => void,
+): void {
+  selection.clear();
+  if (unit) {
+    cancelAction(unit);
+    clearUnitSelection();
+  }
+}
+
 function beginEnchantment(
   tile: Tile,
   selection: EnchantmentSelection,

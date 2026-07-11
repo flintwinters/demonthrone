@@ -35,8 +35,8 @@ function toggleAttack(unit, target) {
     planAttack(unit, target);
     return true;
 }
-export function resolveAttacks(units, targets, ...additionalTargetGroups) {
-    const targetGroups = [targets, ...additionalTargetGroups];
+export function resolveAttacks(units, targets, additionalTargets = [], beforeRemove = () => { }) {
+    const targetGroups = [targets, additionalTargets];
     const allTargets = targetGroups.flat();
     for (const unit of units) {
         damageTarget(unit, allTargets);
@@ -44,6 +44,7 @@ export function resolveAttacks(units, targets, ...additionalTargetGroups) {
     }
     const destroyed = allTargets.filter((target) => target.health <= 0);
     for (const target of destroyed) {
+        beforeRemove(target);
         const group = targetGroups.find((candidates) => candidates.includes(target));
         group?.splice(group.indexOf(target), 1);
     }

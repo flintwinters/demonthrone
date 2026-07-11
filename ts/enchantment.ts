@@ -1,6 +1,6 @@
 import { sameTile } from "./grid.js";
 import { pushables } from "./pushables.js";
-import type { Pushable, Tile, Unit } from "./types.js";
+import type { DamageableEntity, Pushable, Tile, Unit } from "./types.js";
 
 type Positioned = Tile & { id: string };
 
@@ -28,6 +28,14 @@ export function dispelEnchantment(source: Pushable, units: readonly Unit[]): Uni
     dispelChain(source.id);
   }
   return owner;
+}
+
+export function dispelDestroyedPushable(target: DamageableEntity, units: readonly Unit[]): void {
+  const pushable = pushables.find((candidate) => candidate.id === target.id);
+
+  if (pushable) {
+    dispelEnchantment(pushable, units);
+  }
 }
 
 export function enchantmentOwner(target: Unit | Pushable, units: readonly Unit[]): Unit | null {

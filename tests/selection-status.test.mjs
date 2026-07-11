@@ -34,6 +34,21 @@ test("entity status prioritizes explicit gameplay selections", () => {
   assert.equal(selectedEntityStatus(null, crate, warden, [warden, crate]), "crate");
 });
 
+test("status text explains the active interaction without controls", () => {
+  const unit = { ...warden, target: null, attackTargetId: null };
+  const crate = {
+    ...warden,
+    id: "crate-1",
+    entityKind: "object",
+    entityType: "crate",
+    enchanterUnitId: null,
+  };
+  const kindAt = () => "floor";
+
+  assert.match(selectedObjectStatus(unit, null, unit, [unit, crate], kindAt), /green move · red attack/);
+  assert.match(selectedObjectStatus(null, crate, crate, [unit, crate], kindAt), /bind to teammate/);
+});
+
 test("visible non-unit entities can be selected for inspection", () => {
   const enemy = { ...warden, id: "enemy-1", entityKind: "enemy", entityType: "pursuer" };
   const enrich = (tile) => ({ ...tile, height: 2 });

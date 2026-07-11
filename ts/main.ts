@@ -4,11 +4,11 @@ import { connectCancelInput } from "./cancel-input.js";
 import { canPlanAttack, resolveAttacks, tryPlanAttack } from "./combat.js";
 import { attackUnits, moveEnemies } from "./enemies.js";
 import { materializeEntities } from "./entity-generation.js";
-import { captureFollowerPositions, followPositionHistory } from "./enchantment.js";
+import { captureFollowerPositions, dispelDestroyedPushable, followPositionHistory } from "./enchantment.js";
 import { EnchantmentSelection } from "./enchantment-selection.js";
 import { sameTile } from "./grid.js";
 import { connectInput } from "./input.js";
-import { cancelAttackForMovement, handleEnchantmentClick } from "./interaction.js";
+import { cancelAttackForMovement, clearInteraction, handleEnchantmentClick } from "./interaction.js";
 import { canReachTile } from "./movement.js";
 import { requiredElement } from "./dom.js";
 import { isBoardObstacle } from "./obstacles.js";
@@ -193,7 +193,9 @@ function go(): void {
   commitPlannedPushes();
 
   followPositionHistory(units, previousPositions);
-  tombstones.push(...resolveAttacks(units, enemies, pushables));
+  tombstones.push(...resolveAttacks(
+    units, enemies, pushables, target => dispelDestroyedPushable(target, units),
+  ));
   tombstones.push(...attackUnits(units, enemies).map(({ x, y }) => ({ x, y })));
   materializeEntities(units, enemies);
   moveEnemies(enemies, units, isBoardObstacle);
@@ -215,17 +217,12 @@ connectRotationControls(
 );
 connectTurnControl(goButton, go);
 window.addEventListener("resize", resize);
-materializeEntities(units, enemies); moveEnemies(enemies, units, isBoardObstacle);
+materializeEntities(units, enemies);
+moveEnemies(enemies, units, isBoardObstacle);
 resize();
 
 function cancelInteraction(): void {
-  const unit = selectedUnit();
-
-  enchantmentSelection.clear();
-  if (unit) {
-    cancelAction(unit);
-    clearUnitSelection();
-  }
+  clearInteraction(enchantmentSelection, selectedUnit(), cancelAction, clearUnitSelection);
   selectedTile = null;
   draw();
 }
