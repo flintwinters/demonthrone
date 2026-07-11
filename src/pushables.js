@@ -37,20 +37,17 @@ export function clearPlannedPush(unitId) {
     }
 }
 export function commitPlannedPushes() {
-    const moved = new Set();
     for (const pushable of pushables) {
         if (pushable.target) {
             pushable.x = pushable.target.x;
             pushable.y = pushable.target.y;
-            moved.add(pushable.id);
         }
         pushable.target = null;
         pushable.pushedByUnitId = null;
     }
-    return moved;
 }
 function pushable(id, tile) {
-    return { id, ...tile, target: null, pushedByUnitId: null, enchanterUnitId: null };
+    return { id, ...tile, target: null, pushedByUnitId: null, enchanterUnitId: null, followsId: null };
 }
 function pushDestination(unit, pushable) {
     return neighborTile(pushable, {

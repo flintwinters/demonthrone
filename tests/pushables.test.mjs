@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { boardState } from "../src/board-state.js";
-import { chaseEnchanters, toggleEnchantment } from "../src/enchantment.js";
+import { captureFollowerPositions, followPositionHistory, toggleEnchantment } from "../src/enchantment.js";
 import { canTakeAction, resetActions, spendAction } from "../src/teammate-turns.js";
 import {
   canPushTo,
@@ -68,17 +68,24 @@ test("crates outside teammate line of sight are not rendered", () => {
   crate.y = original.y;
 });
 
-test("enchantment toggles and makes a crate chase its teammate", () => {
-  const crate = pushables[0];
+test("enchanted crates form a positional-history tail", () => {
+  const [first, second] = pushables;
 
-  assert.equal(toggleEnchantment(crate, unit), true);
-  assert.equal(crate.enchanterUnitId, unit.id);
-  chaseEnchanters([unit], new Set([crate.id]), () => false, flatHeight);
-  assert.deepEqual({ x: crate.x, y: crate.y }, { x: 5, y: 9 });
-  chaseEnchanters([unit], new Set(), () => false, flatHeight);
-  assert.deepEqual({ x: crate.x, y: crate.y }, { x: 5, y: 8 });
-  assert.equal(toggleEnchantment(crate, unit), true);
-  assert.equal(crate.enchanterUnitId, null);
+  assert.equal(toggleEnchantment(first, unit), true);
+  assert.equal(toggleEnchantment(second, unit), true);
+  assert.equal(first.followsId, unit.id);
+  assert.equal(second.followsId, first.id);
+  const previous = captureFollowerPositions([unit]);
+
+  unit.x = 6;
+  followPositionHistory([unit], previous);
+  assert.deepEqual({ x: first.x, y: first.y }, { x: 5, y: 7 });
+  assert.deepEqual({ x: second.x, y: second.y }, { x: 5, y: 9 });
+
+  assert.equal(toggleEnchantment(first, unit), true);
+  assert.equal(first.enchanterUnitId, null);
+  assert.equal(second.enchanterUnitId, null);
+  unit.x = 5;
 });
 
 test("spending an enchant action clears movement and push plans for the turn", () => {

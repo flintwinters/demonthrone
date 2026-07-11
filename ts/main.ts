@@ -2,7 +2,7 @@ import { boardState, canSeeTile, enrichTile } from "./board-state.js";
 import { devicePixelRatio, gridFromScreen, screenFromGrid, view } from "./camera.js";
 import { terrainHeight } from "./constants.js";
 import { attackUnits, moveEnemies, randomEnemies } from "./enemies.js";
-import { chaseEnchanters } from "./enchantment.js";
+import { captureFollowerPositions, followPositionHistory } from "./enchantment.js";
 import { connectEnchantmentControl } from "./enchantment-control.js";
 import { l1Distance, sameTile } from "./grid.js";
 import { connectInput } from "./input.js";
@@ -171,10 +171,12 @@ function go(): void {
   }
 
   tombstones.length = 0;
-  commitPlannedMoves();
-  const pushed = commitPlannedPushes();
+  const previousPositions = captureFollowerPositions(units);
 
-  chaseEnchanters(units, pushed, isMovementBlocked, tileHeight);
+  commitPlannedMoves();
+  commitPlannedPushes();
+
+  followPositionHistory(units, previousPositions);
   moveEnemies(enemies, units, isBoardObstacle);
   tombstones.push(...attackUnits(units, enemies).map(({ x, y }) => ({ x, y })));
   resetActions();

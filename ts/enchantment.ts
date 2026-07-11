@@ -1,8 +1,8 @@
-import { cardinalDirections, l1Distance, neighborTile } from "./grid.js";
+import { sameTile } from "./grid.js";
 import { pushableAt, pushables } from "./pushables.js";
-import type { Pushable, Tile, TileHeight, TilePredicate, Unit } from "./types.js";
+import type { Pushable, Tile, Unit } from "./types.js";
 
-const maxUpwardChaseHeight = 2;
+type Positioned = Tile & { id: string };
 
 export function toggleEnchantment(tile: Tile, unit: Unit): boolean {
   const pushable = pushableAt(tile);
@@ -11,49 +11,84 @@ export function toggleEnchantment(tile: Tile, unit: Unit): boolean {
     return false;
   }
 
-  pushable.enchanterUnitId = pushable.enchanterUnitId === unit.id ? null : unit.id;
+  if (pushable.enchanterUnitId === unit.id) {
+    dispelChain(pushable.id);
+  } else {
+    pushable.followsId = chainTailId(unit.id);
+    assignChainOwner(pushable.id, unit.id);
+  }
+
   return true;
 }
 
-export function chaseEnchanters(
-  units: readonly Unit[],
-  alreadyMoved: ReadonlySet<string>,
-  isBlocked: TilePredicate,
-  tileHeight: TileHeight,
-): void {
-  for (const pushable of pushables) {
-    const enchanter = units.find((unit) => unit.id === pushable.enchanterUnitId);
+export function captureFollowerPositions(units: readonly Unit[]): Map<string, Tile> {
+  return new Map([...units, ...pushables].map((item) => [item.id, { x: item.x, y: item.y }]));
+}
 
-    if (enchanter && !alreadyMoved.has(pushable.id)) {
-      moveToward(pushable, enchanter, isBlocked, tileHeight);
+export function followPositionHistory(units: readonly Unit[], previous: ReadonlyMap<string, Tile>): void {
+  for (const unit of units) {
+    followChain(unit, previous);
+  }
+}
+
+function followChain(parent: Positioned, previous: ReadonlyMap<string, Tile>): void {
+  const follower = pushables.find((pushable) => pushable.followsId === parent.id);
+  const priorParent = previous.get(parent.id);
+
+  if (!follower || !priorParent) {
+    return;
+  }
+
+  if (!sameTile(parent, priorParent)) {
+    follower.x = priorParent.x;
+    follower.y = priorParent.y;
+  }
+
+  followChain(follower, previous);
+}
+
+function chainTailId(rootId: string): string {
+  let tailId = rootId;
+  let follower = followerOf(tailId);
+
+  while (follower) {
+    tailId = follower.id;
+    follower = followerOf(tailId);
+  }
+
+  return tailId;
+}
+
+function assignChainOwner(pushableId: string, unitId: string): void {
+  const pushable = pushables.find((candidate) => candidate.id === pushableId);
+
+  if (pushable) {
+    pushable.enchanterUnitId = unitId;
+    const follower = followerOf(pushable.id);
+
+    if (follower) {
+      assignChainOwner(follower.id, unitId);
     }
   }
 }
 
-function moveToward(
-  pushable: Pushable,
-  enchanter: Unit,
-  isBlocked: TilePredicate,
-  tileHeight: TileHeight,
-): void {
-  const destination = cardinalDirections
-    .map((direction) => neighborTile(pushable, direction))
-    .find((tile) => isChaseStep(pushable, tile, enchanter, isBlocked, tileHeight));
+function dispelChain(pushableId: string): void {
+  const pushable = pushables.find((candidate) => candidate.id === pushableId);
 
-  if (destination) {
-    pushable.x = destination.x;
-    pushable.y = destination.y;
+  if (!pushable) {
+    return;
+  }
+
+  const follower = followerOf(pushable.id);
+
+  pushable.followsId = null;
+  pushable.enchanterUnitId = null;
+
+  if (follower) {
+    dispelChain(follower.id);
   }
 }
 
-function isChaseStep(
-  pushable: Pushable,
-  tile: Tile,
-  enchanter: Unit,
-  isBlocked: TilePredicate,
-  tileHeight: TileHeight,
-): boolean {
-  return l1Distance(tile, enchanter) < l1Distance(pushable, enchanter)
-    && !isBlocked(tile)
-    && tileHeight(tile) - tileHeight(pushable) <= maxUpwardChaseHeight;
+function followerOf(id: string): Pushable | null {
+  return pushables.find((pushable) => pushable.followsId === id) ?? null;
 }
