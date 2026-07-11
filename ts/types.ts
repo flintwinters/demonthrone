@@ -18,6 +18,17 @@ export type HeightTile = Tile & {
   height: number;
 };
 
+export type Point3 = {
+  x: number;
+  y: number;
+  z: number;
+};
+
+export type SightBlocker = Tile & {
+  bottom: number;
+  top: number;
+};
+
 export type CharacterStats = {
   sight: number;
   movement: number;
@@ -108,7 +119,7 @@ export type BoardState = {
   hoveredTile: HeightTile | null;
   units: RenderUnit[];
   enemies: RenderEnemy[];
-  sightBlockers: Tile[];
+  sightBlockers: SightBlocker[];
   tombstones: RenderTombstone[];
   pushables: RenderPushable[];
   isObstacleTile: TilePredicate;

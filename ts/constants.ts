@@ -13,6 +13,15 @@ export const terrainHeight = {
   visualScale: 0.5,
 };
 
+export const sightGeometry = {
+  eyeHeight: 0.38,
+  characterBottom: 0.08,
+  characterTop: 0.62,
+  characterTargetHeight: 0.32,
+  boulderHeight: 0.66,
+  surfaceClearance: 0.001,
+};
+
 export const gridTopOffset = 72;
 export const worldPixelsPerUnit = 76;
 export const cameraDistance = 80;
@@ -64,7 +73,7 @@ export const colors = {
   brushFen: "#3f5942",
   brushHeath: "#515318",
   brushRidge: "#354d37",
-  boulder: "#7c6f64",
+  boulder: "#7a7282",
   pushable: "#fabd2f",
   enchantedPushable: "#b8bb26",
   unitOne: "#fe5f55",
