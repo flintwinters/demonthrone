@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { boardState } from "../src/board-state.js";
 import { chaseEnchanters, toggleEnchantment } from "../src/enchantment.js";
+import { canTakeAction, resetActions, spendAction } from "../src/teammate-turns.js";
 import {
   canPushTo,
   clearPlannedPush,
@@ -78,4 +79,17 @@ test("enchantment toggles and makes a crate chase its teammate", () => {
   assert.deepEqual({ x: crate.x, y: crate.y }, { x: 5, y: 8 });
   assert.equal(toggleEnchantment(crate, unit), true);
   assert.equal(crate.enchanterUnitId, null);
+});
+
+test("spending an enchant action clears movement and push plans for the turn", () => {
+  const crate = pushables[0];
+
+  unit.target = { x: crate.x, y: crate.y };
+  planPush(unit, crate);
+  spendAction(unit);
+  assert.equal(unit.target, null);
+  assert.equal(crate.target, null);
+  assert.equal(canTakeAction(unit), false);
+  resetActions();
+  assert.equal(canTakeAction(unit), true);
 });

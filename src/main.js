@@ -13,6 +13,7 @@ import { drawGrid } from "./renderer.js";
 import { connectRotationControls } from "./rotation-controls.js";
 import { tileHeight } from "./world.js";
 import { connectTurnControl } from "./turn-control.js";
+import { canTakeAction, resetActions } from "./teammate-turns.js";
 import { clickBoardTile, commitPlannedMoves, selection, selectedUnit, units, } from "./units.js";
 const unitPickRadius = 30;
 const unitPickMinRadius = 18;
@@ -66,7 +67,8 @@ function canSelectedUnitMoveTo(tile) {
 }
 function canMoveToTile(tile, unit) {
     const distance = l1Distance(tile, unit);
-    return canSeeTile(tile, enemies)
+    return canTakeAction(unit)
+        && canSeeTile(tile, enemies)
         && distance <= unit.movement
         && (canPushTo(unit, tile, isPushDestinationBlocked, tileHeight)
             || (!isMovementBlocked(tile)
@@ -128,15 +130,10 @@ function go() {
     const pushed = commitPlannedPushes();
     chaseEnchanters(units, pushed, isMovementBlocked, tileHeight);
     moveEnemies(enemies, units, isBoardObstacle);
-    tombstones.push(...attackUnits(units, enemies).map(unitTile));
+    tombstones.push(...attackUnits(units, enemies).map(({ x, y }) => ({ x, y })));
+    resetActions();
     syncSelection();
     draw();
-}
-function unitTile(unit) {
-    return {
-        x: unit.x,
-        y: unit.y,
-    };
 }
 function syncSelection() {
     if (selection.unitId && !selectedUnit()) {

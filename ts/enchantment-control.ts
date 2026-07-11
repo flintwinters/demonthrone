@@ -1,5 +1,6 @@
 import { toggleEnchantment } from "./enchantment.js";
 import { pushableAt } from "./pushables.js";
+import { canTakeAction, spendAction } from "./teammate-turns.js";
 import type { Tile, Unit } from "./types.js";
 
 export type EnchantmentControl = {
@@ -16,7 +17,8 @@ export function connectEnchantmentControl(
     const unit = selectedUnit();
     const tile = focusedTile();
 
-    if (unit && tile && toggleEnchantment(tile, unit)) {
+    if (unit && canTakeAction(unit) && tile && toggleEnchantment(tile, unit)) {
+      spendAction(unit);
       redraw();
     }
   }
@@ -26,7 +28,7 @@ export function connectEnchantmentControl(
     const unit = selectedUnit();
     const pushable = tile ? pushableAt(tile) : null;
 
-    button.disabled = !unit || !pushable;
+    button.disabled = !unit || !canTakeAction(unit) || !pushable;
     button.setAttribute("aria-pressed", String(Boolean(unit && pushable?.enchanterUnitId === unit.id)));
   }
 
