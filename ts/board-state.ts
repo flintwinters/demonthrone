@@ -19,7 +19,7 @@ export function boardState(
     enemies: renderableEnemies(enemies),
     sightBlockers: sightBlockers(enemies),
     tombstones: renderableTombstones(tombstones, enemies),
-    pushables: renderablePushables(),
+    pushables: renderablePushables(enemies),
     isObstacleTile,
     isBrushTile,
     sightCost,
@@ -29,12 +29,14 @@ export function boardState(
   };
 }
 
-function renderablePushables(): RenderPushable[] {
-  return pushables.map((pushable) => ({
-    ...pushable,
-    height: tileHeight(pushable),
-    target: pushable.target ? enrichTile(pushable.target) : null,
-  }));
+function renderablePushables(enemies: Enemy[]): RenderPushable[] {
+  return pushables
+    .filter((pushable) => canSeeTile(pushable, enemies))
+    .map((pushable) => ({
+      ...pushable,
+      height: tileHeight(pushable),
+      target: pushable.target ? enrichTile(pushable.target) : null,
+    }));
 }
 
 export function canSeeTile(tile: Tile, enemies: Enemy[]): boolean {

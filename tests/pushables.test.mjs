@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { boardState } from "../src/board-state.js";
 import {
   canPushTo,
   clearPlannedPush,
@@ -43,4 +44,18 @@ test("planned pushes can be cleared or committed", () => {
   commitPlannedPushes();
   assert.deepEqual({ x: crate.x, y: crate.y }, { x: 5, y: 9 });
   assert.equal(crate.target, null);
+});
+
+test("crates outside teammate line of sight are not rendered", () => {
+  const crate = pushables[0];
+  const original = { x: crate.x, y: crate.y };
+
+  crate.x = 1000;
+  crate.y = 1000;
+  const isRendered = boardState(null, null, [], [], () => false).pushables
+    .some((candidate) => candidate.id === crate.id);
+
+  assert.equal(isRendered, false);
+  crate.x = original.x;
+  crate.y = original.y;
 });
