@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "check": "npm run build && npm run lint && node --test tests/*.test.mjs && node --check src/main.js && node --check src/enchantment.js && node --check src/board-state.js && node --check src/input.js && node --check src/hover.js && node --check src/pinch.js && node --check src/rotation-controls.js && node --check src/camera.js && node --check src/renderer.js && node --check src/render-materials.js && node --check src/terrain-layer.js && node --check src/terrain-batch.js && node --check src/terrain-mesh.js && node --check src/terrain-style.js && node --check src/terrain-props.js && node --check src/pushable-render.js && node --check src/pushables.js && node --check src/constants.js && node --check src/domain.js && node --check src/units.js && node --check src/enemies.js && node --check src/grid.js && node --check src/sight-cost.js && node --check src/visibility.js && node --check src/tiles.js && node --check src/obstacles.js && node --check src/movement.js && node --check src/noise.js && node --check src/world.js",
+    "check": "npm run build && npm run lint && node --test tests/*.test.mjs && npm run syntax",
     "lint": "eslint .",
+    "syntax": "find src -maxdepth 1 -name '*.js' -print0 | xargs -0 -n1 node --check",
     "backend": "python -m backend.app",
     "serve": "npx serve .",
     "test": "npm run check"

@@ -11,10 +11,11 @@ import {
   pushables,
 } from "../src/pushables.js";
 
+const initialCrate = pushables[0];
 const unit = {
   id: "test-unit",
-  x: 5,
-  y: 7,
+  x: initialCrate.x,
+  y: initialCrate.y - 1,
   color: "#fff",
   sight: 1,
   movement: 3,
@@ -25,32 +26,33 @@ const unit = {
 const flatHeight = () => 0;
 
 test("a teammate can push an adjacent crate into a free tile", () => {
-  assert.equal(canPushTo(unit, { x: 5, y: 8 }, () => false, flatHeight), true);
+  assert.equal(canPushTo(unit, initialCrate, () => false, flatHeight), true);
 });
 
 test("a blocked crate destination prevents a push", () => {
-  const blocksDestination = (tile) => tile.x === 5 && tile.y === 9;
+  const blocksDestination = (tile) => tile.x === initialCrate.x && tile.y === initialCrate.y + 1;
 
-  assert.equal(canPushTo(unit, { x: 5, y: 8 }, blocksDestination, flatHeight), false);
+  assert.equal(canPushTo(unit, initialCrate, blocksDestination, flatHeight), false);
 });
 
 test("a crate cannot be pushed downhill", () => {
-  const downhillHeight = (tile) => tile.y === 8 ? 1 : 0;
+  const downhillHeight = (tile) => tile.x === initialCrate.x && tile.y === initialCrate.y ? 1 : 0;
 
-  assert.equal(canPushTo(unit, { x: 5, y: 8 }, () => false, downhillHeight), false);
+  assert.equal(canPushTo(unit, initialCrate, () => false, downhillHeight), false);
 });
 
 test("planned pushes can be cleared or committed", () => {
   const crate = pushables[0];
+  const destination = { x: crate.x, y: crate.y + 1 };
 
   planPush(unit, crate);
-  assert.deepEqual(crate.target, { x: 5, y: 9 });
+  assert.deepEqual(crate.target, destination);
   clearPlannedPush(unit.id);
   assert.equal(crate.target, null);
 
   planPush(unit, crate);
   commitPlannedPushes();
-  assert.deepEqual({ x: crate.x, y: crate.y }, { x: 5, y: 9 });
+  assert.deepEqual({ x: crate.x, y: crate.y }, destination);
   assert.equal(crate.target, null);
 });
 
@@ -76,16 +78,18 @@ test("enchanted crates form a positional-history tail", () => {
   assert.equal(first.followsId, unit.id);
   assert.equal(second.followsId, first.id);
   const previous = captureFollowerPositions([unit]);
+  const previousUnit = previous.get(unit.id);
+  const previousFirst = previous.get(first.id);
 
-  unit.x = 6;
+  unit.x += 1;
   followPositionHistory([unit], previous);
-  assert.deepEqual({ x: first.x, y: first.y }, { x: 5, y: 7 });
-  assert.deepEqual({ x: second.x, y: second.y }, { x: 5, y: 9 });
+  assert.deepEqual({ x: first.x, y: first.y }, previousUnit);
+  assert.deepEqual({ x: second.x, y: second.y }, previousFirst);
 
   assert.equal(toggleEnchantment(first, unit), true);
   assert.equal(first.enchanterUnitId, null);
   assert.equal(second.enchanterUnitId, null);
-  unit.x = 5;
+  unit.x -= 1;
 });
 
 test("spending an enchant action clears movement and push plans for the turn", () => {

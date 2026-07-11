@@ -1,9 +1,12 @@
+import { NoiseLayer } from "./domain.js";
 import { neighborTile, sameTile } from "./grid.js";
+import { entitySpawnBounds, perlinPlacementTiles } from "./procedural-placement.js";
+import { units } from "./units.js";
+import { isObstacleTile } from "./world.js";
 const maxUpwardPushHeight = 2;
-export const pushables = [
-    pushable("crate-one", { x: 5, y: 8 }),
-    pushable("crate-two", { x: 9, y: 6 }),
-];
+const pushableCount = 2;
+const pushablePlacementNoise = new NoiseLayer({ scale: 0.17, seed: 0x63726174 });
+export const pushables = perlinPlacementTiles(pushableCount, entitySpawnBounds, pushablePlacementNoise, (tile) => !isObstacleTile(tile) && !units.some((unit) => sameTile(unit, tile))).map((tile, index) => pushable(`crate-${index + 1}`, tile));
 export function pushableAt(tile) {
     return pushables.find((pushable) => sameTile(pushable, tile)) ?? null;
 }

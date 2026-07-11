@@ -1,7 +1,7 @@
 import { boardState, canSeeTile, enrichTile } from "./board-state.js";
 import { devicePixelRatio, gridFromScreen, screenFromGrid, view } from "./camera.js";
 import { terrainHeight } from "./constants.js";
-import { attackUnits, moveEnemies, randomEnemies } from "./enemies.js";
+import { attackUnits, moveEnemies, perlinEnemies } from "./enemies.js";
 import { captureFollowerPositions, followPositionHistory } from "./enchantment.js";
 import { connectEnchantmentControl } from "./enchantment-control.js";
 import { l1Distance, sameTile } from "./grid.js";
@@ -33,7 +33,7 @@ const rotateLeftButton = requiredElement<HTMLButtonElement>("#rotate-left");
 const rotateRightButton = requiredElement<HTMLButtonElement>("#rotate-right");
 let selectedTile: HeightTile | null = null;
 let hoveredTile: HeightTile | null = null;
-const enemies = randomEnemies(units, isBoardObstacle);
+const enemies = perlinEnemies(units, isBoardObstacle);
 const tombstones: Tile[] = [];
 let focusedTile: Tile | null = null;
 const enchantmentControl = connectEnchantmentControl(

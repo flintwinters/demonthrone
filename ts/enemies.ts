@@ -1,16 +1,11 @@
 import { colors } from "./constants.js";
-import { CharacterTemplate } from "./domain.js";
+import { CharacterTemplate, NoiseLayer } from "./domain.js";
 import { cardinalDirections, l1Distance, neighborTile, sameTile } from "./grid.js";
+import { entitySpawnBounds, perlinPlacementTiles } from "./procedural-placement.js";
 import type { Enemy, Tile, TilePredicate, Unit } from "./types.js";
 
 const enemyCount = 5;
-const maxSpawnAttempts = 500;
-const spawnBounds = {
-  minX: 0,
-  maxX: 13,
-  minY: 0,
-  maxY: 13,
-};
+const enemyPlacementNoise = new NoiseLayer({ scale: 0.21, seed: 0x6e6d79 });
 const enemyTemplate = new CharacterTemplate({
   sight: 5,
   movement: 1,
@@ -18,27 +13,15 @@ const enemyTemplate = new CharacterTemplate({
   health: 1,
 });
 
-export function randomEnemies(units: Unit[], isBlockedTile: TilePredicate): Enemy[] {
-  const enemies: Enemy[] = [];
-  let attempts = 0;
+export function perlinEnemies(units: Unit[], isBlockedTile: TilePredicate): Enemy[] {
+  const tiles = perlinPlacementTiles(
+    enemyCount,
+    entitySpawnBounds,
+    enemyPlacementNoise,
+    (tile) => !isBlockedTile(tile) && !units.some((unit) => sameTile(unit, tile)),
+  );
 
-  while (enemies.length < enemyCount) {
-    attempts += 1;
-
-    if (attempts > maxSpawnAttempts) {
-      throw new Error("Unable to place random enemies.");
-    }
-
-    const tile = randomSpawnTile();
-
-    if (isBlockedTile(tile) || isOccupied(tile, units, enemies)) {
-      continue;
-    }
-
-    enemies.push(enemyTemplate.enemy(`enemy-${enemies.length + 1}`, tile, colors.enemy));
-  }
-
-  return enemies;
+  return tiles.map((tile, index) => enemyTemplate.enemy(`enemy-${index + 1}`, tile, colors.enemy));
 }
 
 export function moveEnemies(enemies: Enemy[], units: Unit[], isBlockedTile: TilePredicate): void {
@@ -63,21 +46,6 @@ export function attackUnits(units: Unit[], enemies: Enemy[]): Unit[] {
   }
 
   return destroyed;
-}
-
-function randomSpawnTile(): Tile {
-  return {
-    x: randomInt(spawnBounds.minX, spawnBounds.maxX),
-    y: randomInt(spawnBounds.minY, spawnBounds.maxY),
-  };
-}
-
-function randomInt(min: number, max: number): number {
-  return min + Math.floor(Math.random() * (max - min + 1));
-}
-
-function isOccupied(tile: Tile, units: Unit[], enemies: Enemy[]): boolean {
-  return units.some((unit) => sameTile(unit, tile)) || enemies.some((enemy) => sameTile(enemy, tile));
 }
 
 function closestUnit(enemy: Enemy, units: Unit[]): Unit | null {
