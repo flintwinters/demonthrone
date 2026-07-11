@@ -51,6 +51,7 @@ function traverse(ray: Ray, visit: (segment: Segment) => void): void {
 
     visit({ tile, start, end });
     if (end >= 1) return;
+    visitCornerNeighbors(tile, step, end, crossX, crossY, visit);
     if (crossX) {
       tile = { ...tile, x: tile.x + step.x };
       boundary.x += delta.x;
@@ -61,6 +62,19 @@ function traverse(ray: Ray, visit: (segment: Segment) => void): void {
     }
     start = end;
   }
+}
+
+function visitCornerNeighbors(
+  tile: Tile,
+  step: Tile,
+  progress: number,
+  crossX: boolean,
+  crossY: boolean,
+  visit: (segment: Segment) => void,
+): void {
+  if (!crossX || !crossY) return;
+  visit({ tile: { x: tile.x + step.x, y: tile.y }, start: progress, end: progress });
+  visit({ tile: { x: tile.x, y: tile.y + step.y }, start: progress, end: progress });
 }
 
 function firstBoundary(coordinate: number, direction: number): number {

@@ -37,6 +37,17 @@ test("elevated terrain blocks a ray through its three-dimensional column", () =>
   assert.equal(lineSightCost(point(0, 0, 3), point(4, 0, 3), hill), 4);
 });
 
+test("diagonal rays cannot leak through grid corners", () => {
+  const sideColumn = context({
+    tileHeight: (tile) => tile.x === 1 && tile.y === 0 ? 2 : 0,
+  });
+
+  assert.equal(
+    lineSightCost(point(0, 0, 1), point(2, 2, 1), sideColumn),
+    Number.POSITIVE_INFINITY,
+  );
+});
+
 test("rays can clear boulders and character height intervals", () => {
   const blockers = new Map([["2:0", [{ x: 2, y: 0, bottom: 0.08, top: 0.62 }]]]);
   const occupied = context({
