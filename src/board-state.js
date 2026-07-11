@@ -1,18 +1,21 @@
+import { visibilityState } from "./board-visibility.js";
+import { tileKey } from "./grid.js";
 import { isObstacleTile } from "./obstacles.js";
 import { pushables } from "./pushables.js";
-import { isBoulderTile, isBrushTile, sightCost, tileHeight } from "./world.js";
 import { selection, units } from "./units.js";
-import { sightGeometry, terrainHeight } from "./constants.js";
-import { canUnitSeeEntity, isVisibleTile, sightContext } from "./visibility.js";
+import { canUnitSeeEntity, sightContext } from "./visibility.js";
+import { isBoulderTile, isBrushTile, sightCost, tileHeight } from "./world.js";
 export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMovementTile, isAttackTile, enchantmentSourceId = null) {
+    const visibility = visibilityState(enemies);
     return {
         selectedTile,
         hoveredTile,
         units: renderableUnits(),
-        enemies: renderableEnemies(enemies),
-        sightBlockers: sightBlockers(enemies),
-        tombstones: renderableTombstones(tombstones, enemies),
-        pushables: renderablePushables(enemies, enchantmentSourceId),
+        visibleTiles: visibility.tiles,
+        enemies: renderableEnemies(enemies, visibility.keys),
+        sightBlockers: visibility.blockers,
+        tombstones: renderableTombstones(tombstones, visibility.keys),
+        pushables: renderablePushables(visibility.keys, enchantmentSourceId),
         isObstacleTile,
         isBoulderTile,
         isBrushTile,
@@ -23,9 +26,9 @@ export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMov
         isAttackTile,
     };
 }
-function renderablePushables(enemies, enchantmentSourceId) {
+function renderablePushables(visible, enchantmentSourceId) {
     return pushables
-        .filter((pushable) => canSeeTile(pushable, enemies))
+        .filter((pushable) => visible.has(tileKey(pushable)))
         .map((pushable) => ({
         ...pushable,
         height: tileHeight(pushable),
@@ -34,16 +37,13 @@ function renderablePushables(enemies, enchantmentSourceId) {
     }));
 }
 export function canSeeTile(tile, enemies) {
-    return isVisibleTile(tile, units, sightBlockers(enemies), sightCost, tileHeight, isBoulderTile);
+    return visibilityState(enemies).keys.has(tileKey(tile));
 }
 export function canUnitSee(unit, target, enemies) {
-    return canUnitSeeEntity(unit, target, sightContext(sightBlockers(enemies), sightCost, tileHeight, isBoulderTile));
+    return canUnitSeeEntity(unit, target, sightContext(visibilityState(enemies).blockers, sightCost, tileHeight, isBoulderTile));
 }
 export function enrichTile(tile) {
-    return {
-        ...tile,
-        height: tileHeight(tile),
-    };
+    return { ...tile, height: tileHeight(tile) };
 }
 function renderableUnits() {
     return units.map((unit) => ({
@@ -52,30 +52,13 @@ function renderableUnits() {
         target: unit.target ? enrichTile(unit.target) : null,
     }));
 }
-function renderableEnemies(enemies) {
+function renderableEnemies(enemies, visible) {
     return enemies
-        .filter((enemy) => canSeeTile(enemy, enemies))
-        .map((enemy) => ({
-        ...enemy,
-        height: tileHeight(enemy),
-    }));
+        .filter((enemy) => visible.has(tileKey(enemy)))
+        .map((enemy) => ({ ...enemy, height: tileHeight(enemy) }));
 }
-function renderableTombstones(tombstones, enemies) {
+function renderableTombstones(tombstones, visible) {
     return tombstones
-        .filter((tombstone) => canSeeTile(tombstone, enemies))
-        .map((tombstone) => ({
-        ...tombstone,
-        height: tileHeight(tombstone),
-    }));
-}
-function sightBlockers(enemies) {
-    return [...units, ...enemies].map((character) => {
-        const ground = tileHeight(character) * terrainHeight.visualScale;
-        return {
-            x: character.x,
-            y: character.y,
-            bottom: ground + sightGeometry.characterBottom,
-            top: ground + sightGeometry.characterTop,
-        };
-    });
+        .filter((tombstone) => visible.has(tileKey(tombstone)))
+        .map((tombstone) => ({ ...tombstone, height: tileHeight(tombstone) }));
 }

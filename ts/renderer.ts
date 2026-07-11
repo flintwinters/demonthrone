@@ -5,7 +5,6 @@ import { colors, terrainHeight } from "./constants.js";
 import { material } from "./render-materials.js";
 import { pushableMeshes } from "./pushable-render.js";
 import { terrainLayer, terrainSignature } from "./terrain-layer.js";
-import { visibleTiles } from "./tiles.js";
 import type { BoardState, RenderPushable, RenderTombstone, Tile } from "./types.js";
 
 type RenderState = {
@@ -14,13 +13,7 @@ type RenderState = {
   camera: THREE.OrthographicCamera;
   root: THREE.Group;
   dynamicRoot: THREE.Group;
-  visibleCache: VisibleCache | null;
   terrainCache: TerrainCache | null;
-};
-
-type VisibleCache = {
-  signature: string;
-  tiles: Tile[];
 };
 
 type TerrainCache = {
@@ -37,7 +30,7 @@ tombstoneGeometry.userData.shared = true;
 
 export function drawGrid(canvas: HTMLCanvasElement, boardState: BoardState): void {
   const renderState = initializeRenderer(canvas);
-  const tiles = syncVisibleTiles(renderState, boardState);
+  const tiles = boardState.visibleTiles;
 
   configureViewCamera(canvas, renderState.camera);
   syncTerrain(renderState, boardState, tiles);
@@ -67,7 +60,6 @@ function initializeRenderer(canvas: HTMLCanvasElement): RenderState {
     camera: createViewCamera(),
     root: new THREE.Group(),
     dynamicRoot: new THREE.Group(),
-    visibleCache: null,
     terrainCache: null,
   };
 
@@ -81,32 +73,6 @@ function initializeRenderer(canvas: HTMLCanvasElement): RenderState {
   renderState.scene.add(directionalLight());
   state.current = renderState;
   return renderState;
-}
-
-function syncVisibleTiles(renderState: RenderState, boardState: BoardState): Tile[] {
-  const signature = visibilitySignature(boardState);
-
-  if (renderState.visibleCache?.signature === signature) {
-    return renderState.visibleCache.tiles;
-  }
-
-  const tiles = visibleTiles(
-    boardState.units,
-    boardState.sightBlockers,
-    boardState.sightCost,
-    boardState.tileHeight,
-    boardState.isBoulderTile,
-  );
-
-  renderState.visibleCache = { signature, tiles };
-  return tiles;
-}
-
-function visibilitySignature(boardState: BoardState): string {
-  return [
-    boardState.units.map((unit) => `${unit.x}:${unit.y}:${unit.sight}`).join(";"),
-    boardState.sightBlockers.map((blocker) => `${blocker.x}:${blocker.y}:${blocker.bottom}:${blocker.top}`).join(";"),
-  ].join("|");
 }
 
 function configureRendererSize(renderer: THREE.WebGLRenderer, canvas: HTMLCanvasElement): void {

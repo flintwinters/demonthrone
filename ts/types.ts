@@ -119,6 +119,7 @@ export type BoardState = {
   selectedTile: HeightTile | null;
   hoveredTile: HeightTile | null;
   units: RenderUnit[];
+  visibleTiles: Tile[];
   enemies: RenderEnemy[];
   sightBlockers: SightBlocker[];
   tombstones: RenderTombstone[];

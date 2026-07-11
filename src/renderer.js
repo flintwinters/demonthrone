@@ -5,7 +5,6 @@ import { colors, terrainHeight } from "./constants.js";
 import { material } from "./render-materials.js";
 import { pushableMeshes } from "./pushable-render.js";
 import { terrainLayer, terrainSignature } from "./terrain-layer.js";
-import { visibleTiles } from "./tiles.js";
 const tombstoneGeometry = new THREE.SphereGeometry(0.15, 12, 8);
 const hemisphereLightIntensity = 2.8;
 const directionalLightIntensity = 3.5;
@@ -13,7 +12,7 @@ const state = { current: null };
 tombstoneGeometry.userData.shared = true;
 export function drawGrid(canvas, boardState) {
     const renderState = initializeRenderer(canvas);
-    const tiles = syncVisibleTiles(renderState, boardState);
+    const tiles = boardState.visibleTiles;
     configureViewCamera(canvas, renderState.camera);
     syncTerrain(renderState, boardState, tiles);
     clearRoot(renderState.dynamicRoot);
@@ -39,7 +38,6 @@ function initializeRenderer(canvas) {
         camera: createViewCamera(),
         root: new THREE.Group(),
         dynamicRoot: new THREE.Group(),
-        visibleCache: null,
         terrainCache: null,
     };
     configureRendererSize(renderState.renderer, canvas);
@@ -50,21 +48,6 @@ function initializeRenderer(canvas) {
     renderState.scene.add(directionalLight());
     state.current = renderState;
     return renderState;
-}
-function syncVisibleTiles(renderState, boardState) {
-    const signature = visibilitySignature(boardState);
-    if (renderState.visibleCache?.signature === signature) {
-        return renderState.visibleCache.tiles;
-    }
-    const tiles = visibleTiles(boardState.units, boardState.sightBlockers, boardState.sightCost, boardState.tileHeight, boardState.isBoulderTile);
-    renderState.visibleCache = { signature, tiles };
-    return tiles;
-}
-function visibilitySignature(boardState) {
-    return [
-        boardState.units.map((unit) => `${unit.x}:${unit.y}:${unit.sight}`).join(";"),
-        boardState.sightBlockers.map((blocker) => `${blocker.x}:${blocker.y}:${blocker.bottom}:${blocker.top}`).join(";"),
-    ].join("|");
 }
 function configureRendererSize(renderer, canvas) {
     renderer.setPixelRatio(devicePixelRatio());
