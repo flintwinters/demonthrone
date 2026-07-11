@@ -26,6 +26,7 @@ const unit = {
 const flatHeight = () => 0;
 
 test("a teammate can push an adjacent crate into a free tile", () => {
+  assert.equal(initialCrate.health, 3);
   assert.equal(canPushTo(unit, initialCrate, () => false, flatHeight), true);
 });
 

@@ -1,16 +1,13 @@
 import * as THREE from "three";
 import { configureViewCamera, createViewCamera, devicePixelRatio } from "./camera.js";
+import { enemyObjects, unitObjects } from "./character-render.js";
 import { colors, terrainHeight } from "./constants.js";
-import { material, transparentMaterial } from "./render-materials.js";
+import { material } from "./render-materials.js";
 import { pushableMeshes } from "./pushable-render.js";
 import { terrainLayer, terrainSignature } from "./terrain-layer.js";
 import { visibleTiles } from "./tiles.js";
-const unitGeometry = new THREE.SphereGeometry(0.24, 16, 10);
-const enemyGeometry = new THREE.ConeGeometry(0.24, 0.5, 5);
 const tombstoneGeometry = new THREE.SphereGeometry(0.15, 12, 8);
 const state = { current: null };
-unitGeometry.userData.shared = true;
-enemyGeometry.userData.shared = true;
 tombstoneGeometry.userData.shared = true;
 export function drawGrid(canvas, boardState) {
     const renderState = initializeRenderer(canvas);
@@ -20,9 +17,8 @@ export function drawGrid(canvas, boardState) {
     clearRoot(renderState.dynamicRoot);
     addTombstones(renderState, boardState.tombstones);
     addPushables(renderState, boardState.pushables);
-    addPlannedUnits(renderState, boardState.units);
-    addEnemies(renderState, boardState.enemies);
-    addUnits(renderState, boardState.units);
+    renderState.dynamicRoot.add(...boardState.enemies.flatMap(enemyObjects));
+    renderState.dynamicRoot.add(...boardState.units.flatMap(unitObjects));
     renderState.renderer.render(renderState.scene, renderState.camera);
 }
 function addPushables(renderState, pushables) {
@@ -92,49 +88,15 @@ function syncTerrain(renderState, boardState, tiles) {
     renderState.root.add(group);
     renderState.terrainCache = { signature, group };
 }
-function addUnits(renderState, units) {
-    for (const unit of units) {
-        renderState.dynamicRoot.add(unitMesh(unit, 1));
-    }
-}
-function addEnemies(renderState, enemies) {
-    for (const enemy of enemies) {
-        renderState.dynamicRoot.add(enemyMesh(enemy));
-    }
-}
 function addTombstones(renderState, tombstones) {
     for (const tombstone of tombstones) {
         renderState.dynamicRoot.add(tombstoneMesh(tombstone));
     }
 }
-function addPlannedUnits(renderState, units) {
-    for (const unit of units) {
-        if (unit.target) {
-            renderState.dynamicRoot.add(unitMeshAt(unit, unit.target, 0.42));
-        }
-    }
-}
-function unitMesh(unit, opacity) {
-    return unitMeshAt(unit, unit, opacity);
-}
-function unitMeshAt(unit, tile, opacity) {
-    const mesh = new THREE.Mesh(unitGeometry, unitMaterial(unit.color, opacity));
-    mesh.position.set(tile.x + 0.5, tile.y + 0.5, visualHeight(tile.height) + 0.38);
-    return mesh;
-}
-function enemyMesh(enemy) {
-    const mesh = new THREE.Mesh(enemyGeometry, material(enemy.color));
-    mesh.position.set(enemy.x + 0.5, enemy.y + 0.5, visualHeight(enemy.height) + 0.25);
-    mesh.rotation.x = Math.PI / 2;
-    return mesh;
-}
 function tombstoneMesh(tombstone) {
     const mesh = new THREE.Mesh(tombstoneGeometry, material(colors.tombstone));
     mesh.position.set(tombstone.x + 0.5, tombstone.y + 0.5, visualHeight(tombstone.height) + 0.16);
     return mesh;
-}
-function unitMaterial(color, opacity) {
-    return opacity < 1 ? transparentMaterial(color, opacity) : material(color);
 }
 function directionalLight() {
     const light = new THREE.DirectionalLight(colors.tileStroke, 2.2);

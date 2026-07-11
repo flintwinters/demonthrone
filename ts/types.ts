@@ -37,6 +37,7 @@ export type Enemy = Tile & CharacterStats & {
 
 export type Pushable = Tile & {
   id: string;
+  health: number;
   target: Tile | null;
   pushedByUnitId: string | null;
   enchanterUnitId: string | null;

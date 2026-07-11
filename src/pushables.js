@@ -5,6 +5,7 @@ import { units } from "./units.js";
 import { isObstacleTile } from "./world.js";
 const maxUpwardPushHeight = 2;
 const pushableCount = 2;
+const pushableHealth = 3;
 const pushablePlacementNoise = new NoiseLayer({ scale: 0.17, seed: 0x63726174 });
 export const pushables = perlinPlacementTiles(pushableCount, entitySpawnBounds, pushablePlacementNoise, (tile) => !isObstacleTile(tile) && !units.some((unit) => sameTile(unit, tile))).map((tile, index) => pushable(`crate-${index + 1}`, tile));
 export function pushableAt(tile) {
@@ -50,7 +51,7 @@ export function commitPlannedPushes() {
     }
 }
 function pushable(id, tile) {
-    return { id, ...tile, target: null, pushedByUnitId: null, enchanterUnitId: null, followsId: null };
+    return { id, ...tile, health: pushableHealth, target: null, pushedByUnitId: null, enchanterUnitId: null, followsId: null };
 }
 function pushDestination(unit, pushable) {
     return neighborTile(pushable, {

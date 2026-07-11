@@ -7,6 +7,7 @@ import type { Pushable, Tile, TileHeight, TilePredicate, Unit } from "./types.js
 
 const maxUpwardPushHeight = 2;
 const pushableCount = 2;
+const pushableHealth = 3;
 const pushablePlacementNoise = new NoiseLayer({ scale: 0.17, seed: 0x63726174 });
 
 export const pushables: Pushable[] = perlinPlacementTiles(
@@ -76,7 +77,7 @@ export function commitPlannedPushes(): void {
 }
 
 function pushable(id: string, tile: Tile): Pushable {
-  return { id, ...tile, target: null, pushedByUnitId: null, enchanterUnitId: null, followsId: null };
+  return { id, ...tile, health: pushableHealth, target: null, pushedByUnitId: null, enchanterUnitId: null, followsId: null };
 }
 
 function pushDestination(unit: Tile, pushable: Tile): Tile {

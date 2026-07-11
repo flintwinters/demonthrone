@@ -61,6 +61,7 @@ export const colors = {
     unitTwo: "#b8bb26",
     enemy: "#d3869b",
     tombstone: "#928374",
+    health: "#fbf1c7",
 };
 export const foliageColors = {
     cinder: colors.brushCinder,
