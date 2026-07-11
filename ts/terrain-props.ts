@@ -9,9 +9,9 @@ export type PropPlacement = {
 };
 
 const brushGeometry = new THREE.BufferGeometry().setFromPoints([
-  new THREE.Vector3(-0.32, -0.08, 0.02),
-  new THREE.Vector3(0.32, -0.08, 0.02),
-  new THREE.Vector3(0, 0.28, 0.02),
+  new THREE.Vector3(-0.32, 0, 0.02),
+  new THREE.Vector3(0.32, 0, 0.02),
+  new THREE.Vector3(0, 0, 0.62),
 ]);
 const boulderGeometry = new THREE.DodecahedronGeometry(0.34, 0);
 const brushMaterials = new Map<BiomeKind, THREE.MeshBasicMaterial>();

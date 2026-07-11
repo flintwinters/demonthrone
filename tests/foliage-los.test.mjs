@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { lineSightCost } from "../src/sight-cost.js";
+import { brushPatch } from "../src/terrain-props.js";
 import { isBrushTile, sightCost } from "../src/world.js";
 
 function findBrushTile() {
@@ -28,4 +29,15 @@ test("foliage has a high biome-specific line-of-sight cost", () => {
   const brushLine = lineSightCost(start, end, () => brushCost, flat, unblocked);
 
   assert.equal(brushLine > floorLine * 2, true);
+});
+
+test("foliage geometry rises vertically from the terrain", () => {
+  const mesh = brushPatch("heath", [{ tile: { x: 0, y: 0 }, height: 2 }]);
+
+  mesh.geometry.computeBoundingBox();
+  const bounds = mesh.geometry.boundingBox;
+
+  assert.notEqual(bounds, null);
+  assert.equal(bounds.max.z - bounds.min.z > 0.5, true);
+  assert.equal(bounds.max.y - bounds.min.y, 0);
 });
