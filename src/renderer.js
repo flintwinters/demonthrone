@@ -56,18 +56,15 @@ function syncVisibleTiles(renderState, boardState) {
     if (renderState.visibleCache?.signature === signature) {
         return renderState.visibleCache.tiles;
     }
-    const tiles = visibleTiles(boardState.units, boardState.sightBlockers, boardState.sightCost, boardState.tileHeight);
+    const tiles = visibleTiles(boardState.units, boardState.sightBlockers, boardState.sightCost, boardState.tileHeight, boardState.isBoulderTile);
     renderState.visibleCache = { signature, tiles };
     return tiles;
 }
 function visibilitySignature(boardState) {
     return [
-        tileListSignature(boardState.units),
-        tileListSignature(boardState.sightBlockers),
+        boardState.units.map((unit) => `${unit.x}:${unit.y}:${unit.sight}`).join(";"),
+        boardState.sightBlockers.map((blocker) => `${blocker.x}:${blocker.y}:${blocker.bottom}:${blocker.top}`).join(";"),
     ].join("|");
-}
-function tileListSignature(tiles) {
-    return tiles.map((tile) => `${tile.x}:${tile.y}`).join(";");
 }
 function configureRendererSize(renderer, canvas) {
     renderer.setPixelRatio(devicePixelRatio());

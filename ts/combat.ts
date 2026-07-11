@@ -1,6 +1,6 @@
 import { l1Distance } from "./grid.js";
 import { canTakeAction, cancelAction, spendAction } from "./teammate-turns.js";
-import type { DamageableEntity, Tile, TilePredicate, Unit } from "./types.js";
+import type { DamageableEntity, DamageableEntityPredicate, Tile, Unit } from "./types.js";
 
 export function canAttack(unit: Unit, target: DamageableEntity): boolean {
   return l1Distance(unit, target) <= unit.attackRange;
@@ -10,7 +10,7 @@ export function canPlanAttack(
   unit: Unit,
   tile: Tile,
   targets: readonly DamageableEntity[],
-  canSee: TilePredicate,
+  canSee: DamageableEntityPredicate,
 ): boolean {
   const target = targets.find((candidate) => candidate.x === tile.x && candidate.y === tile.y);
 
@@ -29,7 +29,7 @@ export function tryPlanAttack(
   tile: Tile,
   unit: Unit | null,
   targets: readonly DamageableEntity[],
-  canSee: TilePredicate,
+  canSee: DamageableEntityPredicate,
 ): DamageableEntity | null {
   const target = targets.find((candidate) => candidate.x === tile.x && candidate.y === tile.y);
 

@@ -2,7 +2,8 @@ import { isObstacleTile } from "./obstacles.js";
 import { pushables } from "./pushables.js";
 import { isBoulderTile, isBrushTile, sightCost, tileHeight } from "./world.js";
 import { selection, units } from "./units.js";
-import { canUnitSeeTile, isVisibleTile, sightContext } from "./visibility.js";
+import { sightGeometry, terrainHeight } from "./constants.js";
+import { canUnitSeeEntity, isVisibleTile, sightContext } from "./visibility.js";
 export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMovementTile, isAttackTile, enchantmentSourceId = null) {
     return {
         selectedTile,
@@ -33,10 +34,10 @@ function renderablePushables(enemies, enchantmentSourceId) {
     }));
 }
 export function canSeeTile(tile, enemies) {
-    return isVisibleTile(tile, units, sightBlockers(enemies), sightCost, tileHeight);
+    return isVisibleTile(tile, units, sightBlockers(enemies), sightCost, tileHeight, isBoulderTile);
 }
-export function canUnitSee(unit, tile, enemies) {
-    return canUnitSeeTile(unit, tile, sightContext(sightBlockers(enemies), sightCost, tileHeight));
+export function canUnitSee(unit, target, enemies) {
+    return canUnitSeeEntity(unit, target, sightContext(sightBlockers(enemies), sightCost, tileHeight, isBoulderTile));
 }
 export function enrichTile(tile) {
     return {
@@ -68,5 +69,13 @@ function renderableTombstones(tombstones, enemies) {
     }));
 }
 function sightBlockers(enemies) {
-    return [...units, ...enemies];
+    return [...units, ...enemies].map((character) => {
+        const ground = tileHeight(character) * terrainHeight.visualScale;
+        return {
+            x: character.x,
+            y: character.y,
+            bottom: ground + sightGeometry.characterBottom,
+            top: ground + sightGeometry.characterTop,
+        };
+    });
 }

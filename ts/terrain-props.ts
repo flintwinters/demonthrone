@@ -80,9 +80,12 @@ function brushMaterial(biome: BiomeKind): THREE.MeshLambertMaterial {
     return existing;
   }
 
+  const foliageColor = new THREE.Color(foliageColors[biome]);
   const created = new THREE.MeshLambertMaterial({
-    color: foliageColors[biome],
+    color: foliageColor,
     side: THREE.DoubleSide,
+    emissive: foliageColor,
+    emissiveIntensity: 0.08,
   });
 
   brushMaterials.set(biome, created);

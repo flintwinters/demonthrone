@@ -19,6 +19,14 @@ const biomeStyles = {
         top: colors.ridgeTile,
         side: colors.ridgeTileSide,
     },
+    bog: {
+        top: colors.bogTile,
+        side: colors.bogTileSide,
+    },
+    mesa: {
+        top: colors.mesaTile,
+        side: colors.mesaTileSide,
+    },
 };
 export function tileStyle(tile, boardState, level) {
     const priority = priorityTileStyle(tile, boardState, level);

@@ -9,6 +9,14 @@ export const terrainHeight = {
     step: 0.32,
     visualScale: 0.5,
 };
+export const sightGeometry = {
+    eyeHeight: 0.38,
+    characterBottom: 0.08,
+    characterTop: 0.62,
+    characterTargetHeight: 0.32,
+    boulderHeight: 0.66,
+    surfaceClearance: 0.001,
+};
 export const gridTopOffset = 72;
 export const worldPixelsPerUnit = 76;
 export const cameraDistance = 80;
@@ -38,6 +46,10 @@ export const colors = {
     heathTileSide: "#3c3836",
     ridgeTile: "#504945",
     ridgeTileSide: "#665c54",
+    bogTile: "#203028",
+    bogTileSide: "#2d4540",
+    mesaTile: "#8a6640",
+    mesaTileSide: "#6f4d32",
     waterTile: "#076678",
     waterTileSide: "#054f5f",
     iceTile: "#83a598",
@@ -54,11 +66,13 @@ export const colors = {
     attackTile: "#9d0006",
     hoveredAttackTile: "#cc241d",
     attackTarget: "#fb4934",
-    brushCinder: "#4f5014",
-    brushFen: "#3f5942",
-    brushHeath: "#515318",
-    brushRidge: "#354d37",
-    boulder: "#7c6f64",
+    brushCinder: "#6f7b35",
+    brushFen: "#46735a",
+    brushHeath: "#66731e",
+    brushRidge: "#4c664e",
+    brushBog: "#2b563f",
+    brushMesa: "#8a6843",
+    boulder: "#6a6f94",
     pushable: "#fabd2f",
     enchantedPushable: "#b8bb26",
     unitOne: "#fe5f55",
@@ -72,4 +86,6 @@ export const foliageColors = {
     fen: colors.brushFen,
     heath: colors.brushHeath,
     ridge: colors.brushRidge,
+    bog: colors.brushBog,
+    mesa: colors.brushMesa,
 };
