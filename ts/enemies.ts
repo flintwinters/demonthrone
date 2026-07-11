@@ -1,14 +1,9 @@
-import { colors } from "./constants.js";
 import { EnemyTemplate } from "./domain.js";
 import { cardinalDirections, l1Distance, neighborTile, sameTile } from "./grid.js";
+import { enemyConfig } from "./world-config.js";
 import type { Enemy, Tile, TilePredicate, Unit } from "./types.js";
 
-const enemyTemplate = new EnemyTemplate("pursuer", {
-  sight: 5,
-  movement: 1,
-  attackRange: 1,
-  health: 1,
-}, colors.enemy);
+const enemyTemplate = new EnemyTemplate(enemyConfig.type, enemyConfig.stats, enemyConfig.color);
 
 export function createEnemy(id: string, tile: Tile): Enemy {
   return enemyTemplate.create(id, tile);

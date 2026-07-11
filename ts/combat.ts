@@ -1,9 +1,8 @@
-import { l1Distance } from "./grid.js";
 import { canTakeAction, cancelAction, spendAction } from "./teammate-turns.js";
 import type { DamageableEntity, DamageableEntityPredicate, Tile, Unit } from "./types.js";
 
 export function canAttack(unit: Unit, target: DamageableEntity): boolean {
-  return l1Distance(unit, target) <= unit.attackRange;
+  return Math.hypot(unit.x - target.x, unit.y - target.y) <= unit.attackRange;
 }
 
 export function canPlanAttack(

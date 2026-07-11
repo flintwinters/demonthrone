@@ -52,6 +52,7 @@ export const colors = {
     iceTileSide: "#458588",
     hoveredTile: "#32302f",
     selectedTile: "#3c3836",
+    selectedTileOutline: "#fbf1c7",
     tileStroke: "#928374",
     moveStart: "#665c54",
     movementTile: "#3f6f67",

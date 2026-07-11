@@ -1,4 +1,5 @@
 import type { Tile } from "./types.js";
+import { hydrologyConfig } from "./world-config.js";
 
 type Sample = (tile: Tile) => number;
 type Predicate = (tile: Tile) => boolean;
@@ -13,7 +14,7 @@ type RankedAnchor = {
   readonly distanceSquared: number;
 };
 
-const anchorCacheLimit = 2048;
+const anchorCacheLimit = hydrologyConfig.anchorCacheLimit;
 
 export class BasinField {
   private readonly anchors = new Map<string, BasinAnchor>();

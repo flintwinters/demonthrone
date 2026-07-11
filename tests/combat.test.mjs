@@ -54,6 +54,13 @@ test("out-of-range enemies cannot be targeted", () => {
   assert.equal(target.health, 2);
 });
 
+test("attack distance uses a circular field rather than Manhattan lines", () => {
+  const unit = teammate("diagonal-attacker", 2);
+  const target = { ...enemy("diagonal-target", 1), y: 1 };
+
+  assert.equal(canAttack(unit, target), true);
+});
+
 test("clicking a planned attack again cancels and refunds it", () => {
   const unit = teammate("cancel-attacker");
   const target = enemy("cancel-target", 1);

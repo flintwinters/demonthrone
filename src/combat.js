@@ -1,7 +1,6 @@
-import { l1Distance } from "./grid.js";
 import { canTakeAction, cancelAction, spendAction } from "./teammate-turns.js";
 export function canAttack(unit, target) {
-    return l1Distance(unit, target) <= unit.attackRange;
+    return Math.hypot(unit.x - target.x, unit.y - target.y) <= unit.attackRange;
 }
 export function canPlanAttack(unit, tile, targets, canSee) {
     const target = targets.find((candidate) => candidate.x === tile.x && candidate.y === tile.y);

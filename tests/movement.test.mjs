@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { canReachTile, movementStepCost } from "../src/movement.js";
+import { canReachTile, movementStepCost, reachableTileKeys } from "../src/movement.js";
 
 const unblocked = () => false;
 const floorCost = () => 1;
@@ -33,4 +33,13 @@ test("terrain and slope movement multipliers compose", () => {
   const uphill = heightField(new Map([["1,0", 1]]));
 
   assert.equal(movementStepCost(previous, tile, uphill, () => 0.5), 1);
+});
+
+test("one movement field contains every tile reachable around obstacles", () => {
+  const blocked = (tile) => tile.x === 1 && tile.y === 0;
+  const keys = reachableTileKeys({ x: 0, y: 0 }, 3, blocked, () => 0, () => 1);
+
+  assert.equal(keys.has("1:0"), false);
+  assert.equal(keys.has("2:0"), false);
+  assert.equal(keys.has("1:1"), true);
 });

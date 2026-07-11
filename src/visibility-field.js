@@ -11,49 +11,58 @@ const octants = [
     { majorX: 0, majorY: -1, minorX: -1, minorY: 0 },
 ];
 export function appendShadowcastTiles(unit, context, seen, tiles) {
-    appendTile(unit, seen, tiles);
-    const radius = Math.ceil(unit.sight);
+    appendShadowcastField(unit, unit.sight, sightGeometry.surfaceClearance, context, seen, tiles);
+}
+export function shadowcastTiles(origin, range, context, targetOffset = sightGeometry.surfaceClearance) {
+    const seen = new Set();
+    const tiles = [];
+    appendShadowcastField(origin, range, targetOffset, context, seen, tiles);
+    return tiles;
+}
+function appendShadowcastField(origin, range, targetOffset, context, seen, tiles) {
+    appendTile(origin, seen, tiles);
+    const radius = Math.ceil(range);
     for (const octant of octants) {
-        sweepOctant(unit, context, octant, radius, seen, tiles);
+        sweepOctant(origin, range, targetOffset, context, octant, radius, seen, tiles);
     }
 }
-function sweepOctant(unit, context, octant, radius, seen, tiles) {
+function sweepOctant(origin, range, targetOffset, context, octant, radius, seen, tiles) {
     const bins = radius * 2 + 1;
-    const sweep = createSweep(bins, context.tileHeight(unit) + sightGeometry.eyeHeight);
+    const sweep = createSweep(bins, context.tileHeight(origin) + sightGeometry.eyeHeight, targetOffset);
     for (let depth = 1; depth <= radius; depth += 1) {
         for (let bin = 0; bin < bins; bin += 1) {
-            visitBin(unit, context, octant, depth, bin, sweep, seen, tiles);
+            visitBin(origin, range, context, octant, depth, bin, sweep, seen, tiles);
         }
     }
 }
-function createSweep(bins, eyeZ) {
+function createSweep(bins, eyeZ, targetOffset) {
     const horizons = new Float64Array(bins);
     horizons.fill(Number.NEGATIVE_INFINITY);
-    return { horizons, costs: new Float64Array(bins), bins, eyeZ };
+    return { horizons, costs: new Float64Array(bins), bins, eyeZ, targetOffset };
 }
-function visitBin(unit, context, octant, depth, bin, sweep, seen, tiles) {
-    const angularSlope = (bin + 0.5) / sweep.bins;
+function visitBin(origin, range, context, octant, depth, bin, sweep, seen, tiles) {
+    const angularSlope = bin / (sweep.bins - 1);
     const minor = Math.min(depth, Math.floor(angularSlope * (depth + 1)));
-    const tile = projectTile(unit, octant, depth, minor);
+    const tile = projectTile(origin, octant, depth, minor);
     const horizontal = Math.hypot(depth, minor);
     const step = Math.hypot(1, angularSlope);
     const terrainCost = finiteSightCost(context.sightCost(tile));
     sweep.costs[bin] += step * terrainCost;
-    if (isBinVisible(tile, horizontal, bin, unit.sight, sweep, context)) {
+    if (isBinVisible(tile, horizontal, bin, range, sweep, context)) {
         appendTile(tile, seen, tiles);
     }
     sweep.horizons[bin] = Math.max(sweep.horizons[bin], occlusionSlope(tile, depth, angularSlope, sweep, context));
 }
-function projectTile(unit, octant, major, minor) {
+function projectTile(origin, octant, major, minor) {
     return {
-        x: unit.x + octant.majorX * major + octant.minorX * minor,
-        y: unit.y + octant.majorY * major + octant.minorY * minor,
+        x: origin.x + octant.majorX * major + octant.minorX * minor,
+        y: origin.y + octant.majorY * major + octant.minorY * minor,
     };
 }
 function isBinVisible(tile, horizontal, bin, sight, sweep, context) {
     if (horizontal > sight)
         return false;
-    const deltaZ = context.tileHeight(tile) + sightGeometry.surfaceClearance - sweep.eyeZ;
+    const deltaZ = context.tileHeight(tile) + sweep.targetOffset - sweep.eyeZ;
     const rangeCost = sweep.costs[bin] * (1 + Math.abs(deltaZ) / horizontal);
     return rangeCost <= sight && deltaZ / horizontal >= sweep.horizons[bin];
 }

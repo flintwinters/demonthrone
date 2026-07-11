@@ -4,22 +4,22 @@ import { sameTile, tileKey } from "./grid.js";
 import { PerlinSpawnField } from "./procedural-placement.js";
 import { createPushable, pushables } from "./pushables.js";
 import { isObstacleTile } from "./world.js";
+import { entityGeneration } from "./world-config.js";
 import type { Enemy, Tile, Unit } from "./types.js";
 
-const generationRadius = 12;
 const pushableField = new PerlinSpawnField(
-  new NoiseLayer({ scale: 0.17, seed: 0x63726174 }),
-  0.7,
+  new NoiseLayer(entityGeneration.pushable.noise),
+  entityGeneration.pushable.threshold,
 );
 const enemyField = new PerlinSpawnField(
-  new NoiseLayer({ scale: 0.1, seed: 0x6e6d79 }),
-  0.65,
+  new NoiseLayer(entityGeneration.enemy.noise),
+  entityGeneration.enemy.threshold,
 );
 
 export function materializeEntities(units: readonly Unit[], enemies: Enemy[]): void {
   const pushableTiles = pushableField.materialize(
     units,
-    generationRadius,
+    entityGeneration.radius,
     (tile) => isAvailable(tile, units, enemies),
   );
 
@@ -27,7 +27,7 @@ export function materializeEntities(units: readonly Unit[], enemies: Enemy[]): v
 
   const enemyTiles = enemyField.materialize(
     units,
-    generationRadius,
+    entityGeneration.radius,
     (tile) => isAvailable(tile, units, enemies),
   );
 

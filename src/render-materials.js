@@ -8,6 +8,11 @@ export const edgeMaterial = new THREE.LineBasicMaterial({
     transparent: true,
     opacity: 0.38,
 });
+export const selectedOutlineMaterial = new THREE.LineBasicMaterial({
+    color: colors.selectedTileOutline,
+    transparent: true,
+    opacity: 1,
+});
 export function material(color) {
     const existing = materials.get(color);
     if (existing) {

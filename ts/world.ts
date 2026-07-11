@@ -2,12 +2,26 @@ import { terrainHeight } from "./constants.js";
 import type { BiomeProfile } from "./domain.js";
 import { tileKey } from "./grid.js";
 import { BasinField } from "./hydrology.js";
-import { biomes, layers, safeZones, terrainTraits } from "./world-config.js";
+import {
+  biomes,
+  biomeRules,
+  biomeClassification,
+  basinConfig,
+  layers,
+  safeZones,
+  terrainTraits,
+  worldDataCacheLimit,
+} from "./world-config.js";
 import type { BiomeKind, Terrain, TerrainKind, Tile } from "./types.js";
 
-const worldDataCacheLimit = 8192;
 const worldDataCache = new Map<string, WorldTileData>();
-const basinField = new BasinField(10, 6, 1, groundHeightAt, (tile) => layers.water.value(tile));
+const basinField = new BasinField(
+  basinConfig.cellSize,
+  basinConfig.radius,
+  basinConfig.depth,
+  groundHeightAt,
+  (tile) => layers.water.value(tile),
+);
 
 type WorldTileData = {
   readonly biome: BiomeKind;
@@ -109,7 +123,7 @@ function terrainFeatures(
   waterSurface: number | null,
 ): { isWater: boolean; isIce: boolean; isBoulder: boolean; isBrush: boolean } {
   if (waterSurface !== null) {
-    const isIce = layers.ice.value(tile) > 0.55;
+    const isIce = layers.ice.value(tile) > basinConfig.iceThreshold;
 
     return { isWater: !isIce, isIce, isBoulder: false, isBrush: false };
   }
@@ -150,21 +164,8 @@ function classifyBiome(tile: Tile): BiomeKind {
   const sample = { elevation, moisture, ridge, continental };
 
   return biomeRules.find((rule) => rule.matches(sample))?.kind
-    ?? (moisture < 0.35 ? "cinder" : "heath");
+    ?? (moisture < biomeClassification.fallbackMoistureThreshold ? "cinder" : "heath");
 }
-
-type BiomeSample = { elevation: number; moisture: number; ridge: number; continental: number };
-type BiomeRule = { kind: BiomeKind; matches: (sample: BiomeSample) => boolean };
-
-const biomeRules: readonly BiomeRule[] = [
-  { kind: "mesa", matches: ({ continental, ridge }) => continental > 0.72 && ridge > 0.52 },
-  { kind: "ridge", matches: ({ elevation, ridge }) => elevation > 0.66 || ridge > 0.72 },
-  {
-    kind: "bog",
-    matches: ({ moisture, elevation, continental }) => moisture > 0.72 && elevation < 0.58 && continental < 0.3,
-  },
-  { kind: "fen", matches: ({ moisture, elevation }) => moisture > 0.62 && elevation < 0.58 },
-];
 
 function terrainKind(isWater: boolean, isIce: boolean, isBoulder: boolean, isBrush: boolean): TerrainKind {
   if (isWater) {

@@ -4,7 +4,7 @@ import type { SightContext } from "./visibility.js";
 import type { Tile, Unit } from "./types.js";
 
 type Octant = { majorX: number; majorY: number; minorX: number; minorY: number };
-type Sweep = { horizons: Float64Array; costs: Float64Array; bins: number; eyeZ: number };
+type Sweep = { horizons: Float64Array; costs: Float64Array; bins: number; eyeZ: number; targetOffset: number };
 
 const octants: readonly Octant[] = [
   { majorX: 1, majorY: 0, minorX: 0, minorY: 1 },
@@ -23,16 +23,42 @@ export function appendShadowcastTiles(
   seen: Set<string>,
   tiles: Tile[],
 ): void {
-  appendTile(unit, seen, tiles);
-  const radius = Math.ceil(unit.sight);
+  appendShadowcastField(unit, unit.sight, sightGeometry.surfaceClearance, context, seen, tiles);
+}
+
+export function shadowcastTiles(
+  origin: Tile,
+  range: number,
+  context: SightContext,
+  targetOffset: number = sightGeometry.surfaceClearance,
+): Tile[] {
+  const seen = new Set<string>();
+  const tiles: Tile[] = [];
+
+  appendShadowcastField(origin, range, targetOffset, context, seen, tiles);
+  return tiles;
+}
+
+function appendShadowcastField(
+  origin: Tile,
+  range: number,
+  targetOffset: number,
+  context: SightContext,
+  seen: Set<string>,
+  tiles: Tile[],
+): void {
+  appendTile(origin, seen, tiles);
+  const radius = Math.ceil(range);
 
   for (const octant of octants) {
-    sweepOctant(unit, context, octant, radius, seen, tiles);
+    sweepOctant(origin, range, targetOffset, context, octant, radius, seen, tiles);
   }
 }
 
 function sweepOctant(
-  unit: Unit,
+  origin: Tile,
+  range: number,
+  targetOffset: number,
   context: SightContext,
   octant: Octant,
   radius: number,
@@ -40,24 +66,25 @@ function sweepOctant(
   tiles: Tile[],
 ): void {
   const bins = radius * 2 + 1;
-  const sweep = createSweep(bins, context.tileHeight(unit) + sightGeometry.eyeHeight);
+  const sweep = createSweep(bins, context.tileHeight(origin) + sightGeometry.eyeHeight, targetOffset);
 
   for (let depth = 1; depth <= radius; depth += 1) {
     for (let bin = 0; bin < bins; bin += 1) {
-      visitBin(unit, context, octant, depth, bin, sweep, seen, tiles);
+      visitBin(origin, range, context, octant, depth, bin, sweep, seen, tiles);
     }
   }
 }
 
-function createSweep(bins: number, eyeZ: number): Sweep {
+function createSweep(bins: number, eyeZ: number, targetOffset: number): Sweep {
   const horizons = new Float64Array(bins);
 
   horizons.fill(Number.NEGATIVE_INFINITY);
-  return { horizons, costs: new Float64Array(bins), bins, eyeZ };
+  return { horizons, costs: new Float64Array(bins), bins, eyeZ, targetOffset };
 }
 
 function visitBin(
-  unit: Unit,
+  origin: Tile,
+  range: number,
   context: SightContext,
   octant: Octant,
   depth: number,
@@ -66,24 +93,24 @@ function visitBin(
   seen: Set<string>,
   tiles: Tile[],
 ): void {
-  const angularSlope = (bin + 0.5) / sweep.bins;
+  const angularSlope = bin / (sweep.bins - 1);
   const minor = Math.min(depth, Math.floor(angularSlope * (depth + 1)));
-  const tile = projectTile(unit, octant, depth, minor);
+  const tile = projectTile(origin, octant, depth, minor);
   const horizontal = Math.hypot(depth, minor);
   const step = Math.hypot(1, angularSlope);
   const terrainCost = finiteSightCost(context.sightCost(tile));
 
   sweep.costs[bin] += step * terrainCost;
-  if (isBinVisible(tile, horizontal, bin, unit.sight, sweep, context)) {
+  if (isBinVisible(tile, horizontal, bin, range, sweep, context)) {
     appendTile(tile, seen, tiles);
   }
   sweep.horizons[bin] = Math.max(sweep.horizons[bin], occlusionSlope(tile, depth, angularSlope, sweep, context));
 }
 
-function projectTile(unit: Unit, octant: Octant, major: number, minor: number): Tile {
+function projectTile(origin: Tile, octant: Octant, major: number, minor: number): Tile {
   return {
-    x: unit.x + octant.majorX * major + octant.minorX * minor,
-    y: unit.y + octant.majorY * major + octant.minorY * minor,
+    x: origin.x + octant.majorX * major + octant.minorX * minor,
+    y: origin.y + octant.majorY * major + octant.minorY * minor,
   };
 }
 
@@ -96,7 +123,7 @@ function isBinVisible(
   context: SightContext,
 ): boolean {
   if (horizontal > sight) return false;
-  const deltaZ = context.tileHeight(tile) + sightGeometry.surfaceClearance - sweep.eyeZ;
+  const deltaZ = context.tileHeight(tile) + sweep.targetOffset - sweep.eyeZ;
   const rangeCost = sweep.costs[bin] * (1 + Math.abs(deltaZ) / horizontal);
 
   return rangeCost <= sight && deltaZ / horizontal >= sweep.horizons[bin];

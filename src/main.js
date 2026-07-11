@@ -1,4 +1,5 @@
-import { boardState, canSeeTile, canUnitSee, enrichTile } from "./board-state.js";
+import { boardState, canSeeTile, enrichTile } from "./board-state.js";
+import { actionFields } from "./action-fields.js";
 import { devicePixelRatio, gridFromScreen } from "./camera.js";
 import { connectCancelInput } from "./cancel-input.js";
 import { canPlanAttack, resolveAttacks, tryPlanAttack } from "./combat.js";
@@ -6,10 +7,9 @@ import { attackUnits, moveEnemies } from "./enemies.js";
 import { materializeEntities } from "./entity-generation.js";
 import { captureFollowerPositions, dispelDestroyedPushable, followPositionHistory } from "./enchantment.js";
 import { EnchantmentSelection } from "./enchantment-selection.js";
-import { sameTile } from "./grid.js";
+import { sameTile, tileKey } from "./grid.js";
 import { connectInput } from "./input.js";
 import { cancelAttackForMovement, clearInteraction, handleEnchantmentClick } from "./interaction.js";
-import { canReachTile } from "./movement.js";
 import { requiredElement } from "./dom.js";
 import { isBoardObstacle } from "./obstacles.js";
 import { pickPieceTile } from "./piece-picker.js";
@@ -17,7 +17,7 @@ import { canPushTo, clearPlannedPush, commitPlannedPushes, isPushableTile, planP
 import { drawGrid } from "./renderer.js";
 import { connectRotationControls } from "./rotation-controls.js";
 import { isInspectableTerrain, selectedObjectStatus, selectVisibleEntityTile } from "./selection-status.js";
-import { movementCost, tileHeight, tileTerrain } from "./world.js";
+import { tileHeight, tileTerrain } from "./world.js";
 import { connectTurnControl } from "./turn-control.js";
 import { canTakeAction, cancelAction, resetActions } from "./teammate-turns.js";
 import { clearUnitSelection, clickBoardTile, commitPlannedMoves, selectedUnit, syncUnitSelection, units, } from "./units.js";
@@ -54,7 +54,7 @@ function selectTile(tile) {
         return;
     }
     const unit = selectedUnit();
-    const attackTarget = isPushInteraction(tile, unit) ? null : tryPlanAttack(tile, unit, [...enemies, ...pushables], (candidate) => Boolean(unit && canUnitSee(unit, candidate, enemies)));
+    const attackTarget = isPushInteraction(tile, unit) ? null : tryPlanAttack(tile, unit, [...enemies, ...pushables], (candidate) => Boolean(unit && unitActionFields(unit).attack.has(tileKey(candidate))));
     if (attackTarget) {
         selectedTile = enrichTile(attackTarget);
         draw();
@@ -84,10 +84,10 @@ function canInteractionTargetTile(tile) {
 }
 function canSelectedUnitAttackTile(tile) {
     const unit = selectedUnit();
-    return Boolean(unit && canPlanAttack(unit, tile, [...enemies, ...pushables], (candidate) => canUnitSee(unit, candidate, enemies)));
+    return Boolean(unit && canPlanAttack(unit, tile, [...enemies, ...pushables], (candidate) => unitActionFields(unit).attack.has(tileKey(candidate))));
 }
 function conflictsWithUnitAction(tile, unit) {
-    return canMoveToTile(tile, unit) || canPlanAttack(unit, tile, [...enemies, ...pushables], (candidate) => canUnitSee(unit, candidate, enemies));
+    return canMoveToTile(tile, unit) || canPlanAttack(unit, tile, [...enemies, ...pushables], (candidate) => unitActionFields(unit).attack.has(tileKey(candidate)));
 }
 function canMoveToTile(tile, unit) {
     return canTakeAction(unit) && canMoveIgnoringAction(tile, unit);
@@ -96,7 +96,10 @@ function canMoveIgnoringAction(tile, unit) {
     return canSeeTile(tile, enemies)
         && (canPushTo(unit, tile, isPushDestinationBlocked, tileHeight)
             || (!isMovementBlocked(tile)
-                && canReachTile(unit, tile, unit.movement, isMovementBlocked, tileHeight, movementCost)));
+                && unitActionFields(unit).movement.has(tileKey(tile))));
+}
+function unitActionFields(unit) {
+    return actionFields(unit, enemies, isMovementBlocked);
 }
 function isPushInteraction(tile, unit) {
     return Boolean(unit && (sameTile(unit.target, tile)

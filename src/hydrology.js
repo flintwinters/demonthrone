@@ -1,4 +1,5 @@
-const anchorCacheLimit = 2048;
+import { hydrologyConfig } from "./world-config.js";
+const anchorCacheLimit = hydrologyConfig.anchorCacheLimit;
 export class BasinField {
     cellSize;
     radius;

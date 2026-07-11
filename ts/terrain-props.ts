@@ -3,6 +3,7 @@ import { colors, foliageColors } from "./constants.js";
 import { deterministicUnit } from "./noise.js";
 import { material } from "./render-materials.js";
 import type { BiomeKind, Tile } from "./types.js";
+import { terrainPropConfig } from "./world-config.js";
 
 export type PropPlacement = {
   tile: Tile;
@@ -17,9 +18,9 @@ const brushGeometry = new THREE.BufferGeometry().setFromPoints([
 const boulderGeometry = new THREE.DodecahedronGeometry(0.34, 0);
 const brushMaterials = new Map<BiomeKind, THREE.MeshLambertMaterial>();
 const transform = new THREE.Object3D();
-const foliageHeightSeed = 0x6419;
-const minimumFoliageScale = 0.65;
-const foliageScaleRange = 0.7;
+const foliageHeightSeed = terrainPropConfig.foliageHeightSeed;
+const minimumFoliageScale = terrainPropConfig.minimumFoliageScale;
+const foliageScaleRange = terrainPropConfig.foliageScaleRange;
 
 brushGeometry.computeVertexNormals();
 brushGeometry.userData.shared = true;

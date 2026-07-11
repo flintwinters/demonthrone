@@ -1,16 +1,17 @@
-import { cardinalDirections, neighborTile, sameTile, tileKey } from "./grid.js";
-const maxUpwardStepHeight = 2;
+import { cardinalDirections, neighborTile, tileKey } from "./grid.js";
+import { movementConfig } from "./world-config.js";
 export function canReachTile(start, target, limit, isBlockedTile, tileHeight, movementCost) {
+    return reachableTileKeys(start, limit, isBlockedTile, tileHeight, movementCost).has(tileKey(target));
+}
+export function reachableTileKeys(start, limit, isBlockedTile, tileHeight, movementCost) {
     const frontier = [{ tile: start, cost: 0 }];
     const bestCosts = new Map([[tileKey(start), 0]]);
     while (frontier.length > 0) {
         const current = takeCheapest(frontier);
-        if (sameTile(current.tile, target)) {
-            return current.cost > 0;
-        }
         appendReachableNeighbors(current, limit, isBlockedTile, tileHeight, movementCost, bestCosts, frontier);
     }
-    return false;
+    bestCosts.delete(tileKey(start));
+    return new Set(bestCosts.keys());
 }
 export function movementStepCost(previous, tile, tileHeight, movementCost) {
     const heightDelta = tileHeight(tile) - tileHeight(previous);
@@ -30,7 +31,7 @@ function isReachableStep(previous, tile, cost, limit, isBlockedTile, tileHeight,
     return cost <= limit
         && cost < (bestCosts.get(tileKey(tile)) ?? Number.POSITIVE_INFINITY)
         && !isBlockedTile(tile)
-        && tileHeight(tile) - tileHeight(previous) <= maxUpwardStepHeight;
+        && tileHeight(tile) - tileHeight(previous) <= movementConfig.maxUpwardStepHeight;
 }
 function takeCheapest(frontier) {
     let cheapestIndex = 0;

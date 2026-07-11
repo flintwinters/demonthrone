@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { tileKey } from "../src/grid.js";
 import { visibleTiles } from "../src/tiles.js";
+import { shadowcastTiles } from "../src/visibility-field.js";
+import { sightContext } from "../src/visibility.js";
 
 function unit(sight, x = 0, y = 0) {
   return { x, y, sight };
@@ -66,6 +68,14 @@ test("shadowcast work grows quadratically with sight radius", () => {
     return 1;
   } });
   assert.equal(samples <= 20 * radius ** 2, true);
+});
+
+test("character-height range fields include flat adjacent tiles", () => {
+  const context = sightContext([], () => 1, () => 0, () => false);
+  const keys = new Set(shadowcastTiles({ x: 0, y: 0 }, 1, context, 0.38).map(tileKey));
+
+  assert.equal(keys.has("1:0"), true);
+  assert.equal(keys.has("1:1"), false);
 });
 
 function cardinalNeighbors(tile) {

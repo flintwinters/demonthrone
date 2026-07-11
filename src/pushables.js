@@ -1,8 +1,7 @@
 import { neighborTile, sameTile } from "./grid.js";
 import { PushableTemplate } from "./domain.js";
-const maxUpwardPushHeight = 2;
-const pushableHealth = 3;
-const crateTemplate = new PushableTemplate("crate", pushableHealth);
+import { pushableConfig } from "./world-config.js";
+const crateTemplate = new PushableTemplate(pushableConfig.type, pushableConfig.health);
 export const pushables = [];
 export function createPushable(id, tile) {
     return crateTemplate.create(id, tile);
@@ -57,5 +56,5 @@ function pushDestination(unit, pushable) {
 }
 function isValidPushHeight(current, destination) {
     const heightChange = destination - current;
-    return heightChange >= 0 && heightChange <= maxUpwardPushHeight;
+    return heightChange >= 0 && heightChange <= pushableConfig.maxUpwardPushHeight;
 }

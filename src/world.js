@@ -1,10 +1,9 @@
 import { terrainHeight } from "./constants.js";
 import { tileKey } from "./grid.js";
 import { BasinField } from "./hydrology.js";
-import { biomes, layers, safeZones, terrainTraits } from "./world-config.js";
-const worldDataCacheLimit = 8192;
+import { biomes, biomeRules, biomeClassification, basinConfig, layers, safeZones, terrainTraits, worldDataCacheLimit, } from "./world-config.js";
 const worldDataCache = new Map();
-const basinField = new BasinField(10, 6, 1, groundHeightAt, (tile) => layers.water.value(tile));
+const basinField = new BasinField(basinConfig.cellSize, basinConfig.radius, basinConfig.depth, groundHeightAt, (tile) => layers.water.value(tile));
 export function tileTerrain(tile) {
     return { ...worldData(tile).terrain };
 }
@@ -73,7 +72,7 @@ function createWorldData(tile) {
 }
 function terrainFeatures(tile, biomeProfile, waterSurface) {
     if (waterSurface !== null) {
-        const isIce = layers.ice.value(tile) > 0.55;
+        const isIce = layers.ice.value(tile) > basinConfig.iceThreshold;
         return { isWater: !isIce, isIce, isBoulder: false, isBrush: false };
     }
     if (layers.boulder.value(tile) > biomeProfile.boulderThreshold) {
@@ -105,17 +104,8 @@ function classifyBiome(tile) {
     const continental = layers.continental.value(tile);
     const sample = { elevation, moisture, ridge, continental };
     return biomeRules.find((rule) => rule.matches(sample))?.kind
-        ?? (moisture < 0.35 ? "cinder" : "heath");
+        ?? (moisture < biomeClassification.fallbackMoistureThreshold ? "cinder" : "heath");
 }
-const biomeRules = [
-    { kind: "mesa", matches: ({ continental, ridge }) => continental > 0.72 && ridge > 0.52 },
-    { kind: "ridge", matches: ({ elevation, ridge }) => elevation > 0.66 || ridge > 0.72 },
-    {
-        kind: "bog",
-        matches: ({ moisture, elevation, continental }) => moisture > 0.72 && elevation < 0.58 && continental < 0.3,
-    },
-    { kind: "fen", matches: ({ moisture, elevation }) => moisture > 0.62 && elevation < 0.58 },
-];
 function terrainKind(isWater, isIce, isBoulder, isBrush) {
     if (isWater) {
         return "water";

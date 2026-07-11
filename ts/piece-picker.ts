@@ -1,10 +1,7 @@
 import { screenFromGrid, view } from "./camera.js";
 import { terrainHeight } from "./constants.js";
+import { piecePickerConfig } from "./world-config.js";
 import type { ScreenPoint, Tile, TileHeight, TilePredicate } from "./types.js";
-
-const pickRadius = 30;
-const minimumPickRadius = 18;
-const pieceHeight = 0.3;
 
 export function pickPieceTile(
   canvas: HTMLCanvasElement,
@@ -14,7 +11,7 @@ export function pickPieceTile(
   tileHeight: TileHeight,
 ): Tile | null {
   let nearest: Tile | null = null;
-  let nearestDistance = Math.max(minimumPickRadius, pickRadius * view.zoom);
+  let nearestDistance = Math.max(piecePickerConfig.minimumPickRadius, piecePickerConfig.pickRadius * view.zoom);
 
   for (const piece of pieces) {
     const distance = screenDistance(point, pieceScreenPoint(canvas, piece, tileHeight));
@@ -33,7 +30,7 @@ function pieceScreenPoint(canvas: HTMLCanvasElement, piece: Tile, tileHeight: Ti
     canvas,
     piece.x + 0.5,
     piece.y + 0.5,
-    tileHeight(piece) * terrainHeight.visualScale + pieceHeight,
+    tileHeight(piece) * terrainHeight.visualScale + piecePickerConfig.pieceHeight,
   );
 }
 
