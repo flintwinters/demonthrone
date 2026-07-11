@@ -85,7 +85,7 @@ function brushMaterial(biome: BiomeKind): THREE.MeshLambertMaterial {
     color: foliageColor,
     side: THREE.DoubleSide,
     emissive: foliageColor,
-    emissiveIntensity: 0.08,
+    emissiveIntensity: 0.12,
   });
 
   brushMaterials.set(biome, created);

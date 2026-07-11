@@ -60,7 +60,7 @@ function brushMaterial(biome) {
         color: foliageColor,
         side: THREE.DoubleSide,
         emissive: foliageColor,
-        emissiveIntensity: 0.08,
+        emissiveIntensity: 0.12,
     });
     brushMaterials.set(biome, created);
     return created;
