@@ -83,12 +83,12 @@ export const biomes = {
 function profile(config) {
     return new BiomeProfile(config);
 }
-function noise(scale, salt) {
-    return { scale, seed: worldSeed ^ salt };
+function noise(scale, salt, magnitude) {
+    return { scale, magnitude, seed: worldSeed ^ salt };
 }
-function feature(scale, salt, threshold) {
-    return { ...noise(scale, salt), threshold };
+function feature(scale, salt, threshold, magnitude = 1) {
+    return { ...noise(scale, salt, magnitude), threshold };
 }
-function component(scale, salt, sample, weight) {
-    return { ...noise(scale, salt), sample, weight };
+function component(scale, salt, sample, weight, magnitude = 1) {
+    return { ...noise(scale, salt, magnitude), sample, weight };
 }

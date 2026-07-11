@@ -7,10 +7,10 @@ export { biomes } from "./biome-config.js";
 export const worldSeed = 0x5eedf;
 
 export const layers = {
-  elevation: new NoiseLayer({ scale: 0.055, seed: worldSeed ^ 0x1234 }),
-  moisture: new NoiseLayer({ scale: 0.06, seed: worldSeed ^ 0x4321 }),
-  ridge: new NoiseLayer({ scale: 0.13, seed: worldSeed ^ 0x6d2b }),
-  continental: new NoiseLayer({ scale: 0.001, seed: worldSeed ^ 0xcd73 }),
+  elevation: new NoiseLayer({ scale: 0.055, magnitude: 1, seed: worldSeed ^ 0x1234 }),
+  moisture: new NoiseLayer({ scale: 0.06, magnitude: 1, seed: worldSeed ^ 0x4321 }),
+  ridge: new NoiseLayer({ scale: 0.13, magnitude: 1, seed: worldSeed ^ 0x6d2b }),
+  continental: new NoiseLayer({ scale: 0.001, magnitude: 1, seed: worldSeed ^ 0xcd73 }),
 } satisfies Record<"elevation" | "moisture" | "ridge" | "continental", NoiseLayer>;
 
 export const safeZones = [
@@ -53,11 +53,11 @@ export const biomeClassification = {
 export const entityGeneration = {
   radius: 12,
   pushable: {
-    noise: { scale: 0.17, seed: 0x63726174 },
+    noise: { scale: 0.17, magnitude: 1, seed: 0x63726174 },
     threshold: 0.7,
   },
   enemy: {
-    noise: { scale: 0.1, seed: 0x6e6d79 },
+    noise: { scale: 0.1, magnitude: 1, seed: 0x6e6d79 },
     threshold: 0.65,
   },
 };

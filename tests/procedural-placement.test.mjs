@@ -19,8 +19,8 @@ const unit = {
 };
 
 test("Perlin spawn fields materialize deterministic local maxima", () => {
-  const first = new PerlinSpawnField(new NoiseLayer({ scale: 0.17, seed: 12345 }), 0.65);
-  const second = new PerlinSpawnField(new NoiseLayer({ scale: 0.17, seed: 12345 }), 0.65);
+  const first = new PerlinSpawnField(new NoiseLayer({ scale: 0.17, magnitude: 1, seed: 12345 }), 0.65);
+  const second = new PerlinSpawnField(new NoiseLayer({ scale: 0.17, magnitude: 1, seed: 12345 }), 0.65);
 
   assert.deepEqual(first.materialize([unit], 12, () => true), second.materialize([unit], 12, () => true));
 });

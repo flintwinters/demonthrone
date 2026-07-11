@@ -1,7 +1,7 @@
 import { perlinNoise2d } from "./noise.js";
 import type { BiomeKind, Terrain, TerrainKind, Tile } from "./types.js";
 
-export type NoiseLayerConfig = { scale: number; seed: number };
+export type NoiseLayerConfig = { scale: number; magnitude: number; seed: number };
 export type HeightSample = "centered" | "crest" | "linear" | "terraced";
 export type HeightComponentConfig = NoiseLayerConfig & { sample: HeightSample; weight: number };
 export type NoiseFeatureConfig = NoiseLayerConfig & { threshold: number };
@@ -18,7 +18,8 @@ export class NoiseLayer {
   constructor(private readonly config: NoiseLayerConfig) {}
 
   value(tile: Tile): number {
-    return perlinNoise2d(tile.x * this.config.scale, tile.y * this.config.scale, this.config.seed);
+    return perlinNoise2d(tile.x * this.config.scale, tile.y * this.config.scale, this.config.seed)
+      * this.config.magnitude;
   }
 }
 

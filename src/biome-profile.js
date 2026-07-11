@@ -5,7 +5,8 @@ export class NoiseLayer {
         this.config = config;
     }
     value(tile) {
-        return perlinNoise2d(tile.x * this.config.scale, tile.y * this.config.scale, this.config.seed);
+        return perlinNoise2d(tile.x * this.config.scale, tile.y * this.config.scale, this.config.seed)
+            * this.config.magnitude;
     }
 }
 export class HeightComponent {

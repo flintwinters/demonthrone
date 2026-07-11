@@ -91,12 +91,12 @@ function profile(config: BiomeProfileConfig): BiomeProfile {
   return new BiomeProfile(config);
 }
 
-function noise(scale: number, salt: number): NoiseLayerConfig {
-  return { scale, seed: worldSeed ^ salt };
+function noise(scale: number, salt: number, magnitude: number): NoiseLayerConfig {
+  return { scale, magnitude, seed: worldSeed ^ salt };
 }
 
-function feature(scale: number, salt: number, threshold: number): NoiseFeatureConfig {
-  return { ...noise(scale, salt), threshold };
+function feature(scale: number, salt: number, threshold: number, magnitude: number = 1): NoiseFeatureConfig {
+  return { ...noise(scale, salt, magnitude), threshold };
 }
 
 function component(
@@ -104,6 +104,7 @@ function component(
   salt: number,
   sample: HeightSample,
   weight: number,
+  magnitude: number = 1,
 ): HeightComponentConfig {
-  return { ...noise(scale, salt), sample, weight };
+  return { ...noise(scale, salt, magnitude), sample, weight };
 }
