@@ -1,18 +1,33 @@
 import { sameTile } from "./grid.js";
-import { pushableAt, pushables } from "./pushables.js";
-export function toggleEnchantment(tile, unit) {
-    const pushable = pushableAt(tile);
-    if (!pushable) {
-        return false;
+import { pushables } from "./pushables.js";
+export function bindEnchantment(source, target, units) {
+    const owner = enchantmentOwner(target, units);
+    if (source.enchanterUnitId || source.id === target.id || !owner) {
+        return null;
     }
-    if (pushable.enchanterUnitId === unit.id) {
-        dispelChain(pushable.id);
+    const displacedFollower = followerOf(target.id);
+    source.followsId = target.id;
+    source.enchanterUnitId = owner.id;
+    if (displacedFollower) {
+        displacedFollower.followsId = source.id;
     }
-    else {
-        pushable.followsId = chainTailId(unit.id);
-        assignChainOwner(pushable.id, unit.id);
+    return owner;
+}
+export function dispelEnchantment(source, units) {
+    const owner = units.find((unit) => unit.id === source.enchanterUnitId) ?? null;
+    if (owner) {
+        dispelChain(source.id);
     }
-    return true;
+    return owner;
+}
+export function enchantmentOwner(target, units) {
+    if (isUnit(target, units)) {
+        return target;
+    }
+    return units.find((unit) => unit.id === target.enchanterUnitId) ?? null;
+}
+function isUnit(target, units) {
+    return units.some((unit) => unit.id === target.id);
 }
 export function captureFollowerPositions(units) {
     return new Map([...units, ...pushables].map((item) => [item.id, { x: item.x, y: item.y }]));
@@ -33,25 +48,6 @@ function followChain(parent, previous) {
         follower.y = priorParent.y;
     }
     followChain(follower, previous);
-}
-function chainTailId(rootId) {
-    let tailId = rootId;
-    let follower = followerOf(tailId);
-    while (follower) {
-        tailId = follower.id;
-        follower = followerOf(tailId);
-    }
-    return tailId;
-}
-function assignChainOwner(pushableId, unitId) {
-    const pushable = pushables.find((candidate) => candidate.id === pushableId);
-    if (pushable) {
-        pushable.enchanterUnitId = unitId;
-        const follower = followerOf(pushable.id);
-        if (follower) {
-            assignChainOwner(follower.id, unitId);
-        }
-    }
 }
 function dispelChain(pushableId) {
     const pushable = pushables.find((candidate) => candidate.id === pushableId);

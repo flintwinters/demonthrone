@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { boardState } from "../src/board-state.js";
 import { materializeEntities } from "../src/entity-generation.js";
-import { captureFollowerPositions, followPositionHistory, toggleEnchantment } from "../src/enchantment.js";
+import { bindEnchantment, captureFollowerPositions, dispelEnchantment, followPositionHistory } from "../src/enchantment.js";
+import { EnchantmentSelection } from "../src/enchantment-selection.js";
 import { canTakeAction, resetActions, spendAction } from "../src/teammate-turns.js";
 import {
   canPushTo,
@@ -84,26 +85,49 @@ test("crates outside teammate line of sight are not rendered", () => {
   crate.y = original.y;
 });
 
-test("enchanted crates form a positional-history tail", () => {
-  const [first, second] = pushables;
+test("crates bind to an explicitly selected chain target", () => {
+  const [first, second, inserted] = pushables;
 
-  assert.equal(toggleEnchantment(first, unit), true);
-  assert.equal(toggleEnchantment(second, unit), true);
+  assert.equal(bindEnchantment(first, unit, [unit]), unit);
+  assert.equal(bindEnchantment(second, first, [unit]), unit);
   assert.equal(first.followsId, unit.id);
   assert.equal(second.followsId, first.id);
+
+  assert.equal(bindEnchantment(inserted, first, [unit]), unit);
+  assert.equal(inserted.followsId, first.id);
+  assert.equal(second.followsId, inserted.id);
   const previous = captureFollowerPositions([unit]);
   const previousUnit = previous.get(unit.id);
   const previousFirst = previous.get(first.id);
+  const previousInserted = previous.get(inserted.id);
 
   unit.x += 1;
   followPositionHistory([unit], previous);
   assert.deepEqual({ x: first.x, y: first.y }, previousUnit);
-  assert.deepEqual({ x: second.x, y: second.y }, previousFirst);
+  assert.deepEqual({ x: inserted.x, y: inserted.y }, previousFirst);
+  assert.deepEqual({ x: second.x, y: second.y }, previousInserted);
 
-  assert.equal(toggleEnchantment(first, unit), true);
-  assert.equal(first.enchanterUnitId, null);
+  assert.equal(dispelEnchantment(inserted, [unit]), unit);
+  assert.equal(first.enchanterUnitId, unit.id);
+  assert.equal(inserted.enchanterUnitId, null);
   assert.equal(second.enchanterUnitId, null);
+  assert.equal(dispelEnchantment(first, [unit]), unit);
+  assert.equal(first.enchanterUnitId, null);
   unit.x -= 1;
+});
+
+test("crate-first binding consumes the target teammate's action", () => {
+  const source = pushables.find((crate) => crate.x !== unit.x || crate.y !== unit.y);
+  const binding = new EnchantmentSelection();
+
+  assert.notEqual(source, undefined);
+  assert.equal(binding.begin(source), true);
+  assert.equal(binding.canBindTo(unit, [unit]), true);
+  assert.equal(binding.resolve(unit, [unit]), true);
+  assert.equal(source.followsId, unit.id);
+  assert.equal(canTakeAction(unit), false);
+  resetActions();
+  dispelEnchantment(source, [unit]);
 });
 
 test("spending an enchant action clears movement and push plans for the turn", () => {

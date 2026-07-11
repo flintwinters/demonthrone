@@ -4,7 +4,7 @@ import { resolveAttacks, tryPlanAttack } from "./combat.js";
 import { attackUnits, moveEnemies } from "./enemies.js";
 import { materializeEntities } from "./entity-generation.js";
 import { captureFollowerPositions, followPositionHistory } from "./enchantment.js";
-import { connectEnchantmentControl } from "./enchantment-control.js";
+import { EnchantmentSelection } from "./enchantment-selection.js";
 import { l1Distance, sameTile } from "./grid.js";
 import { connectInput } from "./input.js";
 import { canReachTile } from "./movement.js";
@@ -16,7 +16,7 @@ import { connectRotationControls } from "./rotation-controls.js";
 import { movementCost, tileHeight } from "./world.js";
 import { connectTurnControl } from "./turn-control.js";
 import { canTakeAction, resetActions } from "./teammate-turns.js";
-import { clickBoardTile, commitPlannedMoves, selection, selectedUnit, units, } from "./units.js";
+import { clickBoardTile, commitPlannedMoves, selectedUnit, syncUnitSelection, units, } from "./units.js";
 const canvas = requiredElement("#grid");
 const goButton = requiredElement("#go");
 const rotateLeftButton = requiredElement("#rotate-left");
@@ -25,12 +25,10 @@ let selectedTile = null;
 let hoveredTile = null;
 const enemies = [];
 const tombstones = [];
-let focusedTile = null;
-const enchantmentControl = connectEnchantmentControl(requiredElement("#enchant"), () => focusedTile, selectedUnit, draw);
+const enchantmentSelection = new EnchantmentSelection();
 function draw() {
-    drawGrid(canvas, boardState(selectedTile, hoveredTile, enemies, tombstones, canSelectedUnitMoveTo, canSelectedUnitAttackTile));
+    drawGrid(canvas, boardState(selectedTile, hoveredTile, enemies, tombstones, canInteractionTargetTile, canSelectedUnitAttackTile));
     goButton.hidden = units.length === 0;
-    enchantmentControl.sync();
 }
 function resize() {
     const pixelRatio = devicePixelRatio();
@@ -43,7 +41,10 @@ function resize() {
     draw();
 }
 function selectTile(tile) {
-    focusedTile = tile;
+    if (handleEnchantmentClick(tile)) {
+        draw();
+        return;
+    }
     const unit = selectedUnit();
     const attackTarget = tryPlanAttack(tile, unit, enemies, (candidate) => Boolean(unit && canUnitSee(unit, candidate, enemies)));
     if (attackTarget) {
@@ -56,6 +57,17 @@ function selectTile(tile) {
         : null;
     draw();
 }
+function handleEnchantmentClick(tile) {
+    if (enchantmentSelection.source()) {
+        selectedTile = enchantmentSelection.resolve(tile, units) ? null : selectedTile;
+        return true;
+    }
+    if (selectedUnit() || !enchantmentSelection.begin(tile)) {
+        return false;
+    }
+    selectedTile = enrichTile(tile);
+    return true;
+}
 function hoverTile(tile) {
     const nextTile = tile && canSeeTile(tile, enemies) ? enrichTile(tile) : null;
     if (sameTile(hoveredTile, nextTile)) {
@@ -65,10 +77,13 @@ function hoverTile(tile) {
     draw();
 }
 function pickSelectableTile(point) {
-    const piece = pickPieceTile(canvas, point, [...units, ...enemies], (tile) => canSeeTile(tile, enemies), tileHeight);
+    const piece = pickPieceTile(canvas, point, [...units, ...enemies, ...pushables], (tile) => canSeeTile(tile, enemies), tileHeight);
     return piece ?? terrainTileAt(point);
 }
-function canSelectedUnitMoveTo(tile) {
+function canInteractionTargetTile(tile) {
+    if (enchantmentSelection.source()) {
+        return enchantmentSelection.canBindTo(tile, units);
+    }
     const unit = selectedUnit();
     return unit ? canMoveToTile(tile, unit) : false;
 }
@@ -120,14 +135,12 @@ function go() {
     materializeEntities(units, enemies);
     moveEnemies(enemies, units, isBoardObstacle);
     resetActions();
-    syncSelection();
-    draw();
-}
-function syncSelection() {
-    if (selection.unitId && !selectedUnit()) {
-        selection.unitId = null;
+    enchantmentSelection.clear();
+    syncUnitSelection();
+    if (!selectedUnit()) {
         selectedTile = null;
     }
+    draw();
 }
 connectInput(canvas, selectTile, hoverTile, draw, tileHeight, pickSelectableTile);
 connectRotationControls(canvas, { left: rotateLeftButton, right: rotateRightButton }, draw);

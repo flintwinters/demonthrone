@@ -76,39 +76,6 @@ canvas {
   outline-offset: 2px;
 }
 
-.enchant-button {
-  position: fixed;
-  right: 80px;
-  bottom: 14px;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 1px solid #8ec07c;
-  border-radius: 4px;
-  background: #282828;
-  color: #8ec07c;
-  font: 700 22px/1 ui-sans-serif, system-ui, sans-serif;
-}
-
-.enchant-button:disabled {
-  color: #665c54;
-  border-color: #504945;
-}
-
-.enchant-button:active:not(:disabled) {
-  background: #3c3836;
-}
-
-.enchant-button[aria-pressed="true"] {
-  background: #8ec07c;
-  color: #1d2021;
-}
-
-.enchant-button:focus-visible {
-  outline: 2px solid #ebdbb2;
-  outline-offset: 2px;
-}
-
 @media (any-pointer: coarse) {
   .rotate-controls {
     position: fixed;

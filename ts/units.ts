@@ -30,8 +30,8 @@ export function clickBoardTile(
   const unit = unitAt(tile);
 
   if (unit) {
-    selection.unitId = unit.id;
-    return tile;
+    selection.unitId = selection.unitId === unit.id ? null : unit.id;
+    return selection.unitId ? tile : null;
   }
 
   return assignSelectedTarget(tile, canTargetTile, onTarget);
@@ -48,6 +48,10 @@ export function commitPlannedMoves(): void {
     unit.target = null;
   }
 
+  syncUnitSelection();
+}
+
+export function syncUnitSelection(): void {
   if (selection.unitId && !selectedUnit()) {
     selection.unitId = null;
   }
