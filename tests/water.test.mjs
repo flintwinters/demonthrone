@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { lineSightCost } from "../src/sight-cost.js";
 import {
+  groundHeight,
   isBoulderTile,
   isBrushTile,
+  isIceTile,
   isObstacleTile,
   isWaterTile,
   tileHeight,
@@ -16,6 +18,20 @@ function waterTiles() {
   for (let y = -30; y <= 30; y += 1) {
     for (let x = -30; x <= 30; x += 1) {
       if (isWaterTile({ x, y })) {
+        tiles.push({ x, y });
+      }
+    }
+  }
+
+  return tiles;
+}
+
+function hydrologyTiles() {
+  const tiles = [];
+
+  for (let y = -30; y <= 30; y += 1) {
+    for (let x = -30; x <= 30; x += 1) {
+      if (isWaterTile({ x, y }) || isIceTile({ x, y })) {
         tiles.push({ x, y });
       }
     }
@@ -40,10 +56,23 @@ test("water is impassable terrain without obstacle props", () => {
   assert.equal(isWaterTile({ x: 5, y: 7 }), false);
 });
 
-test("water bodies retain noise-generated elevation", () => {
+test("separate water bodies occupy different basin elevations", () => {
   const heights = new Set(waterTiles().map(tileHeight));
 
   assert.equal(heights.size > 1, true);
+});
+
+test("local water and ice bodies are flat over submerged basin ground", () => {
+  const tiles = hydrologyTiles();
+
+  for (const tile of tiles) {
+    const surface = tileHeight(tile);
+    const depth = surface - groundHeight(tile);
+
+    assert.equal(depth === 0 || depth === 1, true);
+    assert.equal(hasSubmergedMinimum(tile, surface), true);
+    assertFlatHydrologyNeighbors(tile, surface);
+  }
 });
 
 test("water greatly extends line-of-sight traversal distance", () => {
@@ -56,3 +85,25 @@ test("water greatly extends line-of-sight traversal distance", () => {
 
   assert.equal(acrossWater < normal / 5, true);
 });
+
+function hasSubmergedMinimum(tile, surface) {
+  for (let y = tile.y - 6; y <= tile.y + 6; y += 1) {
+    for (let x = tile.x - 6; x <= tile.x + 6; x += 1) {
+      if (groundHeight({ x, y }) === surface - 1) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function assertFlatHydrologyNeighbors(tile, surface) {
+  for (const direction of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    const neighbor = { x: tile.x + direction[0], y: tile.y + direction[1] };
+
+    if (isWaterTile(neighbor) || isIceTile(neighbor)) {
+      assert.equal(tileHeight(neighbor), surface);
+    }
+  }
+}

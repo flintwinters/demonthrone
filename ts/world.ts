@@ -1,11 +1,13 @@
 import { terrainHeight } from "./constants.js";
 import type { BiomeProfile } from "./domain.js";
 import { tileKey } from "./grid.js";
+import { BasinField } from "./hydrology.js";
 import { biomes, layers, safeZones, terrainTraits } from "./world-config.js";
 import type { BiomeKind, Terrain, TerrainKind, Tile } from "./types.js";
 
 const worldDataCacheLimit = 8192;
 const worldDataCache = new Map<string, WorldTileData>();
+const basinField = new BasinField(10, 6, 1, groundHeightAt, (tile) => layers.water.value(tile));
 
 type WorldTileData = {
   readonly biome: BiomeKind;
@@ -57,6 +59,10 @@ export function tileHeight(tile: Tile): number {
   return worldData(tile).height;
 }
 
+export function groundHeight(tile: Tile): number {
+  return groundHeightAt(tile);
+}
+
 function terrainFor(kind: TerrainKind, biomeKind: BiomeKind): Terrain {
   return terrainTraits[kind].terrain(biomes[biomeKind]);
 }
@@ -80,13 +86,15 @@ function worldData(tile: Tile): WorldTileData {
 function createWorldData(tile: Tile): WorldTileData {
   const biome = classifyBiome(tile);
   const biomeProfile = biomes[biome];
+  const ground = heightAt(tile, biomeProfile);
   const isSafe = isSafeTile(tile);
-  const { isWater, isIce, isBoulder, isBrush } = terrainFeatures(tile, biomeProfile, isSafe);
+  const waterSurface = isSafe ? null : basinField.surfaceAt(tile, isHydrologicallyWet);
+  const { isWater, isIce, isBoulder, isBrush } = terrainFeatures(tile, biomeProfile, waterSurface);
   const terrain = terrainFor(terrainKind(isWater, isIce, isBoulder, isBrush), biome);
 
   return {
     biome,
-    height: heightAt(tile, biomeProfile),
+    height: waterSurface ?? ground,
     isBoulder,
     isBrush,
     isWater,
@@ -98,13 +106,9 @@ function createWorldData(tile: Tile): WorldTileData {
 function terrainFeatures(
   tile: Tile,
   biomeProfile: BiomeProfile,
-  isSafe: boolean,
+  waterSurface: number | null,
 ): { isWater: boolean; isIce: boolean; isBoulder: boolean; isBrush: boolean } {
-  if (isSafe) {
-    return { isWater: false, isIce: false, isBoulder: false, isBrush: false };
-  }
-
-  if (layers.water.value(tile) > biomeProfile.waterThreshold) {
+  if (waterSurface !== null) {
     const isIce = layers.ice.value(tile) > 0.55;
 
     return { isWater: !isIce, isIce, isBoulder: false, isBrush: false };
@@ -120,6 +124,10 @@ function terrainFeatures(
     isBoulder: false,
     isBrush: layers.brush.value(tile) > biomeProfile.brushThreshold,
   };
+}
+
+function isHydrologicallyWet(tile: Tile): boolean {
+  return layers.water.value(tile) > biomes[classifyBiome(tile)].waterThreshold;
 }
 
 function cacheWorldData(key: string, data: WorldTileData): void {
@@ -171,6 +179,10 @@ function heightAt(tile: Tile, biomeProfile: BiomeProfile): number {
   const value = contrastHeight(biomeProfile.height.value(tile));
 
   return terrainHeight.min + Math.round(clamp(value) * range);
+}
+
+function groundHeightAt(tile: Tile): number {
+  return heightAt(tile, biomes[classifyBiome(tile)]);
 }
 
 function contrastHeight(value: number): number {
