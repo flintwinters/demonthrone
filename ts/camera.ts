@@ -3,9 +3,9 @@ import {
   cameraDistance,
   cameraElevation,
   cameraElevationLimits,
+  minimumZoom,
   terrainHeight,
   worldPixelsPerUnit,
-  zoomLimits,
 } from "./constants.js";
 import type { ScreenPoint, Tile, TileHeight, ViewportSize } from "./types.js";
 
@@ -101,7 +101,7 @@ export function panBy(canvas: HTMLCanvasElement, dx: number, dy: number): void {
 }
 
 export function zoomAt(canvas: HTMLCanvasElement, screenX: number, screenY: number, nextZoom: number): void {
-  const zoom = clamp(nextZoom, zoomLimits.min, zoomLimits.max);
+  const zoom = Math.max(nextZoom, minimumZoom);
   const before = worldPointAtHeight(canvas, screenX, screenY, 0);
 
   view.zoom = zoom;

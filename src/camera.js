@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { cameraDistance, cameraElevation, cameraElevationLimits, terrainHeight, worldPixelsPerUnit, zoomLimits, } from "./constants.js";
+import { cameraDistance, cameraElevation, cameraElevationLimits, minimumZoom, terrainHeight, worldPixelsPerUnit, } from "./constants.js";
 export const view = {
     targetX: 6.5,
     targetY: 6.5,
@@ -64,7 +64,7 @@ export function panBy(canvas, dx, dy) {
     view.targetY += after.y - before.y;
 }
 export function zoomAt(canvas, screenX, screenY, nextZoom) {
-    const zoom = clamp(nextZoom, zoomLimits.min, zoomLimits.max);
+    const zoom = Math.max(nextZoom, minimumZoom);
     const before = worldPointAtHeight(canvas, screenX, screenY, 0);
     view.zoom = zoom;
     anchorView(canvas, screenX, screenY, before);
