@@ -32,7 +32,7 @@ export function canPushTo(
 
   const destination = pushDestination(unit, pushable);
   return !isBlocked(destination)
-    && tileHeight(destination) - tileHeight(pushable) <= maxUpwardPushHeight;
+    && isValidPushHeight(tileHeight(pushable), tileHeight(destination));
 }
 
 export function planPush(unit: Unit, tile: Tile): void {
@@ -75,4 +75,10 @@ function pushDestination(unit: Tile, pushable: Tile): Tile {
     x: pushable.x - unit.x,
     y: pushable.y - unit.y,
   });
+}
+
+function isValidPushHeight(current: number, destination: number): boolean {
+  const heightChange = destination - current;
+
+  return heightChange >= 0 && heightChange <= maxUpwardPushHeight;
 }

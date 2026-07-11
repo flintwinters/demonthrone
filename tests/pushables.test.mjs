@@ -32,6 +32,12 @@ test("a blocked crate destination prevents a push", () => {
   assert.equal(canPushTo(unit, { x: 5, y: 8 }, blocksDestination, flatHeight), false);
 });
 
+test("a crate cannot be pushed downhill", () => {
+  const downhillHeight = (tile) => tile.y === 8 ? 1 : 0;
+
+  assert.equal(canPushTo(unit, { x: 5, y: 8 }, () => false, downhillHeight), false);
+});
+
 test("planned pushes can be cleared or committed", () => {
   const crate = pushables[0];
 
