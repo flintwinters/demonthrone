@@ -1,5 +1,7 @@
 import { colors } from "./constants.js";
 import { TeammateTemplate } from "./domain.js";
+import { sameTile } from "./grid.js";
+import { clearPlannedPush } from "./pushables.js";
 const teammateStats = {
     sight: 50,
     movement: 3,
@@ -17,6 +19,9 @@ export const selection = {
 };
 export function selectedUnit() {
     return units.find((unit) => unit.id === selection.unitId) ?? null;
+}
+export function clearUnitSelection() {
+    selection.unitId = null;
 }
 export function clickBoardTile(tile, canTargetTile, onTarget) {
     const unit = unitAt(tile);
@@ -44,6 +49,11 @@ export function syncUnitSelection() {
 }
 function assignSelectedTarget(tile, canTargetTile, onTarget) {
     const unit = selectedUnit();
+    if (unit?.target && sameTile(unit.target, tile)) {
+        unit.target = null;
+        clearPlannedPush(unit.id);
+        return null;
+    }
     if (unit && canTargetTile(tile, unit)) {
         onTarget(unit, tile);
         unit.target = { x: tile.x, y: tile.y };

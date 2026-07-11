@@ -14,6 +14,13 @@ export function spendAction(unit: Unit): void {
   spentUnitIds.add(unit.id);
 }
 
+export function cancelAction(unit: Unit): void {
+  unit.target = null;
+  unit.attackTargetId = null;
+  clearPlannedPush(unit.id);
+  spentUnitIds.delete(unit.id);
+}
+
 export function resetActions(): void {
   spentUnitIds.clear();
 }

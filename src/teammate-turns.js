@@ -9,6 +9,12 @@ export function spendAction(unit) {
     clearPlannedPush(unit.id);
     spentUnitIds.add(unit.id);
 }
+export function cancelAction(unit) {
+    unit.target = null;
+    unit.attackTargetId = null;
+    clearPlannedPush(unit.id);
+    spentUnitIds.delete(unit.id);
+}
 export function resetActions() {
     spentUnitIds.clear();
 }

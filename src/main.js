@@ -14,8 +14,8 @@ import { pickPieceTile } from "./piece-picker.js";
 import { canPushTo, clearPlannedPush, commitPlannedPushes, isPushableTile, planPush, pushables } from "./pushables.js";
 import { drawGrid } from "./renderer.js";
 import { connectRotationControls } from "./rotation-controls.js";
-import { selectedEntityStatus, selectVisibleEntityTile } from "./selection-status.js";
-import { movementCost, tileHeight } from "./world.js";
+import { isInspectableTerrain, selectedObjectStatus, selectVisibleEntityTile } from "./selection-status.js";
+import { movementCost, tileHeight, tileTerrain } from "./world.js";
 import { connectTurnControl } from "./turn-control.js";
 import { canTakeAction, resetActions } from "./teammate-turns.js";
 import { clickBoardTile, commitPlannedMoves, selectedUnit, syncUnitSelection, units, } from "./units.js";
@@ -32,7 +32,7 @@ const enchantmentSelection = new EnchantmentSelection();
 function draw() {
     drawGrid(canvas, boardState(selectedTile, hoveredTile, enemies, tombstones, canInteractionTargetTile, canSelectedUnitAttackTile, enchantmentSelection.source()?.id ?? null));
     goButton.hidden = units.length === 0;
-    selectionStatus.value = selectedEntityStatus(selectedUnit(), enchantmentSelection.source(), selectedTile, [...units, ...enemies, ...pushables]);
+    selectionStatus.value = selectedObjectStatus(selectedUnit(), enchantmentSelection.source(), selectedTile, [...units, ...enemies, ...pushables], (tile) => tileTerrain(tile).kind);
 }
 function resize() {
     const pixelRatio = devicePixelRatio();
@@ -56,7 +56,7 @@ function selectTile(tile) {
         draw();
         return;
     }
-    selectedTile = selectVisibleEntityTile(tile, units, [...units, ...enemies, ...pushables], (candidate) => canSeeTile(candidate, enemies), enrichTile, (candidate) => clickBoardTile(candidate, canMoveToTile, assignMoveTarget));
+    selectedTile = selectVisibleEntityTile(tile, units, [...units, ...enemies, ...pushables], (candidate) => canSeeTile(candidate, enemies), enrichTile, (candidate) => clickBoardTile(candidate, canMoveToTile, assignMoveTarget), (candidate) => isInspectableTerrain(tileTerrain(candidate).kind));
     draw();
 }
 function handleEnchantmentClick(tile) {

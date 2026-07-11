@@ -1,5 +1,6 @@
 import { boardState, canSeeTile, canUnitSee, enrichTile } from "./board-state.js";
 import { devicePixelRatio, gridFromScreen } from "./camera.js";
+import { connectCancelInput } from "./cancel-input.js";
 import { resolveAttacks, tryPlanAttack } from "./combat.js";
 import { attackUnits, moveEnemies } from "./enemies.js";
 import { materializeEntities } from "./entity-generation.js";
@@ -14,18 +15,19 @@ import { pickPieceTile } from "./piece-picker.js";
 import { canPushTo, clearPlannedPush, commitPlannedPushes, isPushableTile, planPush, pushables } from "./pushables.js";
 import { drawGrid } from "./renderer.js";
 import { connectRotationControls } from "./rotation-controls.js";
-import { selectedEntityStatus, selectVisibleEntityTile } from "./selection-status.js";
-import { movementCost, tileHeight } from "./world.js";
+import { isInspectableTerrain, selectedObjectStatus, selectVisibleEntityTile } from "./selection-status.js";
+import { movementCost, tileHeight, tileTerrain } from "./world.js";
 import { connectTurnControl } from "./turn-control.js";
-import { canTakeAction, resetActions } from "./teammate-turns.js";
+import { canTakeAction, cancelAction, resetActions } from "./teammate-turns.js";
 import {
+  clearUnitSelection,
   clickBoardTile,
   commitPlannedMoves,
   selectedUnit,
   syncUnitSelection,
   units,
 } from "./units.js";
-import type { Enemy, HeightTile, ScreenPoint, Tile, Unit } from "./types.js";
+import type { DamageableEntity, Enemy, HeightTile, ScreenPoint, Tile, Unit } from "./types.js";
 
 const canvas = requiredElement<HTMLCanvasElement>("#grid");
 const goButton = requiredElement<HTMLButtonElement>("#go");
@@ -43,8 +45,9 @@ function draw(): void {
     enchantmentSelection.source()?.id ?? null,
   ));
   goButton.hidden = units.length === 0;
-  selectionStatus.value = selectedEntityStatus(
+  selectionStatus.value = selectedObjectStatus(
     selectedUnit(), enchantmentSelection.source(), selectedTile, [...units, ...enemies, ...pushables],
+    (tile) => tileTerrain(tile).kind,
   );
 }
 
@@ -68,7 +71,7 @@ function selectTile(tile: Tile): void {
 
   const unit = selectedUnit();
   const attackTarget = tryPlanAttack(
-    tile, unit, enemies, (candidate) => Boolean(unit && canUnitSee(unit, candidate, enemies)),
+    tile, unit, attackTargets(), (candidate) => Boolean(unit && canUnitSee(unit, candidate, enemies)),
   );
 
   if (attackTarget) {
@@ -84,24 +87,30 @@ function selectTile(tile: Tile): void {
     (candidate) => canSeeTile(candidate, enemies),
     enrichTile,
     (candidate) => clickBoardTile(candidate, canMoveToTile, assignMoveTarget),
+    (candidate) => isInspectableTerrain(tileTerrain(candidate).kind),
   );
   draw();
 }
 
 function handleEnchantmentClick(tile: Tile): boolean {
-  if (enchantmentSelection.source()) {
+  const source = enchantmentSelection.source();
+
+  if (source && (sameTile(source, tile) || enchantmentSelection.canBindTo(tile, units))) {
     selectedTile = enchantmentSelection.resolve(tile, units) ? null : selectedTile;
     return true;
   }
+
+  enchantmentSelection.clear();
 
   if (!enchantmentSelection.begin(tile)) {
     return false;
   }
   const unit = selectedUnit();
-  if (unit && canMoveToTile(tile, unit)) {
+  if (unit && (canMoveToTile(tile, unit) || canAttackTargetTile(tile, unit))) {
     enchantmentSelection.clear();
     return false;
   }
+  clearUnitSelection();
   selectedTile = enrichTile(tile);
   return true;
 }
@@ -138,10 +147,20 @@ function canInteractionTargetTile(tile: Tile): boolean {
 function canSelectedUnitAttackTile(tile: Tile): boolean {
   const unit = selectedUnit();
 
-  return Boolean(unit
-    && canTakeAction(unit)
-    && canUnitSee(unit, tile, enemies)
-    && l1Distance(unit, tile) <= unit.attackRange);
+  return Boolean(unit && canAttackTargetTile(tile, unit));
+}
+
+function canAttackTargetTile(tile: Tile, unit: Unit): boolean {
+  const target = attackTargets().find((candidate) => sameTile(candidate, tile));
+
+  return Boolean(target
+    && (canTakeAction(unit) || unit.attackTargetId === target.id)
+    && canUnitSee(unit, target, enemies)
+    && l1Distance(unit, target) <= unit.attackRange);
+}
+
+function attackTargets(): DamageableEntity[] {
+  return [...enemies, ...pushables];
 }
 
 function canMoveToTile(tile: Tile, unit: Unit): boolean {
@@ -190,7 +209,7 @@ function go(): void {
   commitPlannedPushes();
 
   followPositionHistory(units, previousPositions);
-  tombstones.push(...resolveAttacks(units, enemies));
+  tombstones.push(...resolveAttacks(units, enemies, pushables));
   tombstones.push(...attackUnits(units, enemies).map(({ x, y }) => ({ x, y })));
   materializeEntities(units, enemies);
   moveEnemies(enemies, units, isBoardObstacle);
@@ -204,6 +223,7 @@ function go(): void {
 }
 
 connectInput(canvas, selectTile, hoverTile, draw, tileHeight, pickSelectableTile);
+connectCancelInput(cancelInteraction);
 connectRotationControls(
   canvas,
   { left: rotateLeftButton, right: rotateRightButton },
@@ -214,3 +234,15 @@ window.addEventListener("resize", resize);
 materializeEntities(units, enemies);
 moveEnemies(enemies, units, isBoardObstacle);
 resize();
+
+function cancelInteraction(): void {
+  const unit = selectedUnit();
+
+  enchantmentSelection.clear();
+  if (unit) {
+    cancelAction(unit);
+    clearUnitSelection();
+  }
+  selectedTile = null;
+  draw();
+}

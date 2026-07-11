@@ -1,5 +1,8 @@
 import { colors } from "./constants.js";
 import { TeammateTemplate } from "./domain.js";
+import { sameTile } from "./grid.js";
+import { clearPlannedPush } from "./pushables.js";
+import { cancelAction } from "./teammate-turns.js";
 import type { HeightTile, Tile, Unit } from "./types.js";
 
 const teammateStats = {
@@ -24,6 +27,10 @@ export function selectedUnit(): Unit | null {
   return units.find((unit) => unit.id === selection.unitId) ?? null;
 }
 
+export function clearUnitSelection(): void {
+  selection.unitId = null;
+}
+
 export function clickBoardTile(
   tile: HeightTile,
   canTargetTile: (tile: Tile, unit: Unit) => boolean,
@@ -32,6 +39,9 @@ export function clickBoardTile(
   const unit = unitAt(tile);
 
   if (unit) {
+    if (selection.unitId === unit.id) {
+      cancelAction(unit);
+    }
     selection.unitId = selection.unitId === unit.id ? null : unit.id;
     return selection.unitId ? tile : null;
   }
@@ -65,6 +75,12 @@ function assignSelectedTarget(
   onTarget: (unit: Unit, tile: Tile) => void,
 ): HeightTile | null {
   const unit = selectedUnit();
+
+  if (unit?.target && sameTile(unit.target, tile)) {
+    unit.target = null;
+    clearPlannedPush(unit.id);
+    return null;
+  }
 
   if (unit && canTargetTile(tile, unit)) {
     onTarget(unit, tile);

@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   entityStatus,
+  isInspectableTerrain,
   selectedEntityAt,
   selectedEntityStatus,
+  selectedObjectStatus,
   selectVisibleEntityTile,
 } from "../src/selection-status.js";
 
@@ -41,4 +43,23 @@ test("visible non-unit entities can be selected for inspection", () => {
     { x: 8, y: 6, height: 2 },
   );
   assert.equal(selectVisibleEntityTile({ x: 8, y: 6 }, [], [enemy], () => false, enrich, () => null), null);
+});
+
+test("terrain objects have concise user-facing inspection text", () => {
+  const kindAt = () => "brush";
+
+  assert.equal(selectedObjectStatus(null, null, { x: 3, y: 4 }, [], kindAt), "foliage");
+  assert.equal(isInspectableTerrain("boulder"), true);
+  assert.equal(isInspectableTerrain("floor"), false);
+});
+
+test("visible terrain objects can be selected for inspection", () => {
+  const enrich = (tile) => ({ ...tile, height: 2 });
+
+  assert.deepEqual(
+    selectVisibleEntityTile(
+      { x: 3, y: 4 }, [], [], () => true, enrich, () => null, () => true,
+    ),
+    { x: 3, y: 4, height: 2 },
+  );
 });
