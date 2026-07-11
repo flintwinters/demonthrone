@@ -14,7 +14,8 @@ export const edgeMaterial = new THREE.LineBasicMaterial({
 
 export const selectedOutlineMaterial = new THREE.LineBasicMaterial({
   color: colors.selectedTileOutline,
-  transparent: false,
+  transparent: true,
+  opacity: 0.95,
   depthTest: false,
   depthWrite: false,
 });

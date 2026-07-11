@@ -1,7 +1,7 @@
 import { colors } from "./constants.js";
 export const selectionOutlineConfig = {
-    edgeInset: 0.06,
-    zLift: 0.006,
+    edgeInset: 0,
+    zLift: 0.001,
 };
 export const parabolicSelectionLineConfig = {
     centerOffset: 0.5,

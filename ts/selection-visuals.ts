@@ -3,8 +3,8 @@ import type { EnchantmentSelection } from "./enchantment-selection.js";
 import type { Enemy, HeightTile, Pushable, SelectionArc, Tile, Unit } from "./types.js";
 
 export const selectionOutlineConfig = {
-  edgeInset: 0.06,
-  zLift: 0.006,
+  edgeInset: 0,
+  zLift: 0.001,
 };
 
 export const parabolicSelectionLineConfig = {

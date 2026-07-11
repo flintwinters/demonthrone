@@ -2,11 +2,11 @@ import * as THREE from "three";
 import { configureViewCamera, createViewCamera, devicePixelRatio } from "./camera.js";
 import { enemyObjects, unitObjects } from "./character-render.js";
 import { colors, terrainHeight } from "./constants.js";
-import { lineMaterial, material } from "./render-materials.js";
+import { material } from "./render-materials.js";
+import { addSelectionVisuals } from "./selection-render.js";
 import { pushableMeshes } from "./pushable-render.js";
 import { terrainLayer, terrainSignature } from "./terrain-layer.js";
-import { parabolicSelectionLineConfig } from "./selection-visuals.js";
-import type { BoardState, RenderPushable, RenderTombstone, SelectionArc, Tile } from "./types.js";
+import type { BoardState, RenderPushable, RenderTombstone, Tile } from "./types.js";
 
 type RenderState = {
   renderer: THREE.WebGLRenderer;
@@ -40,7 +40,7 @@ export function drawGrid(canvas: HTMLCanvasElement, boardState: BoardState): voi
   addPushables(renderState, boardState.pushables);
   renderState.dynamicRoot.add(...boardState.enemies.flatMap(enemyObjects));
   renderState.dynamicRoot.add(...boardState.units.flatMap(unitObjects));
-  addSelectionLines(renderState, boardState.selectionLines);
+  addSelectionVisuals(renderState.dynamicRoot, boardState);
   renderState.renderer.render(renderState.scene, renderState.camera);
 }
 
@@ -111,67 +111,11 @@ function addTombstones(renderState: RenderState, tombstones: RenderTombstone[]):
   }
 }
 
-function addSelectionLines(renderState: RenderState, selectionLines: readonly SelectionArc[]): void {
-  for (const arc of selectionLines) {
-    renderState.dynamicRoot.add(selectionLineMesh(arc));
-  }
-}
-
 function tombstoneMesh(tombstone: RenderTombstone): THREE.Mesh {
   const mesh = new THREE.Mesh(tombstoneGeometry, material(colors.tombstone));
 
   mesh.position.set(tombstone.x + 0.5, tombstone.y + 0.5, visualHeight(tombstone.height) + 0.16);
   return mesh;
-}
-
-function selectionLineMesh(arc: SelectionArc): THREE.LineSegments {
-  return new THREE.LineSegments(selectionLineGeometry(arc), lineMaterial(arc.color));
-}
-
-function selectionLineGeometry(arc: SelectionArc): THREE.BufferGeometry {
-  const geometry = new THREE.BufferGeometry();
-  const positions: number[] = [];
-  const segments = parabolicSelectionLineConfig.segmentCount;
-  const startHeight = visualHeight(arc.start.height) + parabolicSelectionLineConfig.endpointLift;
-  const endHeight = visualHeight(arc.end.height) + parabolicSelectionLineConfig.endpointLift;
-  const distance = Math.hypot(arc.start.x - arc.end.x, arc.start.y - arc.end.y);
-  const peak = parabolicSelectionLineConfig.basePeakHeight + distance * parabolicSelectionLineConfig.distanceScale;
-
-  for (let segment = 0; segment < segments; segment += 1) {
-    const startT = segment / segments;
-    const endT = (segment + 1) / segments;
-
-    const start = arcPoint(arc, startT, startHeight, endHeight, peak);
-    const finish = arcPoint(arc, endT, startHeight, endHeight, peak);
-
-    positions.push(
-      start.x,
-      start.y,
-      start.z,
-      finish.x,
-      finish.y,
-      finish.z,
-    );
-  }
-
-  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  return geometry;
-}
-
-function arcPoint(
-  arc: SelectionArc,
-  t: number,
-  startHeight: number,
-  endHeight: number,
-  peak: number,
-): THREE.Vector3 {
-  const centerOffset = parabolicSelectionLineConfig.centerOffset;
-  const x = arc.start.x + centerOffset + (arc.end.x + centerOffset - (arc.start.x + centerOffset)) * t;
-  const y = arc.start.y + centerOffset + (arc.end.y + centerOffset - (arc.start.y + centerOffset)) * t;
-  const baseHeight = startHeight + (endHeight - startHeight) * t;
-  const arcHeight = parabolicSelectionLineConfig.parabolaPeakScale * t * (1 - t) * peak;
-
-  return new THREE.Vector3(x, y, baseHeight + arcHeight);
 }
 
 function directionalLight(): THREE.DirectionalLight {

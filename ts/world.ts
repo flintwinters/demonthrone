@@ -20,7 +20,7 @@ const basinField = new BasinField(
   basinConfig.radius,
   basinConfig.depth,
   groundHeightAt,
-  (tile) => layers.water.value(tile),
+  (tile) => biomeAt(tile).water.value(tile),
 );
 
 type WorldTileData = {
@@ -123,12 +123,12 @@ function terrainFeatures(
   waterSurface: number | null,
 ): { isWater: boolean; isIce: boolean; isBoulder: boolean; isBrush: boolean } {
   if (waterSurface !== null) {
-    const isIce = layers.ice.value(tile) > basinConfig.iceThreshold;
+    const isIce = biomeProfile.ice.contains(tile);
 
     return { isWater: !isIce, isIce, isBoulder: false, isBrush: false };
   }
 
-  if (layers.boulder.value(tile) > biomeProfile.boulderThreshold) {
+  if (biomeProfile.boulder.contains(tile)) {
     return { isWater: false, isIce: false, isBoulder: true, isBrush: false };
   }
 
@@ -136,12 +136,14 @@ function terrainFeatures(
     isWater: false,
     isIce: false,
     isBoulder: false,
-    isBrush: layers.brush.value(tile) > biomeProfile.brushThreshold,
+    isBrush: biomeProfile.brush.contains(tile),
   };
 }
 
 function isHydrologicallyWet(tile: Tile): boolean {
-  return layers.water.value(tile) > biomes[classifyBiome(tile)].waterThreshold;
+  const biome = biomeAt(tile);
+
+  return biome.water.contains(tile);
 }
 
 function cacheWorldData(key: string, data: WorldTileData): void {
@@ -191,7 +193,11 @@ function heightAt(tile: Tile, biomeProfile: BiomeProfile): number {
 }
 
 function groundHeightAt(tile: Tile): number {
-  return heightAt(tile, biomes[classifyBiome(tile)]);
+  return heightAt(tile, biomeAt(tile));
+}
+
+function biomeAt(tile: Tile): BiomeProfile {
+  return biomes[classifyBiome(tile)];
 }
 
 function contrastHeight(value: number): number {

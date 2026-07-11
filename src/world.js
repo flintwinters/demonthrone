@@ -3,7 +3,7 @@ import { tileKey } from "./grid.js";
 import { BasinField } from "./hydrology.js";
 import { biomes, biomeRules, biomeClassification, basinConfig, layers, safeZones, terrainTraits, worldDataCacheLimit, } from "./world-config.js";
 const worldDataCache = new Map();
-const basinField = new BasinField(basinConfig.cellSize, basinConfig.radius, basinConfig.depth, groundHeightAt, (tile) => layers.water.value(tile));
+const basinField = new BasinField(basinConfig.cellSize, basinConfig.radius, basinConfig.depth, groundHeightAt, (tile) => biomeAt(tile).water.value(tile));
 export function tileTerrain(tile) {
     return { ...worldData(tile).terrain };
 }
@@ -72,21 +72,22 @@ function createWorldData(tile) {
 }
 function terrainFeatures(tile, biomeProfile, waterSurface) {
     if (waterSurface !== null) {
-        const isIce = layers.ice.value(tile) > basinConfig.iceThreshold;
+        const isIce = biomeProfile.ice.contains(tile);
         return { isWater: !isIce, isIce, isBoulder: false, isBrush: false };
     }
-    if (layers.boulder.value(tile) > biomeProfile.boulderThreshold) {
+    if (biomeProfile.boulder.contains(tile)) {
         return { isWater: false, isIce: false, isBoulder: true, isBrush: false };
     }
     return {
         isWater: false,
         isIce: false,
         isBoulder: false,
-        isBrush: layers.brush.value(tile) > biomeProfile.brushThreshold,
+        isBrush: biomeProfile.brush.contains(tile),
     };
 }
 function isHydrologicallyWet(tile) {
-    return layers.water.value(tile) > biomes[classifyBiome(tile)].waterThreshold;
+    const biome = biomeAt(tile);
+    return biome.water.contains(tile);
 }
 function cacheWorldData(key, data) {
     if (worldDataCache.size >= worldDataCacheLimit) {
@@ -124,7 +125,10 @@ function heightAt(tile, biomeProfile) {
     return terrainHeight.min + Math.round(clamp(value) * range);
 }
 function groundHeightAt(tile) {
-    return heightAt(tile, biomes[classifyBiome(tile)]);
+    return heightAt(tile, biomeAt(tile));
+}
+function biomeAt(tile) {
+    return biomes[classifyBiome(tile)];
 }
 function contrastHeight(value) {
     return 0.5 + (value - 0.5) * terrainHeight.contrast;

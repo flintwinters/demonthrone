@@ -5,61 +5,13 @@ import { terrainBatchSurface } from "./terrain-batch.js";
 import { tileStyle } from "./terrain-style.js";
 import { boulders, brushPatch } from "./terrain-props.js";
 import { tileTerrain } from "./world.js";
-import { selectionOutlineConfig } from "./selection-visuals.js";
-import { selectedOutlineMaterial } from "./render-materials.js";
 export function terrainLayer(boardState, tiles) {
     const group = new THREE.Group();
     const levels = tileLevels(boardState, tiles);
     const heights = tileHeights(levels, tiles);
     addTerrainSurfaces(group, boardState, tiles, levels, heights);
-    addSelectionOutlines(group, boardState, heights);
     addTerrainProps(group, boardState, tiles);
     return group;
-}
-function addSelectionOutlines(group, boardState, heights) {
-    const selectedTiles = selectedOutlineTiles(boardState, heights);
-    if (selectedTiles.length === 0) {
-        return;
-    }
-    const selectedGeometry = selectionOutlineGeometry(selectedTiles, heights);
-    group.add(new THREE.LineSegments(selectedGeometry, selectedOutlineMaterial));
-}
-function selectedOutlineTiles(boardState, heights) {
-    const keys = new Set();
-    const selectedTiles = [];
-    const selectedUnit = boardState.units.find((unit) => unit.id === boardState.selectedUnitId);
-    appendOutlineTile(boardState.selectedTile, heights, keys, selectedTiles);
-    appendOutlineTile(selectedUnit ?? null, heights, keys, selectedTiles);
-    return selectedTiles;
-}
-function appendOutlineTile(tile, heights, keys, selectedTiles) {
-    if (!tile)
-        return;
-    const key = tileKey(tile);
-    if (keys.has(key) || !heights.has(key))
-        return;
-    keys.add(key);
-    selectedTiles.push(tile);
-}
-function selectionOutlineGeometry(selectedTiles, heights) {
-    const geometry = new THREE.BufferGeometry();
-    const positions = [];
-    const outlineInset = selectionOutlineConfig.edgeInset;
-    const outlineZOffset = selectionOutlineConfig.zLift;
-    for (const tile of selectedTiles) {
-        const height = heights.get(tileKey(tile));
-        if (height === undefined) {
-            continue;
-        }
-        const z = height + outlineZOffset;
-        const x0 = tile.x - outlineInset;
-        const y0 = tile.y - outlineInset;
-        const x1 = tile.x + 1 + outlineInset;
-        const y1 = tile.y + 1 + outlineInset;
-        positions.push(x0, y0, z, x1, y0, z, x1, y0, z, x1, y1, z, x1, y1, z, x0, y1, z, x0, y1, z, x0, y0, z);
-    }
-    geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-    return geometry;
 }
 export function terrainSignature(tiles, boardState) {
     return [
