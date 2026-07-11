@@ -11,11 +11,12 @@ export function pushableMeshes(pushable) {
     return meshes;
 }
 function pushableMesh(pushable, tile, opacity) {
-    const mesh = new THREE.Mesh(geometry, crateMaterial(opacity));
+    const mesh = new THREE.Mesh(geometry, crateMaterial(pushable, opacity));
     mesh.position.set(tile.x + 0.5, tile.y + 0.5, tile.height * terrainHeight.visualScale + 0.28);
     mesh.rotation.z = (pushable.id.length % 4) * Math.PI / 16;
     return mesh;
 }
-function crateMaterial(opacity) {
-    return opacity < 1 ? transparentMaterial(colors.pushable, opacity) : material(colors.pushable);
+function crateMaterial(pushable, opacity) {
+    const color = pushable.enchanterUnitId ? colors.enchantedPushable : colors.pushable;
+    return opacity < 1 ? transparentMaterial(color, opacity) : material(color);
 }

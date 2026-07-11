@@ -39,6 +39,7 @@ export type Pushable = Tile & {
   id: string;
   target: Tile | null;
   pushedByUnitId: string | null;
+  enchanterUnitId: string | null;
 };
 
 export type RenderPiece = Tile & {

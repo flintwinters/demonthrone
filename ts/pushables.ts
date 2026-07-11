@@ -54,20 +54,25 @@ export function clearPlannedPush(unitId: string): void {
   }
 }
 
-export function commitPlannedPushes(): void {
+export function commitPlannedPushes(): Set<string> {
+  const moved = new Set<string>();
+
   for (const pushable of pushables) {
     if (pushable.target) {
       pushable.x = pushable.target.x;
       pushable.y = pushable.target.y;
+      moved.add(pushable.id);
     }
 
     pushable.target = null;
     pushable.pushedByUnitId = null;
   }
+
+  return moved;
 }
 
 function pushable(id: string, tile: Tile): Pushable {
-  return { id, ...tile, target: null, pushedByUnitId: null };
+  return { id, ...tile, target: null, pushedByUnitId: null, enchanterUnitId: null };
 }
 
 function pushDestination(unit: Tile, pushable: Tile): Tile {

@@ -2,6 +2,8 @@ import { boardState, canSeeTile, enrichTile } from "./board-state.js";
 import { devicePixelRatio, gridFromScreen, screenFromGrid, view } from "./camera.js";
 import { terrainHeight } from "./constants.js";
 import { attackUnits, moveEnemies, randomEnemies } from "./enemies.js";
+import { chaseEnchanters } from "./enchantment.js";
+import { connectEnchantmentControl } from "./enchantment-control.js";
 import { l1Distance, sameTile } from "./grid.js";
 import { connectInput } from "./input.js";
 import { canReachTile } from "./movement.js";
@@ -10,6 +12,7 @@ import { canPushTo, clearPlannedPush, commitPlannedPushes, isPushableTile, planP
 import { drawGrid } from "./renderer.js";
 import { connectRotationControls } from "./rotation-controls.js";
 import { tileHeight } from "./world.js";
+import { connectTurnControl } from "./turn-control.js";
 import { clickBoardTile, commitPlannedMoves, selection, selectedUnit, units, } from "./units.js";
 const unitPickRadius = 30;
 const unitPickMinRadius = 18;
@@ -22,9 +25,12 @@ let selectedTile = null;
 let hoveredTile = null;
 const enemies = randomEnemies(units, isBoardObstacle);
 const tombstones = [];
+let focusedTile = null;
+const enchantmentControl = connectEnchantmentControl(requiredElement("#enchant"), () => focusedTile, selectedUnit, draw);
 function draw() {
     drawGrid(canvas, boardState(selectedTile, hoveredTile, enemies, tombstones, canSelectedUnitMoveTo));
-    syncGoButton();
+    goButton.hidden = units.length === 0;
+    enchantmentControl.sync();
 }
 function resize() {
     const pixelRatio = devicePixelRatio();
@@ -37,6 +43,7 @@ function resize() {
     draw();
 }
 function selectTile(tile) {
+    focusedTile = tile;
     selectedTile = tile && canSeeTile(tile, enemies)
         ? clickBoardTile(enrichTile(tile), canMoveToTile, assignMoveTarget)
         : null;
@@ -112,16 +119,14 @@ function pickRadius() {
 function visualHeight(height) {
     return height * terrainHeight.visualScale;
 }
-function syncGoButton() {
-    goButton.hidden = units.length === 0;
-}
 function go() {
     if (units.length === 0) {
         return;
     }
     tombstones.length = 0;
     commitPlannedMoves();
-    commitPlannedPushes();
+    const pushed = commitPlannedPushes();
+    chaseEnchanters(units, pushed, isMovementBlocked, tileHeight);
     moveEnemies(enemies, units, isBoardObstacle);
     tombstones.push(...attackUnits(units, enemies).map(unitTile));
     syncSelection();
@@ -139,16 +144,9 @@ function syncSelection() {
         selectedTile = null;
     }
 }
-function handleKeyDown(event) {
-    if (event.key === "Enter") {
-        event.preventDefault();
-        go();
-    }
-}
 connectInput(canvas, selectTile, hoverTile, draw, tileHeight, pickSelectableTile);
 connectRotationControls(canvas, { left: rotateLeftButton, right: rotateRightButton }, draw);
-goButton.addEventListener("click", go);
-window.addEventListener("keydown", handleKeyDown);
+connectTurnControl(goButton, go);
 window.addEventListener("resize", resize);
 resize();
 function requiredElement(selector) {

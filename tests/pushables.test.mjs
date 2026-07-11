@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { boardState } from "../src/board-state.js";
+import { chaseEnchanters, toggleEnchantment } from "../src/enchantment.js";
 import {
   canPushTo,
   clearPlannedPush,
@@ -64,4 +65,17 @@ test("crates outside teammate line of sight are not rendered", () => {
   assert.equal(isRendered, false);
   crate.x = original.x;
   crate.y = original.y;
+});
+
+test("enchantment toggles and makes a crate chase its teammate", () => {
+  const crate = pushables[0];
+
+  assert.equal(toggleEnchantment(crate, unit), true);
+  assert.equal(crate.enchanterUnitId, unit.id);
+  chaseEnchanters([unit], new Set([crate.id]), () => false, flatHeight);
+  assert.deepEqual({ x: crate.x, y: crate.y }, { x: 5, y: 9 });
+  chaseEnchanters([unit], new Set(), () => false, flatHeight);
+  assert.deepEqual({ x: crate.x, y: crate.y }, { x: 5, y: 8 });
+  assert.equal(toggleEnchantment(crate, unit), true);
+  assert.equal(crate.enchanterUnitId, null);
 });
