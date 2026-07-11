@@ -74,13 +74,21 @@ function inverseMagnitude(value: number): number {
 }
 
 function blocksRay(ray: Ray, segment: Segment, context: SightRayContext): boolean {
-  if (segment.start === 0 || segment.end === 1) return false;
+  if (isEndpointSegment(segment)) return false;
   const low = Math.min(rayZ(ray, segment.start), rayZ(ray, segment.end));
   const terrainTop = context.tileHeight(segment.tile);
 
   if (low <= terrainTop) return true;
-  if (context.isBoulderTile(segment.tile) && low <= terrainTop + context.boulderHeight) return true;
+  if (boulderBlocks(segment.tile, low, terrainTop, context)) return true;
   return (context.blockers.get(tileKey(segment.tile)) ?? []).some((blocker) => intersectsHeight(ray, segment, blocker));
+}
+
+function isEndpointSegment(segment: Segment): boolean {
+  return segment.start === 0 || segment.end === 1;
+}
+
+function boulderBlocks(tile: Tile, low: number, terrainTop: number, context: SightRayContext): boolean {
+  return context.isBoulderTile(tile) && low <= terrainTop + context.boulderHeight;
 }
 
 function intersectsHeight(ray: Ray, segment: Segment, blocker: SightBlocker): boolean {

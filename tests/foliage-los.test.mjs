@@ -21,12 +21,17 @@ test("foliage has a high biome-specific line-of-sight cost", () => {
 
   assert.equal(brushCost >= 4, true);
 
-  const start = { x: 0, y: 0 };
-  const end = { x: 5, y: 0 };
-  const flat = () => 0;
-  const unblocked = () => false;
-  const floorLine = lineSightCost(start, end, () => 1, flat, unblocked);
-  const brushLine = lineSightCost(start, end, () => brushCost, flat, unblocked);
+  const start = { x: 0.5, y: 0.5, z: 1 };
+  const end = { x: 5.5, y: 0.5, z: 1 };
+  const context = (cost) => ({
+    sightCost: () => cost,
+    tileHeight: () => 0,
+    isBoulderTile: () => false,
+    blockers: new Map(),
+    boulderHeight: 0.66,
+  });
+  const floorLine = lineSightCost(start, end, context(1));
+  const brushLine = lineSightCost(start, end, context(brushCost));
 
   assert.equal(brushLine > floorLine * 2, true);
 });

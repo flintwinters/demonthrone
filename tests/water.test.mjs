@@ -76,12 +76,17 @@ test("local water and ice bodies are flat over submerged basin ground", () => {
 });
 
 test("water greatly extends line-of-sight traversal distance", () => {
-  const start = { x: 0, y: 0 };
-  const end = { x: 100, y: 0 };
-  const height = () => 0;
-  const unblocked = () => false;
-  const normal = lineSightCost(start, end, () => 1, height, unblocked);
-  const acrossWater = lineSightCost(start, end, () => 0.1, height, unblocked);
+  const start = { x: 0.5, y: 0.5, z: 1 };
+  const end = { x: 100.5, y: 0.5, z: 1 };
+  const context = (cost) => ({
+    sightCost: () => cost,
+    tileHeight: () => 0,
+    isBoulderTile: () => false,
+    blockers: new Map(),
+    boulderHeight: 0.66,
+  });
+  const normal = lineSightCost(start, end, context(1));
+  const acrossWater = lineSightCost(start, end, context(0.1));
 
   assert.equal(acrossWater < normal / 5, true);
 });
