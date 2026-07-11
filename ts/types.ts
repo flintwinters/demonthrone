@@ -25,29 +25,44 @@ export type CharacterStats = {
   health: number;
 };
 
-export type Unit = Tile & CharacterStats & {
+export interface Entity extends Tile {
   id: string;
+  entityKind: "teammate" | "enemy" | "object";
+  entityType: string;
+}
+
+export interface DamageableEntity extends Entity {
+  health: number;
+}
+
+export interface Character extends DamageableEntity, CharacterStats {
   color: string;
+}
+
+export interface Teammate extends Character {
+  entityKind: "teammate";
   target: Tile | null;
   attackTargetId: string | null;
-};
+}
 
-export type Enemy = Tile & CharacterStats & {
-  id: string;
-  color: string;
-};
+export type Unit = Teammate;
 
-export type Pushable = Tile & {
-  id: string;
-  health: number;
+export interface Enemy extends Character {
+  entityKind: "enemy";
+}
+
+export interface WorldObject extends DamageableEntity {
+  entityKind: "object";
+}
+
+export interface Pushable extends WorldObject {
   target: Tile | null;
   pushedByUnitId: string | null;
   enchanterUnitId: string | null;
   followsId: string | null;
-};
+}
 
-export type RenderPiece = Tile & {
-  id: string;
+export type RenderPiece = Entity & {
   color: string;
   height: number;
 };

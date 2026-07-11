@@ -1,6 +1,17 @@
 import { l1Distance } from "./grid.js";
 import { perlinNoise2d } from "./noise.js";
-import type { BiomeKind, CharacterStats, Enemy, Terrain, TerrainKind, Tile, Unit } from "./types.js";
+import type {
+  BiomeKind,
+  Character,
+  CharacterStats,
+  Enemy,
+  Entity,
+  Pushable,
+  Terrain,
+  TerrainKind,
+  Tile,
+  Unit,
+} from "./types.js";
 
 export type NoiseLayerConfig = {
   scale: number;
@@ -81,26 +92,66 @@ export class SafeZone {
   }
 }
 
-export class CharacterTemplate {
-  constructor(private readonly stats: CharacterStats) {}
+export abstract class EntityTemplate<TEntity extends Entity> {
+  constructor(readonly entityType: string) {}
 
-  unit(id: string, tile: Tile, color: string): Unit {
+  abstract create(id: string, tile: Tile): TEntity;
+}
+
+abstract class CharacterTemplate<TEntity extends Character> extends EntityTemplate<TEntity> {
+  constructor(
+    entityType: string,
+    protected readonly stats: CharacterStats,
+    protected readonly color: string,
+  ) {
+    super(entityType);
+  }
+}
+
+export class TeammateTemplate extends CharacterTemplate<Unit> {
+  create(id: string, tile: Tile): Unit {
     return {
       ...tile,
       ...this.stats,
       id,
-      color,
+      entityKind: "teammate",
+      entityType: this.entityType,
+      color: this.color,
       target: null,
       attackTargetId: null,
     };
   }
+}
 
-  enemy(id: string, tile: Tile, color: string): Enemy {
+export class EnemyTemplate extends CharacterTemplate<Enemy> {
+  create(id: string, tile: Tile): Enemy {
     return {
       ...tile,
       ...this.stats,
       id,
-      color,
+      entityKind: "enemy",
+      entityType: this.entityType,
+      color: this.color,
+    };
+  }
+}
+
+export class PushableTemplate extends EntityTemplate<Pushable> {
+  constructor(entityType: string, private readonly health: number) {
+    super(entityType);
+  }
+
+  create(id: string, tile: Tile): Pushable {
+    return {
+      id,
+      ...tile,
+      entityKind: "object",
+      entityType: this.entityType,
+      health: this.health,
+      target: null,
+      pushedByUnitId: null,
+      enchanterUnitId: null,
+      followsId: null,
     };
   }
 }

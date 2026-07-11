@@ -1,9 +1,11 @@
 import { neighborTile, sameTile } from "./grid.js";
+import { PushableTemplate } from "./domain.js";
 const maxUpwardPushHeight = 2;
 const pushableHealth = 3;
+const crateTemplate = new PushableTemplate("crate", pushableHealth);
 export const pushables = [];
 export function createPushable(id, tile) {
-    return { id, ...tile, health: pushableHealth, target: null, pushedByUnitId: null, enchanterUnitId: null, followsId: null };
+    return crateTemplate.create(id, tile);
 }
 export function pushableAt(tile) {
     return pushables.find((pushable) => sameTile(pushable, tile)) ?? null;

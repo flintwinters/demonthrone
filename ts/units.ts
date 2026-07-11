@@ -1,17 +1,19 @@
 import { colors } from "./constants.js";
-import { CharacterTemplate } from "./domain.js";
+import { TeammateTemplate } from "./domain.js";
 import type { HeightTile, Tile, Unit } from "./types.js";
 
-const teammateTemplate = new CharacterTemplate({
+const teammateStats = {
   sight: 50,
   movement: 3,
   attackRange: 1,
   health: 1,
-});
+};
+const vanguardTemplate = new TeammateTemplate("vanguard", teammateStats, colors.unitOne);
+const wardenTemplate = new TeammateTemplate("warden", teammateStats, colors.unitTwo);
 
 export const units: Unit[] = [
-  teammateTemplate.unit("vanguard", { x: 5, y: 7 }, colors.unitOne),
-  teammateTemplate.unit("warden", { x: 8, y: 6 }, colors.unitTwo),
+  vanguardTemplate.create("vanguard", { x: 5, y: 7 }),
+  wardenTemplate.create("warden", { x: 8, y: 6 }),
 ];
 
 export const selection: { unitId: string | null } = {
