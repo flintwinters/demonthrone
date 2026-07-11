@@ -69,7 +69,7 @@ function collectProps(boardState, tiles) {
 function collectProp(props, boardState, tile) {
     const height = visualHeight(boardState.tileHeight(tile));
     const placement = { tile, height };
-    if (boardState.isObstacleTile(tile)) {
+    if (boardState.isBoulderTile(tile)) {
         props.boulders.push(placement);
     }
     if (boardState.isBrushTile(tile)) {

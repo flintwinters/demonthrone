@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { colors, terrainHeight } from "./constants.js";
 import { sameTile } from "./grid.js";
-import { tileBiome } from "./world.js";
+import { tileBiome, tileTerrain } from "./world.js";
 const biomeStyles = {
     cinder: {
         top: colors.cinderTile,
@@ -61,6 +61,9 @@ function movementTileStyle(tile, boardState, level) {
     return terrainStyle(top, colors.movementTileSideRight, level);
 }
 function biomeTerrainStyle(tile, level) {
+    if (tileTerrain(tile).kind === "water") {
+        return terrainStyle(colors.waterTile, colors.waterTileSide, level);
+    }
     const style = biomeStyles[tileBiome(tile)];
     return terrainStyle(style.top, style.side, level);
 }

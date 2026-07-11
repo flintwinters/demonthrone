@@ -47,6 +47,7 @@ export class BiomeProfile {
     readonly boulderThreshold: number,
     readonly brushThreshold: number,
     readonly brushSightCost: number,
+    readonly waterThreshold: number,
   ) {}
 }
 

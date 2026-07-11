@@ -39,12 +39,14 @@ export class BiomeProfile {
     boulderThreshold;
     brushThreshold;
     brushSightCost;
-    constructor(kind, height, boulderThreshold, brushThreshold, brushSightCost) {
+    waterThreshold;
+    constructor(kind, height, boulderThreshold, brushThreshold, brushSightCost, waterThreshold) {
         this.kind = kind;
         this.height = height;
         this.boulderThreshold = boulderThreshold;
         this.brushThreshold = brushThreshold;
         this.brushSightCost = brushSightCost;
+        this.waterThreshold = waterThreshold;
     }
 }
 export class TerrainType {

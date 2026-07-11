@@ -1,6 +1,6 @@
 import { isObstacleTile } from "./obstacles.js";
 import { pushables } from "./pushables.js";
-import { isBrushTile, sightCost, tileHeight } from "./world.js";
+import { isBoulderTile, isBrushTile, sightCost, tileHeight } from "./world.js";
 import { selection, units } from "./units.js";
 import { canUnitSeeTile, isVisibleTile, sightContext } from "./visibility.js";
 export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMovementTile, isAttackTile) {
@@ -13,6 +13,7 @@ export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMov
         tombstones: renderableTombstones(tombstones, enemies),
         pushables: renderablePushables(enemies),
         isObstacleTile,
+        isBoulderTile,
         isBrushTile,
         sightCost,
         selectedUnitId: selection.unitId,

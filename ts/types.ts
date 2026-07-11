@@ -4,7 +4,7 @@ export type Tile = {
 };
 
 export type BiomeKind = "cinder" | "fen" | "heath" | "ridge";
-export type TerrainKind = "floor" | "boulder" | "brush";
+export type TerrainKind = "floor" | "boulder" | "brush" | "water";
 
 export type Terrain = {
   kind: TerrainKind;
@@ -94,6 +94,7 @@ export type BoardState = {
   tombstones: RenderTombstone[];
   pushables: RenderPushable[];
   isObstacleTile: TilePredicate;
+  isBoulderTile: TilePredicate;
   isBrushTile: TilePredicate;
   sightCost: TileSightCost;
   selectedUnitId: string | null;

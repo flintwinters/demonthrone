@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { colors, terrainHeight } from "./constants.js";
 import { sameTile } from "./grid.js";
 import type { TerrainStyle } from "./terrain-mesh.js";
-import { tileBiome } from "./world.js";
+import { tileBiome, tileTerrain } from "./world.js";
 import type { BiomeKind, BoardState, RenderUnit, Tile } from "./types.js";
 
 type BiomeStyle = {
@@ -86,6 +86,10 @@ function movementTileStyle(tile: Tile, boardState: BoardState, level: number): T
 }
 
 function biomeTerrainStyle(tile: Tile, level: number): TerrainStyle {
+  if (tileTerrain(tile).kind === "water") {
+    return terrainStyle(colors.waterTile, colors.waterTileSide, level);
+  }
+
   const style = biomeStyles[tileBiome(tile)];
 
   return terrainStyle(style.top, style.side, level);
