@@ -26,7 +26,6 @@ export const mouseRotateSpeed = -0.008;
 export const mousePitchSpeed = -0.006;
 export const wheelDeltaLineMode = 1;
 
-export const minimumZoom = 0.5;
 export const rotationControlStep = Math.PI / 96;
 export const rotationControlInterval = 16;
 

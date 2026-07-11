@@ -3,7 +3,6 @@ import {
   cameraDistance,
   cameraElevation,
   cameraElevationLimits,
-  minimumZoom,
   terrainHeight,
   worldPixelsPerUnit,
 } from "./constants.js";
@@ -101,10 +100,13 @@ export function panBy(canvas: HTMLCanvasElement, dx: number, dy: number): void {
 }
 
 export function zoomAt(canvas: HTMLCanvasElement, screenX: number, screenY: number, nextZoom: number): void {
-  const zoom = Math.max(nextZoom, minimumZoom);
+  if (!Number.isFinite(nextZoom) || nextZoom <= 0) {
+    return;
+  }
+
   const before = worldPointAtHeight(canvas, screenX, screenY, 0);
 
-  view.zoom = zoom;
+  view.zoom = nextZoom;
   anchorView(canvas, screenX, screenY, before);
 }
 

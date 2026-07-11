@@ -12,8 +12,17 @@ test("zoom has no configured maximum", () => {
   assert.equal(view.zoom, 100);
 });
 
-test("zoom retains its minimum bound", () => {
-  zoomAt(canvas, 400, 300, 0.1);
+test("zoom out has no configured minimum", () => {
+  zoomAt(canvas, 400, 300, 0.000001);
 
-  assert.equal(view.zoom, 0.5);
+  assert.equal(view.zoom, 0.000001);
+});
+
+test("zoom rejects values outside the positive finite projection domain", () => {
+  zoomAt(canvas, 400, 300, 0.25);
+
+  for (const invalidZoom of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
+    zoomAt(canvas, 400, 300, invalidZoom);
+    assert.equal(view.zoom, 0.25);
+  }
 });
