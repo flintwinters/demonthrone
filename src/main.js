@@ -14,6 +14,7 @@ import { pickPieceTile } from "./piece-picker.js";
 import { canPushTo, clearPlannedPush, commitPlannedPushes, isPushableTile, planPush, pushables } from "./pushables.js";
 import { drawGrid } from "./renderer.js";
 import { connectRotationControls } from "./rotation-controls.js";
+import { selectedEntityStatus, selectVisibleEntityTile } from "./selection-status.js";
 import { movementCost, tileHeight } from "./world.js";
 import { connectTurnControl } from "./turn-control.js";
 import { canTakeAction, resetActions } from "./teammate-turns.js";
@@ -22,6 +23,7 @@ const canvas = requiredElement("#grid");
 const goButton = requiredElement("#go");
 const rotateLeftButton = requiredElement("#rotate-left");
 const rotateRightButton = requiredElement("#rotate-right");
+const selectionStatus = requiredElement("#selection-status");
 let selectedTile = null;
 let hoveredTile = null;
 const enemies = [];
@@ -30,6 +32,7 @@ const enchantmentSelection = new EnchantmentSelection();
 function draw() {
     drawGrid(canvas, boardState(selectedTile, hoveredTile, enemies, tombstones, canInteractionTargetTile, canSelectedUnitAttackTile, enchantmentSelection.source()?.id ?? null));
     goButton.hidden = units.length === 0;
+    selectionStatus.value = selectedEntityStatus(selectedUnit(), enchantmentSelection.source(), selectedTile, [...units, ...enemies, ...pushables]);
 }
 function resize() {
     const pixelRatio = devicePixelRatio();
@@ -53,9 +56,7 @@ function selectTile(tile) {
         draw();
         return;
     }
-    selectedTile = tile && canSeeTile(tile, enemies)
-        ? clickBoardTile(enrichTile(tile), canMoveToTile, assignMoveTarget)
-        : null;
+    selectedTile = selectVisibleEntityTile(tile, units, [...units, ...enemies, ...pushables], (candidate) => canSeeTile(candidate, enemies), enrichTile, (candidate) => clickBoardTile(candidate, canMoveToTile, assignMoveTarget));
     draw();
 }
 function handleEnchantmentClick(tile) {

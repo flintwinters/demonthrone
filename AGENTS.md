@@ -10,5 +10,6 @@
 - Verification gate: run `npm run check`; ESLint enforces cyclomatic complexity and file length limits.
 - Backend verification gate: run `python -m unittest discover`.
 - UI direction: dense high-contrast gruvbox dark theme, minimal labels, no animations or transitions.
+- The lower-left selection status contains only the selected entity's `entityType`, with no heading or supplemental statistics.
 - Use TypeScript as much as possible. Try not to hand-edit JavaScript.
 - Stop rm-ing __pycache__

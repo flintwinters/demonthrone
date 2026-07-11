@@ -76,11 +76,19 @@ canvas {
   outline-offset: 2px;
 }
 
+.selection-status {
+  position: fixed;
+  left: 14px;
+  bottom: 14px;
+  color: #ebdbb2;
+  font: 700 14px/1.2 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
 @media (any-pointer: coarse) {
   .rotate-controls {
     position: fixed;
     left: 10px;
-    bottom: 10px;
+    bottom: 38px;
     display: grid;
     grid-template-columns: repeat(2, 42px);
     gap: 8px;
