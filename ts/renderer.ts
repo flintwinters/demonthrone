@@ -90,7 +90,13 @@ function syncVisibleTiles(renderState: RenderState, boardState: BoardState): Til
     return renderState.visibleCache.tiles;
   }
 
-  const tiles = visibleTiles(boardState.units, boardState.sightBlockers, boardState.sightCost, boardState.tileHeight);
+  const tiles = visibleTiles(
+    boardState.units,
+    boardState.sightBlockers,
+    boardState.sightCost,
+    boardState.tileHeight,
+    boardState.isBoulderTile,
+  );
 
   renderState.visibleCache = { signature, tiles };
   return tiles;
@@ -98,13 +104,9 @@ function syncVisibleTiles(renderState: RenderState, boardState: BoardState): Til
 
 function visibilitySignature(boardState: BoardState): string {
   return [
-    tileListSignature(boardState.units),
-    tileListSignature(boardState.sightBlockers),
+    boardState.units.map((unit) => `${unit.x}:${unit.y}:${unit.sight}`).join(";"),
+    boardState.sightBlockers.map((blocker) => `${blocker.x}:${blocker.y}:${blocker.bottom}:${blocker.top}`).join(";"),
   ].join("|");
-}
-
-function tileListSignature(tiles: readonly Tile[]): string {
-  return tiles.map((tile) => `${tile.x}:${tile.y}`).join(";");
 }
 
 function configureRendererSize(renderer: THREE.WebGLRenderer, canvas: HTMLCanvasElement): void {

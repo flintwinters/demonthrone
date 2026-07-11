@@ -27,6 +27,14 @@ const biomeStyles = {
     top: colors.ridgeTile,
     side: colors.ridgeTileSide,
   },
+  bog: {
+    top: colors.bogTile,
+    side: colors.bogTileSide,
+  },
+  mesa: {
+    top: colors.mesaTile,
+    side: colors.mesaTileSide,
+  },
 } satisfies Record<BiomeKind, BiomeStyle>;
 
 export function tileStyle(tile: Tile, boardState: BoardState, level: number): TerrainStyle {

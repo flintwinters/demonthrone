@@ -2,8 +2,9 @@ import { isObstacleTile } from "./obstacles.js";
 import { pushables } from "./pushables.js";
 import { isBoulderTile, isBrushTile, sightCost, tileHeight } from "./world.js";
 import { selection, units } from "./units.js";
-import { canUnitSeeTile, isVisibleTile, sightContext } from "./visibility.js";
-import type { BoardState, Enemy, HeightTile, RenderEnemy, RenderPushable, RenderTombstone, RenderUnit, Tile, TilePredicate, Unit } from "./types.js";
+import { sightGeometry, terrainHeight } from "./constants.js";
+import { canUnitSeeEntity, isVisibleTile, sightContext } from "./visibility.js";
+import type { BoardState, DamageableEntity, Enemy, HeightTile, RenderEnemy, RenderPushable, RenderTombstone, RenderUnit, SightBlocker, Tile, TilePredicate, Unit } from "./types.js";
 
 export function boardState(
   selectedTile: HeightTile | null,
@@ -45,11 +46,13 @@ function renderablePushables(enemies: Enemy[], enchantmentSourceId: string | nul
 }
 
 export function canSeeTile(tile: Tile, enemies: Enemy[]): boolean {
-  return isVisibleTile(tile, units, sightBlockers(enemies), sightCost, tileHeight);
+  return isVisibleTile(tile, units, sightBlockers(enemies), sightCost, tileHeight, isBoulderTile);
 }
 
-export function canUnitSee(unit: Unit, tile: Tile, enemies: Enemy[]): boolean {
-  return canUnitSeeTile(unit, tile, sightContext(sightBlockers(enemies), sightCost, tileHeight));
+export function canUnitSee(unit: Unit, target: DamageableEntity, enemies: Enemy[]): boolean {
+  return canUnitSeeEntity(unit, target, sightContext(
+    sightBlockers(enemies), sightCost, tileHeight, isBoulderTile,
+  ));
 }
 
 export function enrichTile(tile: Tile): HeightTile {
@@ -85,6 +88,15 @@ function renderableTombstones(tombstones: Tile[], enemies: Enemy[]): RenderTombs
     }));
 }
 
-function sightBlockers(enemies: Enemy[]): Tile[] {
-  return [...units, ...enemies];
+function sightBlockers(enemies: Enemy[]): SightBlocker[] {
+  return [...units, ...enemies].map((character) => {
+    const ground = tileHeight(character) * terrainHeight.visualScale;
+
+    return {
+      x: character.x,
+      y: character.y,
+      bottom: ground + sightGeometry.characterBottom,
+      top: ground + sightGeometry.characterTop,
+    };
+  });
 }

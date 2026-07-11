@@ -3,7 +3,7 @@ export type Tile = {
   y: number;
 };
 
-export type BiomeKind = "cinder" | "fen" | "heath" | "ridge";
+export type BiomeKind = "cinder" | "fen" | "heath" | "ridge" | "bog" | "mesa";
 export type TerrainKind = "floor" | "boulder" | "brush" | "ice" | "water";
 
 export type Terrain = {
@@ -98,6 +98,7 @@ export type RenderPushable = Pushable & {
 };
 
 export type TilePredicate = (tile: Tile) => boolean;
+export type DamageableEntityPredicate = (entity: DamageableEntity) => boolean;
 export type TileHeight = (tile: Tile) => number;
 export type TileMovementCost = (tile: Tile) => number;
 export type TileSightCost = (tile: Tile) => number;

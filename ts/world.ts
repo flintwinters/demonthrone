@@ -146,9 +146,18 @@ function classifyBiome(tile: Tile): BiomeKind {
   const elevation = layers.elevation.value(tile);
   const moisture = layers.moisture.value(tile);
   const ridge = layers.ridge.value(tile);
+  const continental = layers.continental.value(tile);
+
+  if (continental > 0.72 && ridge > 0.52) {
+    return "mesa";
+  }
 
   if (elevation > 0.66 || ridge > 0.72) {
     return "ridge";
+  }
+
+  if (moisture > 0.72 && elevation < 0.58 && continental < 0.3) {
+    return "bog";
   }
 
   if (moisture > 0.62 && elevation < 0.58) {

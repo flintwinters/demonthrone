@@ -1,67 +1,81 @@
-import { lineSightCost } from "./sight-cost.js";
-import { sameTile, tileKey } from "./grid.js";
-import type { Tile, TileHeight, TileSightCost, Unit } from "./types.js";
+import { sightGeometry, terrainHeight } from "./constants.js";
+import { lineSightCost, type SightRayContext } from "./sight-cost.js";
+import { tileKey } from "./grid.js";
+import type {
+  DamageableEntity, Point3, SightBlocker, Tile, TileHeight, TilePredicate, TileSightCost, Unit,
+} from "./types.js";
 
-const boulderSightClearance = 3;
-
-export type SightContext = {
-  sightCost: TileSightCost;
-  tileHeight: TileHeight;
-  blockerKeys: Set<string>;
-};
+export type SightContext = SightRayContext;
 
 export function isVisibleTile(
   tile: Tile,
   units: Unit[],
-  sightBlockers: Tile[],
+  sightBlockers: SightBlocker[],
   sightCost: TileSightCost,
   tileHeight: TileHeight,
+  isBoulderTile: TilePredicate,
 ): boolean {
-  const context = sightContext(sightBlockers, sightCost, tileHeight);
+  const context = sightContext(sightBlockers, sightCost, tileHeight, isBoulderTile);
 
   return units.some((unit) => canUnitSeeTile(unit, tile, context));
 }
 
-export function canUnitSeeTile(
+export function canUnitSeeTile(unit: Unit, tile: Tile, context: SightContext): boolean {
+  return canSeePoint(unit, tilePoint(tile, context), context);
+}
+
+export function canUnitSeeEntity(
   unit: Unit,
-  tile: Tile,
+  target: DamageableEntity,
   context: SightContext,
 ): boolean {
-  return lineSightCost(
-    unit,
-    tile,
-    terrainSightCostFrom(unit, context.sightCost, context.tileHeight),
-    context.tileHeight,
-    blocksSightFrom(unit, context.blockerKeys),
-  ) <= unit.sight;
+  return canSeePoint(unit, entityPoint(target, context), context);
 }
 
 export function sightContext(
-  sightBlockers: Tile[],
+  sightBlockers: SightBlocker[],
   sightCost: TileSightCost,
   tileHeight: TileHeight,
+  isBoulderTile: TilePredicate,
 ): SightContext {
   return {
     sightCost,
-    tileHeight,
-    blockerKeys: new Set(sightBlockers.map(tileKey)),
+    tileHeight: (tile) => visualHeight(tileHeight(tile)),
+    isBoulderTile,
+    blockers: blockerMap(sightBlockers),
+    boulderHeight: sightGeometry.boulderHeight,
   };
 }
 
-function blocksSightFrom(unit: Unit, blockerKeys: Set<string>): (tile: Tile) => boolean {
-  return (tile) => !sameTile(tile, unit) && blockerKeys.has(tileKey(tile));
+function canSeePoint(unit: Unit, target: Point3, context: SightContext): boolean {
+  const source = pointAbove(unit, context, sightGeometry.eyeHeight);
+  const horizontal = Math.hypot(target.x - source.x, target.y - source.y);
+
+  return horizontal <= unit.sight && lineSightCost(source, target, context) <= unit.sight;
 }
 
-function terrainSightCostFrom(unit: Unit, sightCost: TileSightCost, tileHeight: TileHeight): TileSightCost {
-  const viewerHeight = tileHeight(unit);
+function tilePoint(tile: Tile, context: SightContext): Point3 {
+  return pointAbove(tile, context, sightGeometry.surfaceClearance);
+}
 
-  return (tile) => {
-    const cost = sightCost(tile);
+function entityPoint(target: DamageableEntity, context: SightContext): Point3 {
+  return pointAbove(target, context, sightGeometry.characterTargetHeight);
+}
 
-    if (cost === Number.POSITIVE_INFINITY && viewerHeight - tileHeight(tile) > boulderSightClearance) {
-      return 1;
-    }
+function pointAbove(tile: Tile, context: SightContext, offset: number): Point3 {
+  return { x: tile.x + 0.5, y: tile.y + 0.5, z: context.tileHeight(tile) + offset };
+}
 
-    return cost;
-  };
+function blockerMap(blockers: SightBlocker[]): Map<string, SightBlocker[]> {
+  const grouped = new Map<string, SightBlocker[]>();
+
+  for (const blocker of blockers) {
+    const key = tileKey(blocker);
+    grouped.set(key, [...grouped.get(key) ?? [], blocker]);
+  }
+  return grouped;
+}
+
+function visualHeight(height: number): number {
+  return height * terrainHeight.visualScale;
 }

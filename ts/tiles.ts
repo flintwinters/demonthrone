@@ -1,17 +1,18 @@
 import { l1Distance, tileKey } from "./grid.js";
 import { sightSearchRadius } from "./sight-cost.js";
 import { canUnitSeeTile, sightContext, type SightContext } from "./visibility.js";
-import type { Tile, TileHeight, TileSightCost, Unit } from "./types.js";
+import type { SightBlocker, Tile, TileHeight, TilePredicate, TileSightCost, Unit } from "./types.js";
 
 export function visibleTiles(
   units: Unit[],
-  sightBlockers: Tile[],
+  sightBlockers: SightBlocker[],
   sightCost: TileSightCost,
   tileHeight: TileHeight,
+  isBoulderTile: TilePredicate,
 ): Tile[] {
   const seen = new Set<string>();
   const tiles: Tile[] = [];
-  const context = sightContext(sightBlockers, sightCost, tileHeight);
+  const context = sightContext(sightBlockers, sightCost, tileHeight, isBoulderTile);
 
   for (const unit of units) {
     appendVisibleTiles(unit, context, seen, tiles);
