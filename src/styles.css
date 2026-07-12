@@ -61,7 +61,7 @@ canvas {
 }
 
 .compass-axis-north {
-  background: linear-gradient(90deg, #a89984 0 50%, #fb4934 50% 100%);
+  background: linear-gradient(90deg, #fb4934 0 50%, #a89984 50% 100%);
   transform: rotate(90deg);
 }
 
