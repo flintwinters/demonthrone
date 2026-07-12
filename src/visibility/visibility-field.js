@@ -1,5 +1,5 @@
-import { sightGeometry } from "./constants.js";
-import { tileKey } from "./grid.js";
+import { sightGeometry } from "../constants.js";
+import { tileKey } from "../grid.js";
 const octants = [
     { majorX: 1, majorY: 0, minorX: 0, minorY: 1 },
     { majorX: 1, majorY: 0, minorX: 0, minorY: -1 },

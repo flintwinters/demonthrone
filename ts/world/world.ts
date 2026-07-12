@@ -1,6 +1,6 @@
-import { terrainHeight } from "./constants.js";
-import type { BiomeProfile } from "./domain.js";
-import { tileKey } from "./grid.js";
+import { terrainHeight } from "../constants.js";
+import type { BiomeProfile } from "../domain.js";
+import { tileKey } from "../grid.js";
 import { BasinField } from "./hydrology.js";
 import {
   biomes,
@@ -11,8 +11,8 @@ import {
   safeZones,
   terrainTraits,
   worldDataCacheLimit,
-} from "./world-config.js";
-import type { BiomeKind, Terrain, TerrainKind, Tile } from "./types.js";
+} from "../world-config.js";
+import type { BiomeKind, Terrain, TerrainKind, Tile } from "../types.js";
 
 const worldDataCache = new Map<string, WorldTileData>();
 const basinField = new BasinField(

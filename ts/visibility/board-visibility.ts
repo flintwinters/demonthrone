@@ -1,11 +1,11 @@
-import { sightGeometry, terrainHeight } from "./constants.js";
-import { tileKey } from "./grid.js";
+import { sightGeometry, terrainHeight } from "../constants.js";
+import { tileKey } from "../grid.js";
 import { visibleTiles } from "./tiles.js";
-import { units } from "./units.js";
-import { isBoulderTile, sightCost, tileHeight } from "./world.js";
-import { gameOverConfig } from "./world-config.js";
-import { enemyConfigs } from "./world-config.js";
-import type { Enemy, SightBlocker, Tile, Unit } from "./types.js";
+import { units } from "../units.js";
+import { isBoulderTile, sightCost, tileHeight } from "../world/index.js";
+import { gameOverConfig } from "../world-config.js";
+import { enemyConfigs } from "../world-config.js";
+import type { Enemy, SightBlocker, Tile, Unit } from "../types.js";
 
 export type VisibilityState = {
   tiles: Tile[];

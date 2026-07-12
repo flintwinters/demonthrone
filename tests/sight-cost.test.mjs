@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { lineSightCost } from "../src/sight-cost.js";
+import { lineSightCost } from "../src/visibility/index.js";
 
 const point = (x, y, z) => ({ x: x + 0.5, y: y + 0.5, z });
 

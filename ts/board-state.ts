@@ -1,10 +1,10 @@
-import { visibilityState } from "./board-visibility.js";
+import { visibilityState } from "./visibility/index.js";
 import { tileKey } from "./grid.js";
 import { isObstacleTile } from "./obstacles.js";
 import { pushables } from "./pushables.js";
 import { selection, units } from "./units.js";
-import { canUnitSeeEntity, sightContext } from "./visibility.js";
-import { isBoulderTile, isBrushTile, sightCost, tileHeight } from "./world.js";
+import { canUnitSeeEntity, sightContext } from "./visibility/index.js";
+import { isBoulderTile, isBrushTile, sightCost, tileHeight } from "./world/index.js";
 import { lineOfSightConfig } from "./world-config.js";
 import type {
   BoardState, DamageableEntity, Enemy, HeightTile, RenderEnemy, RenderPushable,

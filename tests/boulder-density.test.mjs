@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { isBoulderTile } from "../src/world.js";
+import { isBoulderTile } from "../src/world/index.js";
 
 test("boulders remain sparse across a representative world region", () => {
   let boulders = 0;

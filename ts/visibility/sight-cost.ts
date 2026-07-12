@@ -1,5 +1,5 @@
-import { tileKey } from "./grid.js";
-import type { Point3, SightBlocker, Tile, TileHeight, TilePredicate, TileSightCost } from "./types.js";
+import { tileKey } from "../grid.js";
+import type { Point3, SightBlocker, Tile, TileHeight, TilePredicate, TileSightCost } from "../types.js";
 
 export type SightRayContext = {
   sightCost: TileSightCost;

@@ -1,4 +1,4 @@
-import { isObstacleTile as blocksMovement } from "./world.js";
+import { isObstacleTile as blocksMovement } from "./world/index.js";
 import { isPushableTile } from "./pushables.js";
 import type { Tile } from "./types.js";
 

@@ -1,4 +1,4 @@
-import { hydrologyConfig } from "./world-config.js";
+import { hydrologyConfig } from "../world-config.js";
 const anchorCacheLimit = hydrologyConfig.anchorCacheLimit;
 export class BasinField {
     cellSize;

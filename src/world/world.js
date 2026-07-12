@@ -1,7 +1,7 @@
-import { terrainHeight } from "./constants.js";
-import { tileKey } from "./grid.js";
+import { terrainHeight } from "../constants.js";
+import { tileKey } from "../grid.js";
 import { BasinField } from "./hydrology.js";
-import { biomes, biomeRules, biomeClassification, basinConfig, layers, safeZones, terrainTraits, worldDataCacheLimit, } from "./world-config.js";
+import { biomes, biomeRules, biomeClassification, basinConfig, layers, safeZones, terrainTraits, worldDataCacheLimit, } from "../world-config.js";
 const worldDataCache = new Map();
 const basinField = new BasinField(basinConfig.cellSize, basinConfig.radius, basinConfig.depth, groundHeightAt, (tile) => biomeAt(tile).water.value(tile));
 export function tileTerrain(tile) {

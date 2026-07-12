@@ -3,7 +3,7 @@ import { createEnemy } from "./enemies.js";
 import { sameTile, tileKey } from "./grid.js";
 import { PerlinSpawnField } from "./procedural-placement.js";
 import { createPushable, pushables } from "./pushables.js";
-import { isObstacleTile } from "./world.js";
+import { isObstacleTile } from "./world/index.js";
 import { enemyConfigs, entityGeneration } from "./world-config.js";
 const pushableField = new PerlinSpawnField(new NoiseLayer(entityGeneration.pushable.noise), entityGeneration.pushable.threshold);
 const enemyFields = enemyConfigs.map(({ type }) => {

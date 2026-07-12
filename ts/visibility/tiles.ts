@@ -1,7 +1,7 @@
 import { appendShadowcastTiles } from "./visibility-field.js";
 import { memoizedSightContext, sightContext } from "./visibility.js";
-import { lineOfSightConfig } from "./world-config.js";
-import type { SightBlocker, Tile, TileHeight, TilePredicate, TileSightCost, Unit } from "./types.js";
+import { lineOfSightConfig } from "../world-config.js";
+import type { SightBlocker, Tile, TileHeight, TilePredicate, TileSightCost, Unit } from "../types.js";
 
 export function visibleTiles(
   units: Unit[],

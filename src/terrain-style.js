@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { colors, terrainHeight } from "./constants.js";
 import { sameTile } from "./grid.js";
-import { tileBiome, tileTerrain } from "./world.js";
+import { tileBiome, tileTerrain } from "./world/index.js";
 const biomeStyles = {
     cinder: {
         top: colors.cinderTile,

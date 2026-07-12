@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { canReachTile } from "../src/movement.js";
-import { isIceTile, tileHeight, tileTerrain } from "../src/world.js";
+import { isIceTile, tileHeight, tileTerrain } from "../src/world/index.js";
 
 function findIceTile() {
   for (let y = -30; y <= 30; y += 1) {

@@ -18,7 +18,7 @@ import { canPushTo, clearPlannedPush, commitPlannedPushes, isPushableTile, planP
 import { drawGrid } from "./renderer.js";
 import { connectRotationControls } from "./controls/index.js";
 import { isInspectableTerrain, selectedObjectStatus, selectVisibleEntityTile } from "./selection-status.js";
-import { tileHeight, tileTerrain } from "./world.js";
+import { tileHeight, tileTerrain } from "./world/index.js";
 import { connectTurnControl } from "./turn-control.js";
 import { canTakeAction, cancelAction, resetActions } from "./teammate-turns.js";
 import { plannedSelectionLines } from "./selection-visuals.js";

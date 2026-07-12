@@ -1,7 +1,7 @@
-import { sightGeometry } from "./constants.js";
-import { tileKey } from "./grid.js";
+import { sightGeometry } from "../constants.js";
+import { tileKey } from "../grid.js";
 import type { SightContext } from "./visibility.js";
-import type { Tile, Unit } from "./types.js";
+import type { Tile, Unit } from "../types.js";
 
 type Octant = { majorX: number; majorY: number; minorX: number; minorY: number };
 type Sweep = { horizons: Float64Array; costs: Float64Array; bins: number; eyeZ: number; targetOffset: number };

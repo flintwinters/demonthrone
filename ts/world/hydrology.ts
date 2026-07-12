@@ -1,5 +1,5 @@
-import type { Tile } from "./types.js";
-import { hydrologyConfig } from "./world-config.js";
+import type { Tile } from "../types.js";
+import { hydrologyConfig } from "../world-config.js";
 
 type Sample = (tile: Tile) => number;
 type Predicate = (tile: Tile) => boolean;

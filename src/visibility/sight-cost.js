@@ -1,4 +1,4 @@
-import { tileKey } from "./grid.js";
+import { tileKey } from "../grid.js";
 export function lineSightCost(start, end, context) {
     const ray = createRay(start, end);
     if (ray.horizontal === 0)

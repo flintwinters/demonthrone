@@ -1,12 +1,12 @@
-import { visibilityState } from "./board-visibility.js";
+import { visibilityState } from "./visibility/index.js";
 import { sightGeometry } from "./constants.js";
 import { tileKey } from "./grid.js";
 import { reachableTileKeys } from "./movement.js";
 import { pushables } from "./pushables.js";
 import { units } from "./units.js";
-import { shadowcastTiles } from "./visibility-field.js";
-import { sightContext } from "./visibility.js";
-import { isBoulderTile, movementCost, tileHeight } from "./world.js";
+import { shadowcastTiles } from "./visibility/index.js";
+import { sightContext } from "./visibility/index.js";
+import { isBoulderTile, movementCost, tileHeight } from "./world/index.js";
 import { lineOfSightConfig } from "./world-config.js";
 let cached = null;
 export function actionFields(unit, enemies, isMovementBlocked) {

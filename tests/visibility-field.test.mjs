@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { tileKey } from "../src/grid.js";
-import { visibleTiles } from "../src/tiles.js";
-import { shadowcastTiles } from "../src/visibility-field.js";
-import { sightContext } from "../src/visibility.js";
+import { visibleTiles } from "../src/visibility/index.js";
+import { shadowcastTiles } from "../src/visibility/index.js";
+import { sightContext } from "../src/visibility/index.js";
 
 function unit(sight, x = 0, y = 0) {
   return { x, y, sight };

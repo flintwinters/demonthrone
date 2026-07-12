@@ -1,7 +1,7 @@
-import { sightGeometry, terrainHeight } from "./constants.js";
-import { lineOfSightConfig } from "./world-config.js";
+import { sightGeometry, terrainHeight } from "../constants.js";
+import { lineOfSightConfig } from "../world-config.js";
 import { lineSightCost } from "./sight-cost.js";
-import { tileKey } from "./grid.js";
+import { tileKey } from "../grid.js";
 export function isVisibleTile(tile, units, sightBlockers, sightCost, tileHeight, isBoulderTile) {
     const context = sightContext(sightBlockers, sightCost, tileHeight, isBoulderTile);
     return units.some((unit) => canUnitSeeTile(unit, tile, context));

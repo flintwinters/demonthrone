@@ -1,10 +1,10 @@
-import { sightGeometry, terrainHeight } from "./constants.js";
-import { tileKey } from "./grid.js";
+import { sightGeometry, terrainHeight } from "../constants.js";
+import { tileKey } from "../grid.js";
 import { visibleTiles } from "./tiles.js";
-import { units } from "./units.js";
-import { isBoulderTile, sightCost, tileHeight } from "./world.js";
-import { gameOverConfig } from "./world-config.js";
-import { enemyConfigs } from "./world-config.js";
+import { units } from "../units.js";
+import { isBoulderTile, sightCost, tileHeight } from "../world/index.js";
+import { gameOverConfig } from "../world-config.js";
+import { enemyConfigs } from "../world-config.js";
 let cached = null;
 export function visibilityState(enemies, revealCenter = null) {
     const signature = revealCenter ? `defeat:${tileKey(revealCenter)}` : visibilitySignature(enemies);

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { configureViewCamera, createViewCamera, devicePixelRatio } from "./camera.js";
+import { configureViewCamera, createViewCamera, devicePixelRatio } from "./controls/index.js";
 import { enemyObjects, unitObjects } from "./character-render.js";
 import { colors, terrainHeight } from "./constants.js";
 import { material } from "./render-materials.js";

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { circularTiles } from "../src/board-visibility.js";
+import { circularTiles } from "../src/visibility/index.js";
 import { GameOverState } from "../src/game-over.js";
 import { tileKey } from "../src/grid.js";
 

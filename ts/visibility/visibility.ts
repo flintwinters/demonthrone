@@ -1,10 +1,10 @@
-import { sightGeometry, terrainHeight } from "./constants.js";
-import { lineOfSightConfig } from "./world-config.js";
+import { sightGeometry, terrainHeight } from "../constants.js";
+import { lineOfSightConfig } from "../world-config.js";
 import { lineSightCost, type SightRayContext } from "./sight-cost.js";
-import { tileKey } from "./grid.js";
+import { tileKey } from "../grid.js";
 import type {
   DamageableEntity, Point3, SightBlocker, Tile, TileHeight, TilePredicate, TileSightCost, Unit,
-} from "./types.js";
+} from "../types.js";
 
 export type SightContext = SightRayContext;
 

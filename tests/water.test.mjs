@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { lineSightCost } from "../src/sight-cost.js";
+import { lineSightCost } from "../src/visibility/index.js";
 import {
   groundHeight,
   isBoulderTile,
@@ -10,7 +10,7 @@ import {
   isWaterTile,
   tileHeight,
   tileTerrain,
-} from "../src/world.js";
+} from "../src/world/index.js";
 
 function waterTiles() {
   const tiles = [];

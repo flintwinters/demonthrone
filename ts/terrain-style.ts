@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { colors, terrainHeight } from "./constants.js";
 import { sameTile } from "./grid.js";
 import type { TerrainStyle } from "./terrain-mesh.js";
-import { tileBiome, tileTerrain } from "./world.js";
+import { tileBiome, tileTerrain } from "./world/index.js";
 import type { BiomeKind, BoardState, RenderUnit, Tile } from "./types.js";
 
 type BiomeStyle = {

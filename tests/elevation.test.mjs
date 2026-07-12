@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { tileHeight } from "../src/world.js";
+import { tileHeight } from "../src/world/index.js";
 
 test("terrain noise produces high peaks and low valleys", () => {
   const heights = [];

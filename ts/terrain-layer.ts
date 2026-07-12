@@ -4,7 +4,7 @@ import { tileKey } from "./grid.js";
 import { terrainBatchSurface } from "./terrain-batch.js";
 import { tileStyle } from "./terrain-style.js";
 import { boulders, brushPatch, type PropPlacement } from "./terrain-props.js";
-import { tileTerrain } from "./world.js";
+import { tileTerrain } from "./world/index.js";
 import type { BiomeKind, BoardState, HeightTile, RenderUnit, Tile } from "./types.js";
 
 export function terrainLayer(boardState: BoardState, tiles: Tile[]): THREE.Group {
