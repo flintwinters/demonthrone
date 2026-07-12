@@ -6,8 +6,8 @@ export const tile = {
 };
 
 export const terrainHeight = {
-  min: -9,
-  max: 14,
+  min: -32,
+  max: 37,
   mappingMin: -2,
   mappingMax: 7,
   contrast: 1.25,

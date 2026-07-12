@@ -8,7 +8,7 @@ export function perlinNoise2d(x, y, seed) {
         y: y - cell.y,
     };
     const lower = interpolateGrid(cell, offset, seed);
-    const upper = interpolateGrid({ x: cell.x, y: cell.y + 1 }, offset, seed);
+    const upper = interpolateGrid({ x: cell.x, y: cell.y + 1 }, { x: offset.x, y: offset.y - 1 }, seed);
     return normalize(lerp(lower, upper, fade(offset.y)));
 }
 function interpolateGrid(cell, offset, seed) {

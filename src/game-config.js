@@ -4,7 +4,7 @@ export { enemyConfigs, teammateConfigs } from "./character-config.js";
 export const worldSeed = 0x5eedf;
 export const elevationConfig = {
     layers: [
-        { wavelength: 84, amplitude: 0.7, seed: worldSeed ^ 0xcd73, sample: "centered" },
+        { wavelength: 84, amplitude: 5, seed: worldSeed ^ 0xcd73, sample: "centered" },
         { wavelength: 14, amplitude: 0.65, seed: worldSeed ^ 0x1234, sample: "linear" },
         { wavelength: 4, amplitude: 0.2, seed: worldSeed ^ 0xa713, sample: "centered" },
     ],
