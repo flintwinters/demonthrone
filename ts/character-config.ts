@@ -1,5 +1,5 @@
 import { colors } from "./constants.js";
-import type { CharacterStats } from "./types.js";
+import type { CharacterStats, EnemyStats, EnemyType } from "./types.js";
 
 export type TeammateConfig = {
   id: string;
@@ -15,11 +15,25 @@ export const teammateConfigs: readonly TeammateConfig[] = [
   teammate("varmint", { x: 6, y: 8 }, colors.unitThree, 36, 4, 2, 3),
 ];
 
-export const enemyConfig = {
-  type: "pursuer",
-  color: colors.enemy,
-  stats: { sight: 5, movement: 1, attackRange: 1, health: 1 },
+export type EnemyAppearance = {
+  shape: "cone" | "cylinder";
+  radius: number;
+  height: number;
+  labelHeight: number;
 };
+export type EnemyConfig = {
+  type: EnemyType;
+  color: string;
+  stats: EnemyStats;
+  appearance: EnemyAppearance;
+};
+
+export const enemyConfigs = [
+  enemy("pursuer", colors.enemy, { shape: "cone", radius: 0.24, height: 0.5, labelHeight: 0.72 },
+    5, 1, 2, 1, 1, 1),
+  enemy("nephilim", colors.nephilim, { shape: "cylinder", radius: 0.22, height: 0.9, labelHeight: 1.1 },
+    5, 1, 1, 8, 3, 3),
+] satisfies readonly EnemyConfig[];
 
 function teammate(
   id: string,
@@ -31,4 +45,18 @@ function teammate(
   health: number,
 ): TeammateConfig {
   return { id, type: id, spawn, color, stats: { sight, movement, attackRange, health } };
+}
+
+function enemy(
+  type: EnemyType,
+  color: string,
+  appearance: EnemyAppearance,
+  sight: number,
+  movement: number,
+  attackRange: number,
+  health: number,
+  damage: number,
+  movementInterval: number,
+): EnemyConfig {
+  return { type, color, appearance, stats: { sight, movement, attackRange, health, damage, movementInterval } };
 }

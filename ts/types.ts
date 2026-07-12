@@ -5,6 +5,7 @@ export type Tile = {
 
 export type BiomeKind = "cinder" | "fen" | "heath" | "ridge" | "bog" | "mesa";
 export type TerrainKind = "floor" | "boulder" | "brush" | "ice" | "water";
+export type EnemyType = "nephilim" | "pursuer";
 
 export type Terrain = {
   kind: TerrainKind;
@@ -42,6 +43,11 @@ export type CharacterStats = {
   health: number;
 };
 
+export type EnemyStats = CharacterStats & {
+  damage: number;
+  movementInterval: number;
+};
+
 export interface Entity extends Tile {
   id: string;
   entityKind: "teammate" | "enemy" | "object";
@@ -66,6 +72,10 @@ export type Unit = Teammate;
 
 export interface Enemy extends Character {
   entityKind: "enemy";
+  entityType: EnemyType;
+  damage: number;
+  movementInterval: number;
+  turnsUntilMove: number;
 }
 
 export interface WorldObject extends DamageableEntity {

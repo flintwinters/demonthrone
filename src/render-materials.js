@@ -4,11 +4,8 @@ const materials = new Map();
 const transparentMaterials = new Map();
 const terrainMaterials = new Map();
 const lineMaterials = new Map();
-export const edgeMaterial = new THREE.LineBasicMaterial({
-    color: colors.tileEdge,
-    transparent: true,
-    opacity: 0.38,
-});
+const edgeMaterials = new Map();
+export const edgeMaterial = terrainEdgeMaterial(colors.tileEdge);
 export const selectedOutlineMaterial = new THREE.LineBasicMaterial({
     color: colors.selectedTileOutline,
     transparent: true,
@@ -29,6 +26,19 @@ export function lineMaterial(color) {
         depthWrite: false,
     });
     lineMaterials.set(color, created);
+    return created;
+}
+export function terrainEdgeMaterial(color) {
+    const existing = edgeMaterials.get(color);
+    if (existing) {
+        return existing;
+    }
+    const created = new THREE.LineBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.42,
+    });
+    edgeMaterials.set(color, created);
     return created;
 }
 export function material(color) {

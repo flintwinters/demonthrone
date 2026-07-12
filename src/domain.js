@@ -41,14 +41,22 @@ export class TeammateTemplate extends CharacterTemplate {
     }
 }
 export class EnemyTemplate extends CharacterTemplate {
+    enemyType;
+    enemyStats;
+    constructor(enemyType, enemyStats, color) {
+        super(enemyType, enemyStats, color);
+        this.enemyType = enemyType;
+        this.enemyStats = enemyStats;
+    }
     create(id, tile) {
         return {
             ...tile,
-            ...this.stats,
+            ...this.enemyStats,
             id,
             entityKind: "enemy",
-            entityType: this.entityType,
+            entityType: this.enemyType,
             color: this.color,
+            turnsUntilMove: 0,
         };
     }
 }

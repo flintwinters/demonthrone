@@ -90,7 +90,7 @@ function isPlannedAttackTarget(tile: Tile, boardState: BoardState): boolean {
 function movementTileStyle(tile: Tile, boardState: BoardState, level: number): TerrainStyle {
   const top = sameTile(boardState.hoveredTile, tile) ? colors.hoveredMovementTile : colors.movementTile;
 
-  return terrainStyle(top, colors.movementTileSideRight, level);
+  return terrainStyle(top, colors.movementTileSideRight, level, colors.movementTileStroke);
 }
 
 function biomeTerrainStyle(tile: Tile, level: number): TerrainStyle {
@@ -109,10 +109,11 @@ function biomeTerrainStyle(tile: Tile, level: number): TerrainStyle {
   return terrainStyle(style.top, style.side, level);
 }
 
-function terrainStyle(top: string, side: string, level: number): TerrainStyle {
+function terrainStyle(top: string, side: string, level: number, edge = colors.tileEdge): TerrainStyle {
   return {
     top: shadeByHeight(top, level, 0),
     side: sideGradient(side, level),
+    edge,
   };
 }
 

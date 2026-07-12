@@ -3,6 +3,8 @@ import type {
   Character,
   CharacterStats,
   Enemy,
+  EnemyStats,
+  EnemyType,
   Entity,
   Pushable,
   Tile,
@@ -54,14 +56,19 @@ export class TeammateTemplate extends CharacterTemplate<Unit> {
 }
 
 export class EnemyTemplate extends CharacterTemplate<Enemy> {
+  constructor(private readonly enemyType: EnemyType, private readonly enemyStats: EnemyStats, color: string) {
+    super(enemyType, enemyStats, color);
+  }
+
   create(id: string, tile: Tile): Enemy {
     return {
       ...tile,
-      ...this.stats,
+      ...this.enemyStats,
       id,
       entityKind: "enemy",
-      entityType: this.entityType,
+      entityType: this.enemyType,
       color: this.color,
+      turnsUntilMove: 0,
     };
   }
 }

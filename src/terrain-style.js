@@ -66,7 +66,7 @@ function isPlannedAttackTarget(tile, boardState) {
 }
 function movementTileStyle(tile, boardState, level) {
     const top = sameTile(boardState.hoveredTile, tile) ? colors.hoveredMovementTile : colors.movementTile;
-    return terrainStyle(top, colors.movementTileSideRight, level);
+    return terrainStyle(top, colors.movementTileSideRight, level, colors.movementTileStroke);
 }
 function biomeTerrainStyle(tile, level) {
     const terrain = tileTerrain(tile);
@@ -79,10 +79,11 @@ function biomeTerrainStyle(tile, level) {
     const style = biomeStyles[tileBiome(tile)];
     return terrainStyle(style.top, style.side, level);
 }
-function terrainStyle(top, side, level) {
+function terrainStyle(top, side, level, edge = colors.tileEdge) {
     return {
         top: shadeByHeight(top, level, 0),
         side: sideGradient(side, level),
+        edge,
     };
 }
 function sideGradient(color, level) {

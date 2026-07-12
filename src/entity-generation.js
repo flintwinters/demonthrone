@@ -4,14 +4,19 @@ import { sameTile, tileKey } from "./grid.js";
 import { PerlinSpawnField } from "./procedural-placement.js";
 import { createPushable, pushables } from "./pushables.js";
 import { isObstacleTile } from "./world.js";
-import { entityGeneration } from "./world-config.js";
+import { enemyConfigs, entityGeneration } from "./world-config.js";
 const pushableField = new PerlinSpawnField(new NoiseLayer(entityGeneration.pushable.noise), entityGeneration.pushable.threshold);
-const enemyField = new PerlinSpawnField(new NoiseLayer(entityGeneration.enemy.noise), entityGeneration.enemy.threshold);
+const enemyFields = enemyConfigs.map(({ type }) => {
+    const config = entityGeneration.enemy[type];
+    return { type, field: new PerlinSpawnField(new NoiseLayer(config.noise), config.threshold) };
+});
 export function materializeEntities(units, enemies) {
     const pushableTiles = pushableField.materialize(units, entityGeneration.radius, (tile) => isAvailable(tile, units, enemies));
     pushables.push(...pushableTiles.map((tile) => createPushable(`crate@${tileKey(tile)}`, tile)));
-    const enemyTiles = enemyField.materialize(units, entityGeneration.radius, (tile) => isAvailable(tile, units, enemies));
-    enemies.push(...enemyTiles.map((tile) => createEnemy(`enemy@${tileKey(tile)}`, tile)));
+    for (const { type, field } of enemyFields) {
+        const enemyTiles = field.materialize(units, entityGeneration.radius, (tile) => isAvailable(tile, units, enemies));
+        enemies.push(...enemyTiles.map((tile) => createEnemy(type, `${type}@${tileKey(tile)}`, tile)));
+    }
 }
 function isAvailable(tile, units, enemies) {
     return !isObstacleTile(tile)

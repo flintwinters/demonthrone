@@ -1,12 +1,18 @@
 import { EnemyTemplate } from "./domain.js";
 import { cardinalDirections, l1Distance, neighborTile, sameTile } from "./grid.js";
-import { enemyConfig } from "./world-config.js";
-import type { Enemy, Tile, TilePredicate, Unit } from "./types.js";
+import { enemyConfigs } from "./world-config.js";
+import type { Enemy, EnemyType, Tile, TilePredicate, Unit } from "./types.js";
 
-const enemyTemplate = new EnemyTemplate(enemyConfig.type, enemyConfig.stats, enemyConfig.color);
+const enemyTemplates = new Map(enemyConfigs.map((config) => [
+  config.type,
+  new EnemyTemplate(config.type, config.stats, config.color),
+]));
 
-export function createEnemy(id: string, tile: Tile): Enemy {
-  return enemyTemplate.create(id, tile);
+export function createEnemy(type: EnemyType, id: string, tile: Tile): Enemy {
+  const template = enemyTemplates.get(type);
+
+  if (!template) throw new Error(`Unknown enemy type: ${type}`);
+  return template.create(id, tile);
 }
 
 export function moveEnemies(enemies: Enemy[], units: Unit[], isBlockedTile: TilePredicate): void {
@@ -19,9 +25,7 @@ export function attackUnits(units: Unit[], enemies: Enemy[]): Unit[] {
   const destroyed: Unit[] = [];
 
   for (let index = units.length - 1; index >= 0; index -= 1) {
-    if (isAttacked(units[index], enemies)) {
-      units[index].health -= 1;
-    }
+    units[index].health -= incomingDamage(units[index], enemies);
 
     if (units[index].health <= 0) {
       const [unit] = units.splice(index, 1);
@@ -55,6 +59,11 @@ function moveEnemy(
   units: Unit[],
   isBlockedTile: TilePredicate,
 ): void {
+  if (enemy.turnsUntilMove > 0) {
+    enemy.turnsUntilMove -= 1;
+    return;
+  }
+
   for (let step = 0; step < enemy.movement; step += 1) {
     const target = closestUnit(enemy, units);
 
@@ -67,6 +76,7 @@ function moveEnemy(
     enemy.x = next.x;
     enemy.y = next.y;
   }
+  enemy.turnsUntilMove = enemy.movementInterval - 1;
 }
 
 function bestStep(
@@ -93,6 +103,9 @@ function closerTile(best: Tile, tile: Tile, target: Unit): Tile {
   return l1Distance(tile, target) < l1Distance(best, target) ? tile : best;
 }
 
-function isAttacked(unit: Unit, enemies: Enemy[]): boolean {
-  return enemies.some((enemy) => l1Distance(enemy, unit) <= enemy.attackRange);
+function incomingDamage(unit: Unit, enemies: Enemy[]): number {
+  return enemies.reduce(
+    (damage, enemy) => damage + (l1Distance(enemy, unit) <= enemy.attackRange ? enemy.damage : 0),
+    0,
+  );
 }

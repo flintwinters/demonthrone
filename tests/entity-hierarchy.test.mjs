@@ -3,11 +3,12 @@ import test from "node:test";
 import { EnemyTemplate, PushableTemplate, TeammateTemplate } from "../src/domain.js";
 
 const stats = { sight: 8, movement: 2, attackRange: 3, health: 5 };
+const enemyStats = { ...stats, damage: 2, movementInterval: 1 };
 
 test("character templates create discriminated, independently extensible archetypes", () => {
   const teammate = new TeammateTemplate("ranger", stats, "#83a598")
     .create("ally-1", { x: 2, y: 3 });
-  const enemy = new EnemyTemplate("warlock", stats, "#cc241d")
+  const enemy = new EnemyTemplate("nephilim", enemyStats, "#cc241d")
     .create("enemy-1", { x: 7, y: 9 });
 
   assert.deepEqual(
@@ -15,8 +16,8 @@ test("character templates create discriminated, independently extensible archety
     ["teammate", "ranger", null, null],
   );
   assert.deepEqual(
-    [enemy.entityKind, enemy.entityType, enemy.health, enemy.attackRange],
-    ["enemy", "warlock", 5, 3],
+    [enemy.entityKind, enemy.entityType, enemy.health, enemy.attackRange, enemy.damage],
+    ["enemy", "nephilim", 5, 3, 2],
   );
 });
 

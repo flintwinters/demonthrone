@@ -1,5 +1,5 @@
 import { NoiseLayer, SafeZone, TerrainType } from "./domain.js";
-export { enemyConfig, teammateConfigs } from "./character-config.js";
+export { enemyConfigs, teammateConfigs } from "./character-config.js";
 export { biomes } from "./biome-config.js";
 export const worldSeed = 0x5eedf;
 export const layers = {
@@ -44,8 +44,14 @@ export const entityGeneration = {
         threshold: 0.7,
     },
     enemy: {
-        noise: { scale: 0.1, magnitude: 1, seed: 0x6e6d79 },
-        threshold: 0.65,
+        pursuer: {
+            noise: { scale: 0.1, magnitude: 1, seed: 0x6e6d79 },
+            threshold: 0.65,
+        },
+        nephilim: {
+            noise: { scale: 0.075, magnitude: 1, seed: 0x6e70686d },
+            threshold: 0.78,
+        },
     },
 };
 export const movementConfig = { maxUpwardStepHeight: 2 };

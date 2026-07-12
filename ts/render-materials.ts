@@ -5,12 +5,9 @@ const materials: Map<string, THREE.MeshLambertMaterial> = new Map();
 const transparentMaterials: Map<string, THREE.MeshLambertMaterial> = new Map();
 const terrainMaterials: Map<string, THREE.MeshLambertMaterial> = new Map();
 const lineMaterials: Map<string, THREE.LineBasicMaterial> = new Map();
+const edgeMaterials: Map<string, THREE.LineBasicMaterial> = new Map();
 
-export const edgeMaterial = new THREE.LineBasicMaterial({
-  color: colors.tileEdge,
-  transparent: true,
-  opacity: 0.38,
-});
+export const edgeMaterial = terrainEdgeMaterial(colors.tileEdge);
 
 export const selectedOutlineMaterial = new THREE.LineBasicMaterial({
   color: colors.selectedTileOutline,
@@ -36,6 +33,23 @@ export function lineMaterial(color: string): THREE.LineBasicMaterial {
   });
 
   lineMaterials.set(color, created);
+  return created;
+}
+
+export function terrainEdgeMaterial(color: string): THREE.LineBasicMaterial {
+  const existing = edgeMaterials.get(color);
+
+  if (existing) {
+    return existing;
+  }
+
+  const created = new THREE.LineBasicMaterial({
+    color,
+    transparent: true,
+    opacity: 0.42,
+  });
+
+  edgeMaterials.set(color, created);
   return created;
 }
 

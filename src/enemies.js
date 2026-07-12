@@ -1,9 +1,15 @@
 import { EnemyTemplate } from "./domain.js";
 import { cardinalDirections, l1Distance, neighborTile, sameTile } from "./grid.js";
-import { enemyConfig } from "./world-config.js";
-const enemyTemplate = new EnemyTemplate(enemyConfig.type, enemyConfig.stats, enemyConfig.color);
-export function createEnemy(id, tile) {
-    return enemyTemplate.create(id, tile);
+import { enemyConfigs } from "./world-config.js";
+const enemyTemplates = new Map(enemyConfigs.map((config) => [
+    config.type,
+    new EnemyTemplate(config.type, config.stats, config.color),
+]));
+export function createEnemy(type, id, tile) {
+    const template = enemyTemplates.get(type);
+    if (!template)
+        throw new Error(`Unknown enemy type: ${type}`);
+    return template.create(id, tile);
 }
 export function moveEnemies(enemies, units, isBlockedTile) {
     for (const enemy of enemies) {
@@ -13,9 +19,7 @@ export function moveEnemies(enemies, units, isBlockedTile) {
 export function attackUnits(units, enemies) {
     const destroyed = [];
     for (let index = units.length - 1; index >= 0; index -= 1) {
-        if (isAttacked(units[index], enemies)) {
-            units[index].health -= 1;
-        }
+        units[index].health -= incomingDamage(units[index], enemies);
         if (units[index].health <= 0) {
             const [unit] = units.splice(index, 1);
             destroyed.push(unit);
@@ -36,6 +40,10 @@ function closestUnit(enemy, units) {
     return closest;
 }
 function moveEnemy(enemy, enemies, units, isBlockedTile) {
+    if (enemy.turnsUntilMove > 0) {
+        enemy.turnsUntilMove -= 1;
+        return;
+    }
     for (let step = 0; step < enemy.movement; step += 1) {
         const target = closestUnit(enemy, units);
         if (!target) {
@@ -45,6 +53,7 @@ function moveEnemy(enemy, enemies, units, isBlockedTile) {
         enemy.x = next.x;
         enemy.y = next.y;
     }
+    enemy.turnsUntilMove = enemy.movementInterval - 1;
 }
 function bestStep(enemy, target, enemies, units, isBlockedTile) {
     const candidates = cardinalDirections
@@ -60,6 +69,6 @@ function canEnemyEnter(tile, enemies, units, isBlockedTile) {
 function closerTile(best, tile, target) {
     return l1Distance(tile, target) < l1Distance(best, target) ? tile : best;
 }
-function isAttacked(unit, enemies) {
-    return enemies.some((enemy) => l1Distance(enemy, unit) <= enemy.attackRange);
+function incomingDamage(unit, enemies) {
+    return enemies.reduce((damage, enemy) => damage + (l1Distance(enemy, unit) <= enemy.attackRange ? enemy.damage : 0), 0);
 }

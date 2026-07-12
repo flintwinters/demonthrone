@@ -4,7 +4,8 @@ import { visibleTiles } from "./tiles.js";
 import { units } from "./units.js";
 import { isBoulderTile, sightCost, tileHeight } from "./world.js";
 import { gameOverConfig } from "./world-config.js";
-import type { Enemy, SightBlocker, Tile } from "./types.js";
+import { enemyConfigs } from "./world-config.js";
+import type { Enemy, SightBlocker, Tile, Unit } from "./types.js";
 
 export type VisibilityState = {
   tiles: Tile[];
@@ -47,9 +48,17 @@ function sightBlockers(enemies: Enemy[]): SightBlocker[] {
       x: character.x,
       y: character.y,
       bottom: ground + sightGeometry.characterBottom,
-      top: ground + sightGeometry.characterTop,
+      top: ground + characterSightHeight(character),
     };
   });
+}
+
+function characterSightHeight(character: Unit | Enemy): number {
+  if (character.entityKind === "teammate") return sightGeometry.characterTop;
+  const config = enemyConfigs.find((candidate) => candidate.type === character.entityType);
+
+  if (!config) throw new Error(`Missing enemy config: ${character.entityType}`);
+  return config.appearance.height;
 }
 
 function visibilitySignature(enemies: Enemy[]): string {

@@ -8,6 +8,7 @@ export type SurfaceStyle = string | readonly [string, string, string, string];
 export type TerrainStyle = {
   top: SurfaceStyle;
   side: SurfaceStyle;
+  edge: string;
 };
 
 const neighbors = [

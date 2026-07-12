@@ -77,6 +77,7 @@ export const colors = {
     unitTwo: "#d5d83d",
     unitThree: "#d65d0e",
     enemy: "#e6a4ba",
+    nephilim: "#d3869b",
     tombstone: "#a89984",
     health: "#fbf1c7",
 };
