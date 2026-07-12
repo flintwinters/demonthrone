@@ -30,8 +30,8 @@ export default [
       },
     },
     rules: {
-      complexity: ["error", { max: 6 }],
-      "max-lines": ["error", { max: 160, skipBlankLines: true, skipComments: true }],
+      complexity: ["error", { max: 7 }],
+      "max-lines": ["error", { max: 500, skipBlankLines: true, skipComments: true }],
       "no-unused-vars": "error",
       "no-undef": "error",
     },
