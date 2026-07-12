@@ -8,13 +8,13 @@ import { shadowcastTiles } from "./visibility/index.js";
 import { sightContext } from "./visibility/index.js";
 import { isBoulderTile, movementCost, tileHeight } from "./world/index.js";
 import { lineOfSightConfig } from "./world-config.js";
-import type { Enemy, TilePredicate, Unit } from "./types.js";
+import type { Character, Enemy, TilePredicate } from "./types.js";
 
 export type ActionFields = { movement: Set<string>; attack: Set<string> };
 
 let cached: { signature: string; fields: ActionFields } | null = null;
 
-export function actionFields(unit: Unit, enemies: Enemy[], isMovementBlocked: TilePredicate): ActionFields {
+export function actionFields(unit: Character, enemies: Enemy[], isMovementBlocked: TilePredicate): ActionFields {
   const signature = actionFieldSignature(unit, enemies);
 
   if (cached?.signature === signature) return cached.fields;
@@ -37,7 +37,7 @@ export function actionFields(unit: Unit, enemies: Enemy[], isMovementBlocked: Ti
   return fields;
 }
 
-function actionFieldSignature(unit: Unit, enemies: Enemy[]): string {
+function actionFieldSignature(unit: Character, enemies: Enemy[]): string {
   return [
     unit.id, unit.x, unit.y, unit.movement, unit.attackRange,
     ...[...units, ...enemies, ...pushables].map(entitySignature),

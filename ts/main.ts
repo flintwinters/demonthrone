@@ -4,6 +4,7 @@ import { devicePixelRatio, gridFromScreen } from "./controls/index.js";
 import { connectCancelInput } from "./controls/index.js";
 import { canPlanAttack, resolveAttacks, tryPlanAttack } from "./combat.js";
 import { attackUnits, moveEnemies } from "./enemies.js";
+import { isEnemyActionTile, isSelectionAttackTile } from "./enemy-inspection.js";
 import { materializeEntities } from "./entity-generation.js";
 import { captureFollowerPositions, dispelDestroyedPushable, followPositionHistory } from "./enchantment.js";
 import { EnchantmentSelection } from "./enchantment-selection.js";
@@ -133,16 +134,13 @@ function canInteractionTargetTile(tile: Tile): boolean {
 
   const unit = selectedUnit();
 
-  return unit ? canMoveToTile(tile, unit) : false;
+  return unit ? canMoveToTile(tile, unit) : isEnemyActionTile(selectedTile, tile, enemies, isMovementBlocked, "movement");
 }
 
 function canSelectedUnitAttackTile(tile: Tile): boolean {
-  const unit = selectedUnit();
-
-  return Boolean(unit && canPlanAttack(
-    unit, tile, [...enemies, ...pushables],
-    (candidate) => actionFields(unit, enemies, isMovementBlocked).attack.has(tileKey(candidate)),
-  ));
+  return isSelectionAttackTile(
+    selectedUnit(), selectedTile, tile, enemies, [...enemies, ...pushables], isMovementBlocked,
+  );
 }
 
 function conflictsWithUnitAction(tile: Tile, unit: Unit): boolean {
