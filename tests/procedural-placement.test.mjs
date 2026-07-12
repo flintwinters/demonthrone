@@ -31,6 +31,7 @@ test("entity fields expand with terrain and never reuse consumed origins", () =>
   materializeEntities([unit], enemies);
   assert.equal(pushables.length > 0, true);
   assert.equal(enemies.length > 0, true);
+  assert.equal(new Set(enemies.map((enemy) => enemy.entityType)).has("nephilim"), true);
 
   const crate = pushables[0];
   const origin = { x: crate.x, y: crate.y };

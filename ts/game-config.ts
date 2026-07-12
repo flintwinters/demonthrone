@@ -62,8 +62,8 @@ export const entityGeneration = {
       threshold: 0.65,
     },
     nephilim: {
-      noise: { scale: 0.075, magnitude: 1, seed: 0x6e70686d },
-      threshold: 0.78,
+      noise: { scale: 0.08, magnitude: 1, seed: 0x6e71a4db },
+      threshold: 0.68,
     },
   },
 };
