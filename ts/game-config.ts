@@ -8,9 +8,9 @@ export const worldSeed = 0x5eedf;
 
 export const elevationConfig = {
   layers: [
-    { scale: 0.012, magnitude: 1, seed: worldSeed ^ 0xcd73, sample: "centered", weight: 0.46 },
-    { scale: 0.075, magnitude: 1, seed: worldSeed ^ 0x1234, sample: "linear", weight: 0.42 },
-    { scale: 0.24, magnitude: 1, seed: worldSeed ^ 0xa713, sample: "centered", weight: 0.12 },
+    { wavelength: 84, amplitude: 0.7, seed: worldSeed ^ 0xcd73, sample: "centered" },
+    { wavelength: 14, amplitude: 0.65, seed: worldSeed ^ 0x1234, sample: "linear" },
+    { wavelength: 4, amplitude: 0.2, seed: worldSeed ^ 0xa713, sample: "centered" },
   ],
 } satisfies { layers: readonly HeightComponentConfig[] };
 

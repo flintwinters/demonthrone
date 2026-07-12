@@ -10,16 +10,13 @@ export class NoiseLayer {
     }
 }
 export class HeightComponent {
-    layer;
-    sample;
-    weight;
-    constructor(layer, sample, weight) {
-        this.layer = layer;
-        this.sample = sample;
-        this.weight = weight;
+    config;
+    constructor(config) {
+        this.config = config;
     }
     value(tile) {
-        return sampleHeight(this.layer.value(tile), this.sample) * this.weight;
+        const noise = perlinNoise2d(tile.x / this.config.wavelength, tile.y / this.config.wavelength, this.config.seed);
+        return sampleHeight(noise, this.config.sample) * this.config.amplitude;
     }
 }
 export class HeightProfile {
@@ -98,5 +95,5 @@ function sampleHeight(value, sample) {
     return value;
 }
 function heightComponent(config) {
-    return new HeightComponent(new NoiseLayer(config), config.sample, config.weight);
+    return new HeightComponent(config);
 }

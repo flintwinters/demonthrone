@@ -24,7 +24,10 @@ export class BasinField {
         return this.isFlooded(anchor, tile, surface, isWet) ? surface : null;
     }
     isFlooded(anchor, tile, surface, isWet) {
-        return isWet(anchor) && isWet(tile) && this.groundHeight(tile) <= surface;
+        const ground = this.groundHeight(tile);
+        return isWet(anchor) && isWet(tile)
+            && ground <= surface
+            && ground >= surface - this.depth;
     }
     belongsToBasin(nearest, second) {
         const maximumDistance = this.radius * this.radius;

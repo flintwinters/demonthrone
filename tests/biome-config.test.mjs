@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { biomes, elevationConfig } from "../src/world-config.js";
-import { NoiseLayer } from "../src/domain.js";
+import { HeightComponent, NoiseLayer } from "../src/domain.js";
 
 test("every biome owns a complete typed procedural profile", () => {
   for (const [kind, biome] of Object.entries(biomes)) {
@@ -13,16 +13,17 @@ test("every biome owns a complete typed procedural profile", () => {
     assertNoiseFeature(biome.config.ice);
     assert.equal(Number.isFinite(biome.config.brush.sightCost), true);
     for (const component of biome.config.height.components) {
-      assert.equal(Number.isFinite(component.weight), true);
+      assert.equal(component.wavelength > 0, true);
+      assert.equal(Number.isFinite(component.amplitude), true);
       assert.equal(["centered", "crest", "linear", "terraced"].includes(component.sample), true);
-      assertNoise(component);
+      assert.equal(Number.isInteger(component.seed), true);
     }
   }
 });
 
 test("elevation is composed from exactly three configurable noise layers", () => {
   assert.equal(elevationConfig.layers.length, 3);
-  assert.equal(new Set(elevationConfig.layers.map(({ scale }) => scale)).size, 3);
+  assert.equal(new Set(elevationConfig.layers.map(({ wavelength }) => wavelength)).size, 3);
   assert.equal(new Set(elevationConfig.layers.map(({ seed }) => seed)).size, 3);
 });
 
@@ -43,6 +44,16 @@ test("noise magnitude scales output independently of coordinate scale", () => {
   const tile = { x: 4, y: 9 };
 
   assert.equal(amplified.value(tile), base.value(tile) * 2.5);
+});
+
+test("elevation wavelength divides coordinates and amplitude scales transformed output", () => {
+  const config = { wavelength: 10, amplitude: 1, seed: 12345, sample: "centered" };
+  const base = new HeightComponent(config);
+  const wider = new HeightComponent({ ...config, wavelength: 20 });
+  const amplified = new HeightComponent({ ...config, amplitude: 2.5 });
+
+  assert.equal(wider.value({ x: 14, y: 18 }), base.value({ x: 7, y: 9 }));
+  assert.equal(amplified.value({ x: 7, y: 9 }), base.value({ x: 7, y: 9 }) * 2.5);
 });
 
 function assertNoiseFeature(feature) {

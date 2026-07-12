@@ -3,7 +3,12 @@ import type { BiomeKind, Terrain, TerrainKind, Tile } from "./types.js";
 
 export type NoiseLayerConfig = { scale: number; magnitude: number; seed: number };
 export type HeightSample = "centered" | "crest" | "linear" | "terraced";
-export type HeightComponentConfig = NoiseLayerConfig & { sample: HeightSample; weight: number };
+export type HeightComponentConfig = {
+  wavelength: number;
+  amplitude: number;
+  seed: number;
+  sample: HeightSample;
+};
 export type NoiseFeatureConfig = NoiseLayerConfig & { threshold: number };
 export type BiomeProfileConfig = {
   kind: BiomeKind;
@@ -24,14 +29,16 @@ export class NoiseLayer {
 }
 
 export class HeightComponent {
-  constructor(
-    private readonly layer: NoiseLayer,
-    private readonly sample: HeightSample,
-    private readonly weight: number,
-  ) {}
+  constructor(private readonly config: HeightComponentConfig) {}
 
   value(tile: Tile): number {
-    return sampleHeight(this.layer.value(tile), this.sample) * this.weight;
+    const noise = perlinNoise2d(
+      tile.x / this.config.wavelength,
+      tile.y / this.config.wavelength,
+      this.config.seed,
+    );
+
+    return sampleHeight(noise, this.config.sample) * this.config.amplitude;
   }
 }
 
@@ -106,5 +113,5 @@ function sampleHeight(value: number, sample: HeightSample): number {
 }
 
 function heightComponent(config: HeightComponentConfig): HeightComponent {
-  return new HeightComponent(new NoiseLayer(config), config.sample, config.weight);
+  return new HeightComponent(config);
 }

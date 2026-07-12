@@ -120,9 +120,9 @@ function terrainKind(isWater, isIce, isBoulder, isBrush) {
     return isBrush ? "brush" : "floor";
 }
 function heightAt(tile, biomeProfile) {
-    const range = terrainHeight.max - terrainHeight.min;
+    const range = terrainHeight.mappingMax - terrainHeight.mappingMin;
     const value = contrastHeight(biomeProfile.height.value(tile));
-    return terrainHeight.min + Math.round(clamp(value) * range);
+    return terrainHeight.mappingMin + Math.round(value * range);
 }
 function groundHeightAt(tile) {
     return heightAt(tile, biomeAt(tile));
@@ -132,9 +132,6 @@ function biomeAt(tile) {
 }
 function contrastHeight(value) {
     return 0.5 + (value - 0.5) * terrainHeight.contrast;
-}
-function clamp(value) {
-    return Math.max(0, Math.min(1, value));
 }
 function isSafeTile(tile) {
     return safeZones.some((zone) => zone.contains(tile));

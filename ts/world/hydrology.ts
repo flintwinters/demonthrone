@@ -41,7 +41,11 @@ export class BasinField {
   }
 
   private isFlooded(anchor: BasinAnchor, tile: Tile, surface: number, isWet: Predicate): boolean {
-    return isWet(anchor) && isWet(tile) && this.groundHeight(tile) <= surface;
+    const ground = this.groundHeight(tile);
+
+    return isWet(anchor) && isWet(tile)
+      && ground <= surface
+      && ground >= surface - this.depth;
   }
 
   private belongsToBasin(nearest: RankedAnchor, second: RankedAnchor): boolean {

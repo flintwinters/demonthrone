@@ -186,10 +186,10 @@ function terrainKind(isWater: boolean, isIce: boolean, isBoulder: boolean, isBru
 }
 
 function heightAt(tile: Tile, biomeProfile: BiomeProfile): number {
-  const range = terrainHeight.max - terrainHeight.min;
+  const range = terrainHeight.mappingMax - terrainHeight.mappingMin;
   const value = contrastHeight(biomeProfile.height.value(tile));
 
-  return terrainHeight.min + Math.round(clamp(value) * range);
+  return terrainHeight.mappingMin + Math.round(value * range);
 }
 
 function groundHeightAt(tile: Tile): number {
@@ -202,10 +202,6 @@ function biomeAt(tile: Tile): BiomeProfile {
 
 function contrastHeight(value: number): number {
   return 0.5 + (value - 0.5) * terrainHeight.contrast;
-}
-
-function clamp(value: number): number {
-  return Math.max(0, Math.min(1, value));
 }
 
 function isSafeTile(tile: Tile): boolean {
