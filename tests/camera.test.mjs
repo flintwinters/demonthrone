@@ -3,7 +3,7 @@ import test from "node:test";
 
 globalThis.window = { devicePixelRatio: 1 };
 
-const { view, zoomAt } = await import("../src/camera.js");
+const { view, zoomAt } = await import("../src/controls/index.js");
 const canvas = { width: 800, height: 600 };
 
 test("zoom has no configured maximum", () => {

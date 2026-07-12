@@ -1,5 +1,5 @@
 import { rotateAt, view, viewportCenter } from "./camera.js";
-import { rotationControlInterval, rotationControlStep } from "./constants.js";
+import { rotationControlInterval, rotationControlStep } from "../constants.js";
 export function connectRotationControls(canvas, controls, onViewChange) {
     const state = {
         intervalId: null,

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { cameraDistance, cameraElevation, terrainHeight, worldPixelsPerUnit, } from "./constants.js";
+import { cameraDistance, cameraElevation, terrainHeight, worldPixelsPerUnit, } from "../constants.js";
 export const view = {
     targetX: 6.5,
     targetY: 6.5,

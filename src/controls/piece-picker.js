@@ -1,6 +1,6 @@
 import { screenFromGrid, view } from "./camera.js";
-import { terrainHeight } from "./constants.js";
-import { piecePickerConfig } from "./world-config.js";
+import { terrainHeight } from "../constants.js";
+import { piecePickerConfig } from "../world-config.js";
 export function pickPieceTile(canvas, point, pieces, canSee, tileHeight) {
     let nearest = null;
     let nearestDistance = Math.max(piecePickerConfig.minimumPickRadius, piecePickerConfig.pickRadius * view.zoom);

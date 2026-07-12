@@ -1,5 +1,5 @@
 import { gridFromScreen, panBy, rotateAt, view, viewportCenter, zoomAt } from "./camera.js";
-import { dragThreshold, mousePitchSpeed, mouseRotateSpeed, wheelDeltaLineMode } from "./constants.js";
+import { dragThreshold, mousePitchSpeed, mouseRotateSpeed, wheelDeltaLineMode } from "../constants.js";
 import { createHoverScheduler } from "./hover.js";
 import { endPinch, handlePinch, startPinch } from "./pinch.js";
 export function connectInput(canvas, onSelectTile, onHoverTile, onViewChange, heightAt = null, screenTileAt = null) {
