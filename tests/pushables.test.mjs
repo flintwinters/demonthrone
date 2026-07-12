@@ -13,6 +13,7 @@ import {
 import { EnchantmentSelection } from "../src/enchantment-selection.js";
 import { handleEnchantmentClick } from "../src/interaction.js";
 import { canTakeAction, resetActions, spendAction } from "../src/teammate-turns.js";
+import { units } from "../src/units.js";
 import {
   canPushTo,
   clearPlannedPush,
@@ -94,13 +95,17 @@ test("crates outside teammate line of sight are not rendered", () => {
 });
 
 test("the pending enchantment source is exposed to the renderer", () => {
-  const crate = boardState(null, null, [], [], () => false).pushables[0];
+  const crate = pushables[0];
+  const original = { x: crate.x, y: crate.y };
 
-  assert.notEqual(crate, undefined);
+  crate.x = units[0].x;
+  crate.y = units[0].y;
   const renderedCrate = boardState(null, null, [], [], () => false, () => false, crate.id).pushables
     .find((candidate) => candidate.id === crate.id);
 
   assert.equal(renderedCrate?.isEnchantmentSource, true);
+  crate.x = original.x;
+  crate.y = original.y;
 });
 
 test("crates bind to an explicitly selected chain target", () => {

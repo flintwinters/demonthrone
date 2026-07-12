@@ -6,7 +6,9 @@ import { NoiseLayer } from "../src/domain.js";
 test("every biome owns a complete typed procedural profile", () => {
   for (const [kind, biome] of Object.entries(biomes)) {
     assert.equal(biome.kind, kind);
-    assert.equal(biome.config.height.components.length > 0, true);
+    assert.equal(biome.config.height.components.length >= 6, true);
+    assert.equal(new Set(biome.config.height.components.map(({ scale }) => scale)).size >= 4, true);
+    assert.equal(new Set(biome.config.height.components.map(({ seed }) => seed)).size >= 4, true);
     assertNoiseFeature(biome.config.boulder);
     assertNoiseFeature(biome.config.brush);
     assertNoiseFeature(biome.config.water);
