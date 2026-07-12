@@ -1,14 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { biomes } from "../src/world-config.js";
+import { biomes, elevationConfig } from "../src/world-config.js";
 import { NoiseLayer } from "../src/domain.js";
 
 test("every biome owns a complete typed procedural profile", () => {
   for (const [kind, biome] of Object.entries(biomes)) {
     assert.equal(biome.kind, kind);
-    assert.equal(biome.config.height.components.length >= 6, true);
-    assert.equal(new Set(biome.config.height.components.map(({ scale }) => scale)).size >= 4, true);
-    assert.equal(new Set(biome.config.height.components.map(({ seed }) => seed)).size >= 4, true);
+    assert.equal(biome.config.height.components, elevationConfig.layers);
     assertNoiseFeature(biome.config.boulder);
     assertNoiseFeature(biome.config.brush);
     assertNoiseFeature(biome.config.water);
@@ -20,6 +18,12 @@ test("every biome owns a complete typed procedural profile", () => {
       assertNoise(component);
     }
   }
+});
+
+test("elevation is composed from exactly three configurable noise layers", () => {
+  assert.equal(elevationConfig.layers.length, 3);
+  assert.equal(new Set(elevationConfig.layers.map(({ scale }) => scale)).size, 3);
+  assert.equal(new Set(elevationConfig.layers.map(({ seed }) => seed)).size, 3);
 });
 
 test("biomes do not share mutable procedural feature instances", () => {

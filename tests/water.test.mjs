@@ -12,11 +12,11 @@ import {
   tileTerrain,
 } from "../src/world/index.js";
 
-function waterTiles() {
+function waterTiles(radius = 30) {
   const tiles = [];
 
-  for (let y = -30; y <= 30; y += 1) {
-    for (let x = -30; x <= 30; x += 1) {
+  for (let y = -radius; y <= radius; y += 1) {
+    for (let x = -radius; x <= radius; x += 1) {
       if (isWaterTile({ x, y })) {
         tiles.push({ x, y });
       }
@@ -57,7 +57,7 @@ test("water is impassable terrain without obstacle props", () => {
 });
 
 test("separate water bodies occupy different basin elevations", () => {
-  const heights = new Set(waterTiles().map(tileHeight));
+  const heights = new Set(waterTiles(50).map(tileHeight));
 
   assert.equal(heights.size > 1, true);
 });

@@ -1,7 +1,15 @@
 import { NoiseLayer, SafeZone, TerrainType } from "./domain.js";
+import { createBiomes } from "./biome-config.js";
 export { enemyConfigs, teammateConfigs } from "./character-config.js";
-export { biomes } from "./biome-config.js";
 export const worldSeed = 0x5eedf;
+export const elevationConfig = {
+    layers: [
+        { scale: 0.012, magnitude: 1, seed: worldSeed ^ 0xcd73, sample: "centered", weight: 0.46 },
+        { scale: 0.075, magnitude: 1, seed: worldSeed ^ 0x1234, sample: "linear", weight: 0.42 },
+        { scale: 0.24, magnitude: 1, seed: worldSeed ^ 0xa713, sample: "centered", weight: 0.12 },
+    ],
+};
+export const biomes = createBiomes(elevationConfig.layers);
 export const layers = {
     elevation: new NoiseLayer({ scale: 0.055, magnitude: 1, seed: worldSeed ^ 0x1234 }),
     moisture: new NoiseLayer({ scale: 0.06, magnitude: 1, seed: worldSeed ^ 0x4321 }),
