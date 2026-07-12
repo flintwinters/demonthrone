@@ -1,5 +1,6 @@
 import { boardState, canSeeTile, enrichTile } from "./board-state.js";
 import { actionFields } from "./action-fields.js";
+import { syncCompass } from "./compass.js";
 import { devicePixelRatio, gridFromScreen } from "./controls/index.js";
 import { connectCancelInput } from "./controls/index.js";
 import { canPlanAttack, resolveAttacks, tryPlanAttack } from "./combat.js";
@@ -29,6 +30,7 @@ const goButton = requiredElement("#go");
 const rotateLeftButton = requiredElement("#rotate-left");
 const rotateRightButton = requiredElement("#rotate-right");
 const selectionStatus = requiredElement("#selection-status");
+const compassDial = requiredElement("#compass-dial");
 let selectedTile = null;
 let hoveredTile = null;
 const enemies = [];
@@ -36,6 +38,7 @@ const tombstones = [];
 const enchantmentSelection = new EnchantmentSelection();
 const gameOver = new GameOverState(requiredElement("#game-over"));
 function draw() {
+    syncCompass(compassDial);
     drawGrid(canvas, boardState(selectedTile, hoveredTile, enemies, tombstones, canInteractionTargetTile, canSelectedUnitAttackTile, enchantmentSelection.source()?.id ?? null, plannedSelectionLines(enchantmentSelection, hoveredTile, units, enemies, pushables, enrichTile), gameOver.center));
     goButton.hidden = units.length === 0;
     gameOver.syncStatus();

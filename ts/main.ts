@@ -1,5 +1,6 @@
 import { boardState, canSeeTile, enrichTile } from "./board-state.js";
 import { actionFields } from "./action-fields.js";
+import { syncCompass } from "./compass.js";
 import { devicePixelRatio, gridFromScreen } from "./controls/index.js";
 import { connectCancelInput } from "./controls/index.js";
 import { canPlanAttack, resolveAttacks, tryPlanAttack } from "./combat.js";
@@ -38,6 +39,7 @@ const goButton = requiredElement<HTMLButtonElement>("#go");
 const rotateLeftButton = requiredElement<HTMLButtonElement>("#rotate-left");
 const rotateRightButton = requiredElement<HTMLButtonElement>("#rotate-right");
 const selectionStatus = requiredElement<HTMLOutputElement>("#selection-status");
+const compassDial = requiredElement<HTMLElement>("#compass-dial");
 let selectedTile: HeightTile | null = null;
 let hoveredTile: HeightTile | null = null;
 const enemies: Enemy[] = [];
@@ -45,6 +47,7 @@ const tombstones: Tile[] = [];
 const enchantmentSelection = new EnchantmentSelection();
 const gameOver = new GameOverState(requiredElement<HTMLOutputElement>("#game-over"));
 function draw(): void {
+  syncCompass(compassDial);
   drawGrid(canvas, boardState(
     selectedTile, hoveredTile, enemies, tombstones, canInteractionTargetTile, canSelectedUnitAttackTile,
     enchantmentSelection.source()?.id ?? null,
@@ -218,11 +221,7 @@ function go(): void {
 
 connectInput(canvas, selectTile, hoverTile, draw, tileHeight, pickSelectableTile);
 connectCancelInput(cancelInteraction);
-connectRotationControls(
-  canvas,
-  { left: rotateLeftButton, right: rotateRightButton },
-  draw,
-);
+connectRotationControls(canvas, { left: rotateLeftButton, right: rotateRightButton }, draw);
 connectTurnControl(goButton, go);
 window.addEventListener("resize", resize);
 materializeEntities(units, enemies);

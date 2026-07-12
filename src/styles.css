@@ -33,6 +33,67 @@ canvas {
   display: none;
 }
 
+.compass {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 72px;
+  height: 72px;
+  color: #ebdbb2;
+  font: 700 11px/1 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  pointer-events: none;
+}
+
+.compass-dial {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+}
+
+.compass-axis {
+  position: absolute;
+  top: 35px;
+  left: 13px;
+  width: 46px;
+  height: 2px;
+  background: #a89984;
+}
+
+.compass-axis-north {
+  background: linear-gradient(90deg, #a89984 0 50%, #fb4934 50% 100%);
+  transform: rotate(90deg);
+}
+
+.compass-marker {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  text-align: center;
+  transform-origin: center;
+}
+
+.compass-north {
+  top: 0;
+  left: 28px;
+  color: #fb4934;
+}
+
+.compass-east {
+  top: 28px;
+  right: 0;
+}
+
+.compass-south {
+  bottom: 0;
+  left: 28px;
+}
+
+.compass-west {
+  top: 28px;
+  left: 0;
+}
+
 .rotate-button {
   width: 42px;
   height: 42px;
