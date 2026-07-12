@@ -7,12 +7,13 @@ import { units } from "./units.js";
 import { shadowcastTiles } from "./visibility-field.js";
 import { sightContext } from "./visibility.js";
 import { isBoulderTile, movementCost, tileHeight } from "./world.js";
+import { lineOfSightConfig } from "./world-config.js";
 let cached = null;
 export function actionFields(unit, enemies, isMovementBlocked) {
     const signature = actionFieldSignature(unit, enemies);
     if (cached?.signature === signature)
         return cached.fields;
-    const context = sightContext(visibilityState(enemies).blockers, () => 1, tileHeight, isBoulderTile);
+    const context = sightContext(visibilityState(enemies).blockers, () => 1, tileHeight, isBoulderTile, lineOfSightConfig.attackHeightMultiplier);
     const movement = reachableTileKeys(unit, unit.movement, isMovementBlocked, tileHeight, movementCost);
     const attack = new Set(shadowcastTiles(unit, unit.attackRange, context, sightGeometry.eyeHeight).map(tileKey));
     const fields = { movement, attack };

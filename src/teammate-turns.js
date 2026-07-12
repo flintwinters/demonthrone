@@ -1,20 +1,24 @@
 import { clearPlannedPush } from "./pushables.js";
-const spentUnitIds = new Set();
+let actingUnitId = null;
 export function canTakeAction(unit) {
-    return !spentUnitIds.has(unit.id);
+    return actingUnitId === null && unit.health > 0;
 }
 export function spendAction(unit) {
-    unit.target = null;
-    unit.attackTargetId = null;
-    clearPlannedPush(unit.id);
-    spentUnitIds.add(unit.id);
+    if (actingUnitId !== null && actingUnitId !== unit.id)
+        return;
+    clearUnitAction(unit);
+    actingUnitId = unit.id;
 }
 export function cancelAction(unit) {
+    clearUnitAction(unit);
+    if (actingUnitId === unit.id)
+        actingUnitId = null;
+}
+export function resetActions() {
+    actingUnitId = null;
+}
+function clearUnitAction(unit) {
     unit.target = null;
     unit.attackTargetId = null;
     clearPlannedPush(unit.id);
-    spentUnitIds.delete(unit.id);
-}
-export function resetActions() {
-    spentUnitIds.clear();
 }

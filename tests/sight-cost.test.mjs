@@ -30,6 +30,16 @@ test("vertical slope adds a monotonic symmetric distance penalty", () => {
   assert.equal(raised > flat, true);
 });
 
+test("line-of-sight slope penalty scales by height multiplier", () => {
+  assert.equal(lineSightCost(point(0, 0, 1), point(4, 0, 3), context({
+    heightMultiplier: 0,
+  })), 4);
+
+  assert.equal(lineSightCost(point(0, 0, 1), point(4, 0, 3), context({
+    heightMultiplier: 2,
+  })), 8);
+});
+
 test("elevated terrain blocks a ray through its three-dimensional column", () => {
   const hill = context({ tileHeight: (tile) => tile.x === 2 ? 2 : 0 });
 

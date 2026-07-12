@@ -1,7 +1,6 @@
 import { TeammateTemplate } from "./domain.js";
 import { sameTile } from "./grid.js";
-import { clearPlannedPush } from "./pushables.js";
-import { cancelAction } from "./teammate-turns.js";
+import { cancelAction, spendAction } from "./teammate-turns.js";
 import { teammateConfigs } from "./world-config.js";
 export const units = [
     ...teammateConfigs.map((config) => {
@@ -48,11 +47,11 @@ export function syncUnitSelection() {
 function assignSelectedTarget(tile, canTargetTile, onTarget) {
     const unit = selectedUnit();
     if (unit?.target && sameTile(unit.target, tile)) {
-        unit.target = null;
-        clearPlannedPush(unit.id);
+        cancelAction(unit);
         return null;
     }
     if (unit && canTargetTile(tile, unit)) {
+        spendAction(unit);
         onTarget(unit, tile);
         unit.target = { x: tile.x, y: tile.y };
         return tile;

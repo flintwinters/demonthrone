@@ -34,6 +34,19 @@ test("planning an in-range attack spends the teammate action", () => {
   resetActions();
 });
 
+test("one teammate action locks every other teammate for the turn", () => {
+  const acting = teammate("acting");
+  const waiting = teammate("waiting");
+  const target = enemy("target", 1);
+
+  planAttack(acting, target);
+  assert.equal(canTakeAction(acting), false);
+  assert.equal(canTakeAction(waiting), false);
+  assert.equal(tryPlanAttack(target, waiting, [target], () => true), null);
+  resetActions();
+  assert.equal(canTakeAction(waiting), true);
+});
+
 test("attack resolution damages and removes defeated enemies", () => {
   const unit = teammate("finisher");
   const target = enemy("target", 1, 1);

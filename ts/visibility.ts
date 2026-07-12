@@ -1,4 +1,5 @@
 import { sightGeometry, terrainHeight } from "./constants.js";
+import { lineOfSightConfig } from "./world-config.js";
 import { lineSightCost, type SightRayContext } from "./sight-cost.js";
 import { tileKey } from "./grid.js";
 import type {
@@ -37,6 +38,7 @@ export function sightContext(
   sightCost: TileSightCost,
   tileHeight: TileHeight,
   isBoulderTile: TilePredicate,
+  heightMultiplier: number = lineOfSightConfig.visionHeightMultiplier,
 ): SightContext {
   return {
     sightCost,
@@ -44,6 +46,7 @@ export function sightContext(
     isBoulderTile,
     blockers: blockerMap(sightBlockers),
     boulderHeight: sightGeometry.boulderHeight,
+    heightMultiplier,
   };
 }
 

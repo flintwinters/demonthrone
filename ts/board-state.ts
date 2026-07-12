@@ -5,6 +5,7 @@ import { pushables } from "./pushables.js";
 import { selection, units } from "./units.js";
 import { canUnitSeeEntity, sightContext } from "./visibility.js";
 import { isBoulderTile, isBrushTile, sightCost, tileHeight } from "./world.js";
+import { lineOfSightConfig } from "./world-config.js";
 import type {
   BoardState, DamageableEntity, Enemy, HeightTile, RenderEnemy, RenderPushable,
   RenderTombstone, RenderUnit, SelectionArc, Tile, TilePredicate, Unit,
@@ -61,7 +62,11 @@ export function canSeeTile(tile: Tile, enemies: Enemy[], revealCenter: Tile | nu
 
 export function canUnitSee(unit: Unit, target: DamageableEntity, enemies: Enemy[]): boolean {
   return canUnitSeeEntity(unit, target, sightContext(
-    visibilityState(enemies).blockers, sightCost, tileHeight, isBoulderTile,
+    visibilityState(enemies).blockers,
+    sightCost,
+    tileHeight,
+    isBoulderTile,
+    lineOfSightConfig.visionHeightMultiplier,
   ));
 }
 

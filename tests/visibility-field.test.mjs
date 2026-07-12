@@ -78,6 +78,21 @@ test("character-height range fields include flat adjacent tiles", () => {
   assert.equal(keys.has("1:1"), false);
 });
 
+test("shadowcast LOS slope penalty is configurable", () => {
+  const context = (heightMultiplier) => sightContext(
+    [],
+    () => 1,
+    (tile) => (tile.x === 3 && tile.y === 0 ? 8 : 0),
+    () => false,
+    heightMultiplier,
+  );
+  const flatVision = new Set(shadowcastTiles({ x: 0, y: 0 }, 8, context(1), 0.001).map(tileKey));
+  const steepVision = new Set(shadowcastTiles({ x: 0, y: 0 }, 8, context(1.5), 0.001).map(tileKey));
+
+  assert.equal(flatVision.has("3:0"), true);
+  assert.equal(steepVision.has("3:0"), false);
+});
+
 function cardinalNeighbors(tile) {
   return [
     { x: tile.x + 1, y: tile.y },

@@ -1,4 +1,5 @@
 import { sightGeometry, terrainHeight } from "./constants.js";
+import { lineOfSightConfig } from "./world-config.js";
 import { lineSightCost } from "./sight-cost.js";
 import { tileKey } from "./grid.js";
 export function isVisibleTile(tile, units, sightBlockers, sightCost, tileHeight, isBoulderTile) {
@@ -11,13 +12,14 @@ export function canUnitSeeTile(unit, tile, context) {
 export function canUnitSeeEntity(unit, target, context) {
     return canSeePoint(unit, entityPoint(target, context), context);
 }
-export function sightContext(sightBlockers, sightCost, tileHeight, isBoulderTile) {
+export function sightContext(sightBlockers, sightCost, tileHeight, isBoulderTile, heightMultiplier = lineOfSightConfig.visionHeightMultiplier) {
     return {
         sightCost,
         tileHeight: (tile) => visualHeight(tileHeight(tile)),
         isBoulderTile,
         blockers: blockerMap(sightBlockers),
         boulderHeight: sightGeometry.boulderHeight,
+        heightMultiplier,
     };
 }
 export function memoizedSightContext(context) {

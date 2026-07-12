@@ -1,5 +1,6 @@
 import { appendShadowcastTiles } from "./visibility-field.js";
 import { memoizedSightContext, sightContext } from "./visibility.js";
+import { lineOfSightConfig } from "./world-config.js";
 import type { SightBlocker, Tile, TileHeight, TilePredicate, TileSightCost, Unit } from "./types.js";
 
 export function visibleTiles(
@@ -12,7 +13,13 @@ export function visibleTiles(
   const seen = new Set<string>();
   const tiles: Tile[] = [];
   const context = memoizedSightContext(
-    sightContext(sightBlockers, sightCost, tileHeight, isBoulderTile),
+    sightContext(
+      sightBlockers,
+      sightCost,
+      tileHeight,
+      isBoulderTile,
+      lineOfSightConfig.visionHeightMultiplier,
+    ),
   );
 
   for (const unit of units) {

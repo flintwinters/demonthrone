@@ -69,6 +69,10 @@ export const entityGeneration = {
 };
 
 export const movementConfig = { maxUpwardStepHeight: 2 };
+export const lineOfSightConfig = {
+  visionHeightMultiplier: 1,
+  attackHeightMultiplier: 1,
+};
 
 export const pushableConfig = {
   maxUpwardPushHeight: 2,

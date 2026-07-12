@@ -126,7 +126,8 @@ function isBinVisible(
 ): boolean {
   if (horizontal > sight) return false;
   const deltaZ = context.tileHeight(tile) + sweep.targetOffset - sweep.eyeZ;
-  const rangeCost = sweep.costs[bin] * (1 + Math.abs(deltaZ) / horizontal);
+  const heightMultiplier = context.heightMultiplier ?? 1;
+  const rangeCost = sweep.costs[bin] * (1 + heightMultiplier * Math.abs(deltaZ) / horizontal);
 
   return rangeCost <= sight && deltaZ / horizontal >= sweep.horizons[bin];
 }

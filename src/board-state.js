@@ -5,6 +5,7 @@ import { pushables } from "./pushables.js";
 import { selection, units } from "./units.js";
 import { canUnitSeeEntity, sightContext } from "./visibility.js";
 import { isBoulderTile, isBrushTile, sightCost, tileHeight } from "./world.js";
+import { lineOfSightConfig } from "./world-config.js";
 export function boardState(selectedTile, hoveredTile, enemies, tombstones, isMovementTile, isAttackTile, enchantmentSourceId = null, selectionLines = [], revealCenter = null) {
     const visibility = visibilityState(enemies, revealCenter);
     return {
@@ -41,7 +42,7 @@ export function canSeeTile(tile, enemies, revealCenter = null) {
     return visibilityState(enemies, revealCenter).keys.has(tileKey(tile));
 }
 export function canUnitSee(unit, target, enemies) {
-    return canUnitSeeEntity(unit, target, sightContext(visibilityState(enemies).blockers, sightCost, tileHeight, isBoulderTile));
+    return canUnitSeeEntity(unit, target, sightContext(visibilityState(enemies).blockers, sightCost, tileHeight, isBoulderTile, lineOfSightConfig.visionHeightMultiplier));
 }
 export function enrichTile(tile) {
     return { ...tile, height: tileHeight(tile) };

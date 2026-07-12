@@ -9,7 +9,7 @@ export function lineSightCost(start, end, context) {
         blocked ||= blocksRay(ray, segment, context);
         cost += segmentCost(ray, segment, context.sightCost);
     });
-    return blocked ? Number.POSITIVE_INFINITY : cost * slopeMultiplier(ray);
+    return blocked ? Number.POSITIVE_INFINITY : cost * slopeMultiplier(ray, context.heightMultiplier ?? 1);
 }
 export function sightSearchRadius(lineOfSight) {
     return Math.ceil(lineOfSight);
@@ -90,6 +90,6 @@ function segmentCost(ray, segment, sightCost) {
 function rayZ(ray, progress) {
     return ray.start.z + ray.dz * progress;
 }
-function slopeMultiplier(ray) {
-    return 1 + Math.abs(ray.dz) / ray.horizontal;
+function slopeMultiplier(ray, heightMultiplier) {
+    return 1 + Math.abs(ray.dz) * heightMultiplier / ray.horizontal;
 }

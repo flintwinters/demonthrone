@@ -1,26 +1,29 @@
 import { clearPlannedPush } from "./pushables.js";
 import type { Unit } from "./types.js";
 
-const spentUnitIds = new Set<string>();
+let actingUnitId: string | null = null;
 
 export function canTakeAction(unit: Unit): boolean {
-  return !spentUnitIds.has(unit.id);
+  return actingUnitId === null && unit.health > 0;
 }
 
 export function spendAction(unit: Unit): void {
-  unit.target = null;
-  unit.attackTargetId = null;
-  clearPlannedPush(unit.id);
-  spentUnitIds.add(unit.id);
+  if (actingUnitId !== null && actingUnitId !== unit.id) return;
+  clearUnitAction(unit);
+  actingUnitId = unit.id;
 }
 
 export function cancelAction(unit: Unit): void {
-  unit.target = null;
-  unit.attackTargetId = null;
-  clearPlannedPush(unit.id);
-  spentUnitIds.delete(unit.id);
+  clearUnitAction(unit);
+  if (actingUnitId === unit.id) actingUnitId = null;
 }
 
 export function resetActions(): void {
-  spentUnitIds.clear();
+  actingUnitId = null;
+}
+
+function clearUnitAction(unit: Unit): void {
+  unit.target = null;
+  unit.attackTargetId = null;
+  clearPlannedPush(unit.id);
 }

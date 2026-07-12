@@ -7,6 +7,7 @@ export type SightRayContext = {
   isBoulderTile: TilePredicate;
   blockers: Map<string, SightBlocker[]>;
   boulderHeight: number;
+  heightMultiplier?: number;
 };
 
 type Ray = { start: Point3; end: Point3; dx: number; dy: number; dz: number; horizontal: number };
@@ -23,7 +24,7 @@ export function lineSightCost(start: Point3, end: Point3, context: SightRayConte
     blocked ||= blocksRay(ray, segment, context);
     cost += segmentCost(ray, segment, context.sightCost);
   });
-  return blocked ? Number.POSITIVE_INFINITY : cost * slopeMultiplier(ray);
+  return blocked ? Number.POSITIVE_INFINITY : cost * slopeMultiplier(ray, context.heightMultiplier ?? 1);
 }
 
 export function sightSearchRadius(lineOfSight: number): number {
@@ -123,6 +124,6 @@ function rayZ(ray: Ray, progress: number): number {
   return ray.start.z + ray.dz * progress;
 }
 
-function slopeMultiplier(ray: Ray): number {
-  return 1 + Math.abs(ray.dz) / ray.horizontal;
+function slopeMultiplier(ray: Ray, heightMultiplier: number): number {
+  return 1 + Math.abs(ray.dz) * heightMultiplier / ray.horizontal;
 }
