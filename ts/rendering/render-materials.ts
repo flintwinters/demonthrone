@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { colors } from "./constants.js";
+import { colors } from "../constants.js";
 
 const materials: Map<string, THREE.MeshLambertMaterial> = new Map();
 const transparentMaterials: Map<string, THREE.MeshLambertMaterial> = new Map();

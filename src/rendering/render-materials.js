@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { colors } from "./constants.js";
+import { colors } from "../constants.js";
 const materials = new Map();
 const transparentMaterials = new Map();
 const terrainMaterials = new Map();

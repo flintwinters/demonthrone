@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { colors, foliageColors } from "./constants.js";
-import { deterministicUnit } from "./noise.js";
+import { colors, foliageColors } from "../constants.js";
+import { deterministicUnit } from "../noise.js";
 import { material } from "./render-materials.js";
-import type { BiomeKind, Tile } from "./types.js";
-import { terrainPropConfig } from "./world-config.js";
+import type { BiomeKind, Tile } from "../types.js";
+import { terrainPropConfig } from "../world-config.js";
 
 export type PropPlacement = {
   tile: Tile;

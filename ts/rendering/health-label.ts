@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { colors, terrainHeight } from "./constants.js";
-import type { HeightTile } from "./types.js";
+import { colors, terrainHeight } from "../constants.js";
+import type { HeightTile } from "../types.js";
 
 const textureSize = 64;
 const labelScale = 0.34;

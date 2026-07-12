@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { colors } from "./constants.js";
-import { tileKey } from "./grid.js";
+import { colors } from "../constants.js";
+import { tileKey } from "../grid.js";
 import { terrainEdgeMaterial, terrainMaterial } from "./render-materials.js";
 import type { TerrainStyle } from "./terrain-mesh.js";
-import type { Tile } from "./types.js";
+import type { Tile } from "../types.js";
 
 type Vertex = readonly [number, number, number];
 

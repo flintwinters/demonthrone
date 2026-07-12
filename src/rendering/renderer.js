@@ -1,7 +1,7 @@
 import * as THREE from "three";
-import { configureViewCamera, createViewCamera, devicePixelRatio } from "./controls/index.js";
+import { configureViewCamera, createViewCamera, devicePixelRatio } from "../controls/index.js";
 import { enemyObjects, unitObjects } from "./character-render.js";
-import { colors, terrainHeight } from "./constants.js";
+import { colors, terrainHeight } from "../constants.js";
 import { material } from "./render-materials.js";
 import { addSelectionVisuals } from "./selection-render.js";
 import { pushableMeshes } from "./pushable-render.js";

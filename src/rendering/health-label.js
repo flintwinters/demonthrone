@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { colors, terrainHeight } from "./constants.js";
+import { colors, terrainHeight } from "../constants.js";
 const textureSize = 64;
 const labelScale = 0.34;
 const materials = new Map();

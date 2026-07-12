@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { terrainHeight } from "./constants.js";
-import { enemyConfigs } from "./world-config.js";
+import { terrainHeight } from "../constants.js";
+import { enemyConfigs } from "../world-config.js";
 import { healthLabel } from "./health-label.js";
 import { material, transparentMaterial } from "./render-materials.js";
 const unitGeometry = new THREE.SphereGeometry(0.24, 16, 10);

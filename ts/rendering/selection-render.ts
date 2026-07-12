@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { terrainHeight } from "./constants.js";
-import { tileKey } from "./grid.js";
+import { terrainHeight } from "../constants.js";
+import { tileKey } from "../grid.js";
 import { lineMaterial, selectedOutlineMaterial } from "./render-materials.js";
-import { parabolicSelectionLineConfig, selectionOutlineConfig } from "./selection-visuals.js";
-import type { BoardState, HeightTile, SelectionArc } from "./types.js";
+import { parabolicSelectionLineConfig, selectionOutlineConfig } from "../selection-visuals.js";
+import type { BoardState, HeightTile, SelectionArc } from "../types.js";
 
 export function addSelectionVisuals(root: THREE.Group, boardState: BoardState): void {
   addSelectionOutlines(root, boardState);

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { lineSightCost } from "../src/visibility/index.js";
-import { brushPatch } from "../src/terrain-props.js";
+import { brushPatch } from "../src/rendering/index.js";
 import { isBrushTile, sightCost } from "../src/world/index.js";
 
 function findBrushTile() {

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { colors, terrainHeight } from "./constants.js";
+import { colors, terrainHeight } from "../constants.js";
 import { healthLabel } from "./health-label.js";
 import { material, transparentMaterial } from "./render-materials.js";
 const geometry = new THREE.BoxGeometry(0.56, 0.56, 0.56);

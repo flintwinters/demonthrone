@@ -1,10 +1,10 @@
 import * as THREE from "three";
-import { terrainHeight } from "./constants.js";
-import { tileKey } from "./grid.js";
+import { terrainHeight } from "../constants.js";
+import { tileKey } from "../grid.js";
 import { terrainBatchSurface } from "./terrain-batch.js";
 import { tileStyle } from "./terrain-style.js";
 import { boulders, brushPatch } from "./terrain-props.js";
-import { tileTerrain } from "./world/index.js";
+import { tileTerrain } from "../world/index.js";
 export function terrainLayer(boardState, tiles) {
     const group = new THREE.Group();
     const levels = tileLevels(boardState, tiles);

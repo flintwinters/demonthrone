@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { tileKey } from "./grid.js";
+import { tileKey } from "../grid.js";
 import { edgeMaterial, terrainMaterial } from "./render-materials.js";
 const neighbors = [
     { x: 0, y: -1, face: northFace },

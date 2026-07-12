@@ -15,7 +15,7 @@ import { requiredElement } from "./dom.js";
 import { isBoardObstacle } from "./obstacles.js";
 import { pickPieceTile } from "./controls/index.js";
 import { canPushTo, clearPlannedPush, commitPlannedPushes, isPushableTile, planPush, pushables } from "./pushables.js";
-import { drawGrid } from "./renderer.js";
+import { drawGrid } from "./rendering/index.js";
 import { connectRotationControls } from "./controls/index.js";
 import { isInspectableTerrain, selectedObjectStatus, selectVisibleEntityTile } from "./selection-status.js";
 import { tileHeight, tileTerrain } from "./world/index.js";

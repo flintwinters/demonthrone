@@ -1,8 +1,8 @@
 import * as THREE from "three";
-import { colors, foliageColors } from "./constants.js";
-import { deterministicUnit } from "./noise.js";
+import { colors, foliageColors } from "../constants.js";
+import { deterministicUnit } from "../noise.js";
 import { material } from "./render-materials.js";
-import { terrainPropConfig } from "./world-config.js";
+import { terrainPropConfig } from "../world-config.js";
 const brushGeometry = new THREE.BufferGeometry().setFromPoints([
     new THREE.Vector3(-0.32, 0, 0.02),
     new THREE.Vector3(0.32, 0, 0.02),

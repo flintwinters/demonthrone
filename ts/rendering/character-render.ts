@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { terrainHeight } from "./constants.js";
-import { enemyConfigs } from "./world-config.js";
+import { terrainHeight } from "../constants.js";
+import { enemyConfigs } from "../world-config.js";
 import { healthLabel } from "./health-label.js";
 import { material, transparentMaterial } from "./render-materials.js";
-import type { EnemyType, HeightTile, RenderEnemy, RenderPiece, RenderUnit } from "./types.js";
+import type { EnemyType, HeightTile, RenderEnemy, RenderPiece, RenderUnit } from "../types.js";
 
 type EnemyShape = { geometry: THREE.BufferGeometry; centerHeight: number; labelHeight: number };
 

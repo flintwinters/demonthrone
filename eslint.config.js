@@ -1,3 +1,22 @@
+const coldModules = ["controls", "rendering", "visibility", "world"];
+
+function moduleBoundary(name) {
+  const importRoots = [`./${name}/`, `../${name}/`, `../src/${name}/`];
+
+  return {
+    files: ["src/**/*.js", "tests/**/*.mjs"],
+    ignores: [`src/${name}/**`],
+    rules: {
+      "no-restricted-imports": ["error", {
+        patterns: [{
+          group: importRoots.flatMap((root) => [`${root}*`, `!${root}index.js`]),
+          message: `Import the ${name} module through its index.js facade.`,
+        }],
+      }],
+    },
+  };
+}
+
 export default [
   {
     files: ["**/*.js"],
@@ -17,4 +36,5 @@ export default [
       "no-undef": "error",
     },
   },
+  ...coldModules.map(moduleBoundary),
 ];

@@ -1,7 +1,7 @@
 import * as THREE from "three";
-import { tileKey } from "./grid.js";
+import { tileKey } from "../grid.js";
 import { edgeMaterial, terrainMaterial } from "./render-materials.js";
-import type { Tile } from "./types.js";
+import type { Tile } from "../types.js";
 
 export type SurfaceStyle = string | readonly [string, string, string, string];
 

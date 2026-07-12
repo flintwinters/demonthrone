@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { brushPatch, foliageHeightScale } from "../src/terrain-props.js";
+import { brushPatch, foliageHeightScale } from "../src/rendering/index.js";
 import { terrainPropConfig } from "../src/world-config.js";
 
 test("foliage height varies stably by tile within the intended range", () => {

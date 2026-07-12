@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { colors } from "./constants.js";
-import { tileKey } from "./grid.js";
+import { colors } from "../constants.js";
+import { tileKey } from "../grid.js";
 import { terrainEdgeMaterial, terrainMaterial } from "./render-materials.js";
 const neighbors = [
     { dx: 0, dy: -1, face: northFace },
