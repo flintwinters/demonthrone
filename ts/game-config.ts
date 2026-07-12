@@ -10,7 +10,7 @@ export const layers = {
   elevation: new NoiseLayer({ scale: 0.055, magnitude: 1, seed: worldSeed ^ 0x1234 }),
   moisture: new NoiseLayer({ scale: 0.06, magnitude: 1, seed: worldSeed ^ 0x4321 }),
   ridge: new NoiseLayer({ scale: 0.13, magnitude: 1, seed: worldSeed ^ 0x6d2b }),
-  continental: new NoiseLayer({ scale: 0.001, magnitude: 1, seed: worldSeed ^ 0xcd73 }),
+  continental: new NoiseLayer({ scale: 0.01, magnitude: 2, seed: worldSeed ^ 0xcd73 }),
 } satisfies Record<"elevation" | "moisture" | "ridge" | "continental", NoiseLayer>;
 
 export const safeZones = [
