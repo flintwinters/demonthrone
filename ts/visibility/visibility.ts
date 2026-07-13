@@ -1,9 +1,9 @@
 import { sightGeometry, terrainHeight } from "../constants.js";
-import { lineOfSightConfig } from "../world-config.js";
+import { enemyConfigs, lineOfSightConfig } from "../world-config.js";
 import { lineSightCost, type SightRayContext } from "./sight-cost.js";
 import { tileKey } from "../grid.js";
 import type {
-  DamageableEntity, Point3, SightBlocker, Tile, TileHeight, TilePredicate, TileSightCost, Unit,
+  Character, DamageableEntity, Point3, SightBlocker, Tile, TileHeight, TilePredicate, TileSightCost, Unit,
 } from "../types.js";
 
 export type SightContext = SightRayContext;
@@ -33,6 +33,30 @@ export function canUnitSeeEntity(
   return canSeePoint(unit, entityPoint(target, context), context);
 }
 
+export function canCharacterSeeEntity(
+  character: Character,
+  target: DamageableEntity,
+  context: SightContext,
+): boolean {
+  return canSeePoint(character, entityPoint(target, context), context);
+}
+
+export function characterSightBlockers(
+  characters: readonly Character[],
+  tileHeight: TileHeight,
+): SightBlocker[] {
+  return characters.map((character) => {
+    const ground = visualHeight(tileHeight(character));
+
+    return {
+      x: character.x,
+      y: character.y,
+      bottom: ground + sightGeometry.characterBottom,
+      top: ground + characterSightHeight(character),
+    };
+  });
+}
+
 export function sightContext(
   sightBlockers: SightBlocker[],
   sightCost: TileSightCost,
@@ -59,11 +83,11 @@ export function memoizedSightContext(context: SightContext): SightContext {
   };
 }
 
-function canSeePoint(unit: Unit, target: Point3, context: SightContext): boolean {
-  const source = pointAbove(unit, context, sightGeometry.eyeHeight);
+function canSeePoint(character: Character, target: Point3, context: SightContext): boolean {
+  const source = pointAbove(character, context, sightGeometry.eyeHeight);
   const horizontal = Math.hypot(target.x - source.x, target.y - source.y);
 
-  return horizontal <= unit.sight && lineSightCost(source, target, context) <= unit.sight;
+  return horizontal <= character.sight && lineSightCost(source, target, context) <= character.sight;
 }
 
 function tilePoint(tile: Tile, context: SightContext): Point3 {
@@ -105,4 +129,12 @@ function memoizedTileValue<Value>(valueAt: (tile: Tile) => Value): (tile: Tile) 
 
 function visualHeight(height: number): number {
   return height * terrainHeight.visualScale;
+}
+
+function characterSightHeight(character: Character): number {
+  if (character.entityKind === "teammate") return sightGeometry.characterTop;
+  const config = enemyConfigs.find((candidate) => candidate.type === character.entityType);
+
+  if (!config) throw new Error(`Missing enemy config: ${character.entityType}`);
+  return config.appearance.height;
 }

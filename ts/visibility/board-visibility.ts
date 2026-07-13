@@ -1,11 +1,10 @@
-import { sightGeometry, terrainHeight } from "../constants.js";
 import { tileKey } from "../grid.js";
+import { characterSightBlockers } from "./visibility.js";
 import { visibleTiles } from "./tiles.js";
 import { units } from "../units.js";
 import { isBoulderTile, sightCost, tileHeight } from "../world/index.js";
 import { gameOverConfig } from "../world-config.js";
-import { enemyConfigs } from "../world-config.js";
-import type { Enemy, SightBlocker, Tile, Unit } from "../types.js";
+import type { Enemy, SightBlocker, Tile } from "../types.js";
 
 export type VisibilityState = {
   tiles: Tile[];
@@ -19,7 +18,7 @@ export function visibilityState(enemies: Enemy[], revealCenter: Tile | null = nu
   const signature = revealCenter ? `defeat:${tileKey(revealCenter)}` : visibilitySignature(enemies);
 
   if (cached?.signature === signature) return cached.state;
-  const blockers = sightBlockers(enemies);
+  const blockers = characterSightBlockers([...units, ...enemies], tileHeight);
   const tiles = revealCenter
     ? circularTiles(revealCenter, gameOverConfig.revealRadius)
     : visibleTiles(units, blockers, sightCost, tileHeight, isBoulderTile);
@@ -38,27 +37,6 @@ export function circularTiles(center: Tile, radius: number): Tile[] {
     }
   }
   return tiles;
-}
-
-function sightBlockers(enemies: Enemy[]): SightBlocker[] {
-  return [...units, ...enemies].map((character) => {
-    const ground = tileHeight(character) * terrainHeight.visualScale;
-
-    return {
-      x: character.x,
-      y: character.y,
-      bottom: ground + sightGeometry.characterBottom,
-      top: ground + characterSightHeight(character),
-    };
-  });
-}
-
-function characterSightHeight(character: Unit | Enemy): number {
-  if (character.entityKind === "teammate") return sightGeometry.characterTop;
-  const config = enemyConfigs.find((candidate) => candidate.type === character.entityType);
-
-  if (!config) throw new Error(`Missing enemy config: ${character.entityType}`);
-  return config.appearance.height;
 }
 
 function visibilitySignature(enemies: Enemy[]): string {

@@ -1,16 +1,15 @@
-import { sightGeometry, terrainHeight } from "../constants.js";
 import { tileKey } from "../grid.js";
+import { characterSightBlockers } from "./visibility.js";
 import { visibleTiles } from "./tiles.js";
 import { units } from "../units.js";
 import { isBoulderTile, sightCost, tileHeight } from "../world/index.js";
 import { gameOverConfig } from "../world-config.js";
-import { enemyConfigs } from "../world-config.js";
 let cached = null;
 export function visibilityState(enemies, revealCenter = null) {
     const signature = revealCenter ? `defeat:${tileKey(revealCenter)}` : visibilitySignature(enemies);
     if (cached?.signature === signature)
         return cached.state;
-    const blockers = sightBlockers(enemies);
+    const blockers = characterSightBlockers([...units, ...enemies], tileHeight);
     const tiles = revealCenter
         ? circularTiles(revealCenter, gameOverConfig.revealRadius)
         : visibleTiles(units, blockers, sightCost, tileHeight, isBoulderTile);
@@ -27,25 +26,6 @@ export function circularTiles(center, radius) {
         }
     }
     return tiles;
-}
-function sightBlockers(enemies) {
-    return [...units, ...enemies].map((character) => {
-        const ground = tileHeight(character) * terrainHeight.visualScale;
-        return {
-            x: character.x,
-            y: character.y,
-            bottom: ground + sightGeometry.characterBottom,
-            top: ground + characterSightHeight(character),
-        };
-    });
-}
-function characterSightHeight(character) {
-    if (character.entityKind === "teammate")
-        return sightGeometry.characterTop;
-    const config = enemyConfigs.find((candidate) => candidate.type === character.entityType);
-    if (!config)
-        throw new Error(`Missing enemy config: ${character.entityType}`);
-    return config.appearance.height;
 }
 function visibilitySignature(enemies) {
     return [...units, ...enemies]

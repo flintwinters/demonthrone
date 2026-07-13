@@ -2,10 +2,15 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { attackUnits, createEnemy, moveEnemies } from "../src/enemies.js";
 import { enemyConfigs } from "../src/world-config.js";
+import { groundHeight, isWallTile, tileHeight } from "../src/world/index.js";
 
 function unit(x, health = 5) {
+  return unitAt({ x, y: 0 }, health);
+}
+
+function unitAt(tile, health = 5) {
   return {
-    id: "unit", entityKind: "teammate", entityType: "warden", x, y: 0,
+    id: "unit", entityKind: "teammate", entityType: "warden", ...tile,
     color: "#fff", sight: 5, movement: 1, attackRange: 1, health,
     target: null, attackTargetId: null,
   };
@@ -33,6 +38,15 @@ test("nephilim damage is applied through the shared enemy attack phase", () => {
   assert.equal(target.health, 2);
 });
 
+test("enemies cannot attack a teammate through a procedural wall", () => {
+  const [enemyTile, targetTile] = wallSeparatedTiles();
+  const target = unitAt(targetTile);
+  const pursuer = createEnemy("pursuer", "pursuer", enemyTile);
+
+  assert.deepEqual(attackUnits([target], [pursuer]), []);
+  assert.equal(target.health, 5);
+});
+
 test("nephilim moves only every third enemy phase", () => {
   const target = unit(5);
   const nephilim = createEnemy("nephilim", "nephilim", { x: 0, y: 0 });
@@ -55,3 +69,34 @@ test("nephilim renders as a taller cylinder than the pursuer cone", () => {
   assert.equal(nephilim.appearance.shape, "cylinder");
   assert.equal(nephilim.appearance.height > pursuer.appearance.height, true);
 });
+
+function wallSeparatedTiles() {
+  for (let y = -80; y <= 80; y += 1) {
+    for (let x = -80; x <= 80; x += 1) {
+      const wall = { x, y };
+
+      if (isTallWall(wall)) {
+        const separated = oppositeOpenNeighbors(wall);
+
+        if (separated) return separated;
+      }
+    }
+  }
+
+  throw new Error("Expected a tall wall tile with open opposite neighbors.");
+}
+
+function isTallWall(tile) {
+  return isWallTile(tile) && tileHeight(tile) - groundHeight(tile) >= 8;
+}
+
+function oppositeOpenNeighbors(wall) {
+  for (const [dx, dy] of [[1, 0], [0, 1]]) {
+    const first = { x: wall.x - dx, y: wall.y - dy };
+    const second = { x: wall.x + dx, y: wall.y + dy };
+
+    if (!isWallTile(first) && !isWallTile(second)) return [first, second];
+  }
+
+  return null;
+}

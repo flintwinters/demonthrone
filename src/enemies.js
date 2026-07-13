@@ -1,6 +1,8 @@
 import { EnemyTemplate } from "./domain.js";
 import { cardinalDirections, l1Distance, neighborTile, sameTile } from "./grid.js";
-import { enemyConfigs } from "./world-config.js";
+import { enemyConfigs, lineOfSightConfig } from "./world-config.js";
+import { canCharacterSeeEntity, characterSightBlockers, sightContext, } from "./visibility/index.js";
+import { isBoulderTile, sightCost, tileHeight } from "./world/index.js";
 const enemyTemplates = new Map(enemyConfigs.map((config) => [
     config.type,
     new EnemyTemplate(config.type, config.stats, config.color),
@@ -18,8 +20,9 @@ export function moveEnemies(enemies, units, isBlockedTile) {
 }
 export function attackUnits(units, enemies) {
     const destroyed = [];
+    const context = sightContext(characterSightBlockers([...units, ...enemies], tileHeight), sightCost, tileHeight, isBoulderTile, lineOfSightConfig.attackHeightMultiplier);
     for (let index = units.length - 1; index >= 0; index -= 1) {
-        units[index].health -= incomingDamage(units[index], enemies);
+        units[index].health -= incomingDamage(units[index], enemies, context);
         if (units[index].health <= 0) {
             const [unit] = units.splice(index, 1);
             destroyed.push(unit);
@@ -69,6 +72,10 @@ function canEnemyEnter(tile, enemies, units, isBlockedTile) {
 function closerTile(best, tile, target) {
     return l1Distance(tile, target) < l1Distance(best, target) ? tile : best;
 }
-function incomingDamage(unit, enemies) {
-    return enemies.reduce((damage, enemy) => damage + (l1Distance(enemy, unit) <= enemy.attackRange ? enemy.damage : 0), 0);
+function incomingDamage(unit, enemies, context) {
+    return enemies.reduce((damage, enemy) => damage + (canEnemyAttack(enemy, unit, context) ? enemy.damage : 0), 0);
+}
+function canEnemyAttack(enemy, unit, context) {
+    return l1Distance(enemy, unit) <= enemy.attackRange
+        && canCharacterSeeEntity(enemy, unit, context);
 }

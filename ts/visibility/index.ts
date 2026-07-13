@@ -5,6 +5,8 @@ export { appendShadowcastTiles, shadowcastTiles } from "./visibility-field.js";
 export {
   canUnitSeeEntity,
   canUnitSeeTile,
+  canCharacterSeeEntity,
+  characterSightBlockers,
   isVisibleTile,
   memoizedSightContext,
   sightContext,

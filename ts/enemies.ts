@@ -1,6 +1,10 @@
 import { EnemyTemplate } from "./domain.js";
 import { cardinalDirections, l1Distance, neighborTile, sameTile } from "./grid.js";
-import { enemyConfigs } from "./world-config.js";
+import { enemyConfigs, lineOfSightConfig } from "./world-config.js";
+import {
+  canCharacterSeeEntity, characterSightBlockers, sightContext,
+} from "./visibility/index.js";
+import { isBoulderTile, sightCost, tileHeight } from "./world/index.js";
 import type { Enemy, EnemyType, Tile, TilePredicate, Unit } from "./types.js";
 
 const enemyTemplates = new Map(enemyConfigs.map((config) => [
@@ -23,9 +27,16 @@ export function moveEnemies(enemies: Enemy[], units: Unit[], isBlockedTile: Tile
 
 export function attackUnits(units: Unit[], enemies: Enemy[]): Unit[] {
   const destroyed: Unit[] = [];
+  const context = sightContext(
+    characterSightBlockers([...units, ...enemies], tileHeight),
+    sightCost,
+    tileHeight,
+    isBoulderTile,
+    lineOfSightConfig.attackHeightMultiplier,
+  );
 
   for (let index = units.length - 1; index >= 0; index -= 1) {
-    units[index].health -= incomingDamage(units[index], enemies);
+    units[index].health -= incomingDamage(units[index], enemies, context);
 
     if (units[index].health <= 0) {
       const [unit] = units.splice(index, 1);
@@ -103,9 +114,14 @@ function closerTile(best: Tile, tile: Tile, target: Unit): Tile {
   return l1Distance(tile, target) < l1Distance(best, target) ? tile : best;
 }
 
-function incomingDamage(unit: Unit, enemies: Enemy[]): number {
+function incomingDamage(unit: Unit, enemies: Enemy[], context: ReturnType<typeof sightContext>): number {
   return enemies.reduce(
-    (damage, enemy) => damage + (l1Distance(enemy, unit) <= enemy.attackRange ? enemy.damage : 0),
+    (damage, enemy) => damage + (canEnemyAttack(enemy, unit, context) ? enemy.damage : 0),
     0,
   );
+}
+
+function canEnemyAttack(enemy: Enemy, unit: Unit, context: ReturnType<typeof sightContext>): boolean {
+  return l1Distance(enemy, unit) <= enemy.attackRange
+    && canCharacterSeeEntity(enemy, unit, context);
 }
