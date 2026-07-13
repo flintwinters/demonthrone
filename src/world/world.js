@@ -63,14 +63,14 @@ function createWorldData(tile) {
     const biomeProfile = biomes[biome];
     const ground = heightAt(tile, biomeProfile);
     const isSafe = isSafeTile(tile);
-    const { isRiver, wallHeight } = landscapePathAt(tile, isSafe);
-    const isWall = wallHeight > 0;
+    const { isRiver, wallRise } = landscapePathAt(tile, ground, isSafe);
+    const isWall = wallRise > 0;
     const waterSurface = hydrologySurfaceAt(tile, isSafe || isRiver || isWall);
     const { isWater, isIce, isBoulder, isBrush } = terrainFeatures(tile, biomeProfile, waterSurface, isRiver, isWall);
     const terrain = terrainFor(terrainKind(isWater, isIce, isBoulder, isBrush), biome);
     return {
         biome,
-        height: (waterSurface ?? ground) + wallHeight,
+        height: (waterSurface ?? ground) + wallRise,
         isBoulder,
         isBrush,
         isWater,
@@ -80,17 +80,21 @@ function createWorldData(tile) {
         terrain,
     };
 }
-function landscapePathAt(tile, isSafe) {
+function landscapePathAt(tile, ground, isSafe) {
     const isRiver = !isSafe && landscapePaths.river.contains(tile);
-    const wallHeight = isSafe || isRiver ? 0 : wallHeightAt(tile);
-    return { isRiver, wallHeight };
+    const wallRise = isSafe || isRiver ? 0 : wallRiseAt(tile, ground);
+    return { isRiver, wallRise };
 }
-function wallHeightAt(tile) {
+function wallRiseAt(tile, ground) {
     if (!landscapePaths.wall.field.contains(tile))
         return 0;
     const envelope = landscapePaths.wall.envelope.value(tile);
     const strength = (envelope - landscapePaths.wall.threshold) / landscapePaths.wall.taper;
-    return Math.round(landscapePaths.wall.height * Math.max(0, Math.min(1, strength)));
+    const taperedHeight = landscapePaths.wall.height * Math.max(0, Math.min(1, strength));
+    const target = ground * landscapePaths.wall.terrainProportion
+        + taperedHeight
+        - landscapePaths.wall.subtraction.value(tile);
+    return Math.max(0, Math.round(target) - ground);
 }
 function hydrologySurfaceAt(tile, excludesHydrology) {
     return excludesHydrology ? null : basinField.surfaceAt(tile, isHydrologicallyWet);

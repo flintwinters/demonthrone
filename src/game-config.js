@@ -41,8 +41,14 @@ export const landscapePaths = {
             magnitude: 1,
             seed: worldSeed ^ 0x656e6473,
         }),
+        subtraction: new NoiseLayer({
+            scale: 0.041,
+            magnitude: 4,
+            seed: worldSeed ^ 0x73756274,
+        }),
         threshold: 0.46,
         taper: 0.12,
+        terrainProportion: 0.35,
         height: 12,
     },
 };

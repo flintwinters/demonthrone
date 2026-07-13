@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { canReachTile } from "../src/movement.js";
 import { lineSightCost } from "../src/visibility/index.js";
+import { landscapePaths } from "../src/world-config.js";
 import {
   groundHeight,
   isBoulderTile,
@@ -58,7 +59,30 @@ test("walls are tall ordinary blocks governed by terrain slope", () => {
   assert.equal(isObstacleTile(wall), false);
   assert.equal(isBoulderTile(wall), false);
   assert.equal(isBrushTile(wall), false);
-  assert.equal(wallRise(wall), 12);
+  assert.equal(wallRise(wall) >= landscapePaths.wall.height, true);
+});
+
+test("wall elevation is proportional and subtracts a second Perlin layer", () => {
+  const wall = pathTiles(isWallTile).find((tile) => wallStrength(tile) === 1);
+
+  assert.notEqual(wall, undefined);
+  const ground = groundHeight(wall);
+  const target = ground * landscapePaths.wall.terrainProportion
+    + landscapePaths.wall.height
+    - landscapePaths.wall.subtraction.value(wall);
+
+  assert.equal(wallRise(wall), Math.max(0, Math.round(target) - ground));
+});
+
+test("high terrain can overtake and absorb a full-height wall contour", () => {
+  const absorbed = contourTiles().find((tile) => (
+    wallStrength(tile) === 1
+      && !isRiverTile(tile)
+      && !isWallTile(tile)
+  ));
+
+  assert.notEqual(absorbed, undefined, "Expected high terrain to rise through the wall target.");
+  assert.equal(tileHeight(absorbed), groundHeight(absorbed));
 });
 
 test("wall envelopes produce climbable ends and traversable tops", () => {
@@ -94,6 +118,25 @@ test("safe zones remain clear of rivers and walls", () => {
 
 function wallRise(tile) {
   return tileHeight(tile) - groundHeight(tile);
+}
+
+function wallStrength(tile) {
+  const envelope = landscapePaths.wall.envelope.value(tile);
+  const strength = (envelope - landscapePaths.wall.threshold) / landscapePaths.wall.taper;
+
+  return Math.max(0, Math.min(1, strength));
+}
+
+function contourTiles(radius = 220) {
+  const tiles = [];
+
+  for (let y = -radius; y <= radius; y += 1) {
+    for (let x = -radius; x <= radius; x += 1) {
+      if (landscapePaths.wall.field.contains({ x, y })) tiles.push({ x, y });
+    }
+  }
+
+  return tiles;
 }
 
 function walkableEntry(wall) {
