@@ -9,6 +9,17 @@ export class NoiseLayer {
             * this.config.magnitude;
     }
 }
+export class ContourPathField {
+    config;
+    layer;
+    constructor(config) {
+        this.config = config;
+        this.layer = new NoiseLayer(config);
+    }
+    contains(tile) {
+        return Math.abs(this.layer.value(tile) - this.config.center) <= this.config.halfWidth;
+    }
+}
 export class HeightComponent {
     config;
     constructor(config) {

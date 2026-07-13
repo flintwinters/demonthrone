@@ -7,6 +7,7 @@ import {
   isBrushTile,
   isIceTile,
   isObstacleTile,
+  isRiverTile,
   isWaterTile,
   tileHeight,
   tileTerrain,
@@ -31,7 +32,7 @@ function hydrologyTiles() {
 
   for (let y = -30; y <= 30; y += 1) {
     for (let x = -30; x <= 30; x += 1) {
-      if (isWaterTile({ x, y }) || isIceTile({ x, y })) {
+      if ((isWaterTile({ x, y }) || isIceTile({ x, y })) && !isRiverTile({ x, y })) {
         tiles.push({ x, y });
       }
     }

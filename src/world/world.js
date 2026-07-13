@@ -1,7 +1,7 @@
 import { terrainHeight } from "../constants.js";
 import { tileKey } from "../grid.js";
 import { BasinField } from "./hydrology.js";
-import { biomes, biomeRules, biomeClassification, basinConfig, layers, safeZones, terrainTraits, worldDataCacheLimit, } from "../world-config.js";
+import { biomes, biomeRules, biomeClassification, basinConfig, landscapePaths, layers, safeZones, terrainTraits, worldDataCacheLimit, } from "../world-config.js";
 const worldDataCache = new Map();
 const basinField = new BasinField(basinConfig.cellSize, basinConfig.radius, basinConfig.depth, groundHeightAt, (tile) => biomeAt(tile).water.value(tile));
 export function tileTerrain(tile) {
@@ -31,6 +31,12 @@ export function isWaterTile(tile) {
 export function isIceTile(tile) {
     return worldData(tile).isIce;
 }
+export function isRiverTile(tile) {
+    return worldData(tile).isRiver;
+}
+export function isWallTile(tile) {
+    return worldData(tile).isWall;
+}
 export function tileHeight(tile) {
     return worldData(tile).height;
 }
@@ -57,32 +63,54 @@ function createWorldData(tile) {
     const biomeProfile = biomes[biome];
     const ground = heightAt(tile, biomeProfile);
     const isSafe = isSafeTile(tile);
-    const waterSurface = isSafe ? null : basinField.surfaceAt(tile, isHydrologicallyWet);
-    const { isWater, isIce, isBoulder, isBrush } = terrainFeatures(tile, biomeProfile, waterSurface);
+    const { isRiver, wallHeight } = landscapePathAt(tile, isSafe);
+    const isWall = wallHeight > 0;
+    const waterSurface = hydrologySurfaceAt(tile, isSafe || isRiver || isWall);
+    const { isWater, isIce, isBoulder, isBrush } = terrainFeatures(tile, biomeProfile, waterSurface, isRiver, isWall);
     const terrain = terrainFor(terrainKind(isWater, isIce, isBoulder, isBrush), biome);
     return {
         biome,
-        height: waterSurface ?? ground,
+        height: (waterSurface ?? ground) + wallHeight,
         isBoulder,
         isBrush,
         isWater,
         isIce,
+        isRiver,
+        isWall,
         terrain,
     };
 }
-function terrainFeatures(tile, biomeProfile, waterSurface) {
+function landscapePathAt(tile, isSafe) {
+    const isRiver = !isSafe && landscapePaths.river.contains(tile);
+    const wallHeight = isSafe || isRiver ? 0 : wallHeightAt(tile);
+    return { isRiver, wallHeight };
+}
+function wallHeightAt(tile) {
+    if (!landscapePaths.wall.field.contains(tile))
+        return 0;
+    const envelope = landscapePaths.wall.envelope.value(tile);
+    const strength = (envelope - landscapePaths.wall.threshold) / landscapePaths.wall.taper;
+    return Math.round(landscapePaths.wall.height * Math.max(0, Math.min(1, strength)));
+}
+function hydrologySurfaceAt(tile, excludesHydrology) {
+    return excludesHydrology ? null : basinField.surfaceAt(tile, isHydrologicallyWet);
+}
+function terrainFeatures(tile, biomeProfile, waterSurface, isRiver, isWall) {
+    if (isRiver) {
+        return { isWater: true, isIce: false, isBoulder: false, isBrush: false };
+    }
     if (waterSurface !== null) {
         const isIce = biomeProfile.ice.contains(tile);
         return { isWater: !isIce, isIce, isBoulder: false, isBrush: false };
     }
-    if (biomeProfile.boulder.contains(tile)) {
+    if (!isWall && biomeProfile.boulder.contains(tile)) {
         return { isWater: false, isIce: false, isBoulder: true, isBrush: false };
     }
     return {
         isWater: false,
         isIce: false,
         isBoulder: false,
-        isBrush: biomeProfile.brush.contains(tile),
+        isBrush: !isWall && biomeProfile.brush.contains(tile),
     };
 }
 function isHydrologicallyWet(tile) {

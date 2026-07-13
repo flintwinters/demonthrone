@@ -4,6 +4,8 @@ export {
   isBrushTile,
   isIceTile,
   isObstacleTile,
+  isRiverTile,
+  isWallTile,
   isWaterTile,
   movementCost,
   sightCost,

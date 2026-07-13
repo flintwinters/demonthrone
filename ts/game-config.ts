@@ -1,4 +1,4 @@
-import { NoiseLayer, SafeZone, TerrainType } from "./domain.js";
+import { ContourPathField, NoiseLayer, SafeZone, TerrainType } from "./domain.js";
 import type { HeightComponentConfig } from "./domain.js";
 import { createBiomes } from "./biome-config.js";
 import type { BiomeKind, TerrainKind } from "./types.js";
@@ -27,6 +27,42 @@ export const safeZones = [
   new SafeZone({ x: 5, y: 7 }, 1),
   new SafeZone({ x: 8, y: 6 }, 1),
 ];
+
+export const landscapePaths = {
+  river: new ContourPathField({
+    scale: 0.018,
+    magnitude: 1,
+    seed: worldSeed ^ 0x72697672,
+    center: 0.5,
+    halfWidth: 0.024,
+  }),
+  wall: {
+    field: new ContourPathField({
+      scale: 0.027,
+      magnitude: 1,
+      seed: worldSeed ^ 0x77616c6c,
+      center: 0.5,
+      halfWidth: 0.018,
+    }),
+    envelope: new NoiseLayer({
+      scale: 0.008,
+      magnitude: 1,
+      seed: worldSeed ^ 0x656e6473,
+    }),
+    threshold: 0.46,
+    taper: 0.12,
+    height: 12,
+  },
+} satisfies {
+  river: ContourPathField;
+  wall: {
+    field: ContourPathField;
+    envelope: NoiseLayer;
+    threshold: number;
+    taper: number;
+    height: number;
+  };
+};
 
 export const terrainTraits = {
   floor: new TerrainType("floor", false, 1, 1),
