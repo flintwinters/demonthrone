@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { colors, terrainHeight } from "../constants.js";
 import { sameTile } from "../grid.js";
-import { tileBiome, tileTerrain } from "../world/index.js";
+import { isWallTile, tileBiome, tileTerrain } from "../world/index.js";
 const biomeStyles = {
     cinder: {
         top: colors.cinderTile,
@@ -29,6 +29,10 @@ const biomeStyles = {
     },
 };
 export function tileStyle(tile, boardState, level) {
+    const style = baseTileStyle(tile, boardState, level);
+    return isWallTile(tile) ? { ...style, pattern: "brick" } : style;
+}
+function baseTileStyle(tile, boardState, level) {
     const priority = priorityTileStyle(tile, boardState, level);
     if (priority) {
         return priority;
@@ -70,6 +74,9 @@ function movementTileStyle(tile, boardState, level) {
 }
 function biomeTerrainStyle(tile, level) {
     const terrain = tileTerrain(tile);
+    if (isWallTile(tile)) {
+        return terrainStyle(colors.wallTile, colors.wallTileSide, level);
+    }
     if (terrain.kind === "water") {
         return terrainStyle(colors.waterTile, colors.waterTileSide, level);
     }

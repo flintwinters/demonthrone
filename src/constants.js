@@ -48,6 +48,8 @@ export const colors = {
     bogTileSide: "#2d4540",
     mesaTile: "#8a6640",
     mesaTileSide: "#6f4d32",
+    wallTile: "#a0a0a0",
+    wallTileSide: "#707070",
     waterTile: "#076678",
     waterTileSide: "#054f5f",
     iceTile: "#83a598",

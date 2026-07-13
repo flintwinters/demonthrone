@@ -31,25 +31,26 @@ function appendTile(batches, tile, style, heights) {
     if (!style) {
         return;
     }
-    appendFace(batches, topFace(tile, height), style.top, style.edge);
-    appendSideFaces(batches, tile, height, style.side, heights);
+    appendFace(batches, topFace(tile, height), style.top, style.edge, style.pattern);
+    appendSideFaces(batches, tile, height, style.side, heights, style.pattern);
 }
-function appendSideFaces(batches, tile, height, sideStyle, heights) {
+function appendSideFaces(batches, tile, height, sideStyle, heights, pattern) {
     for (const neighbor of neighbors) {
         const lower = heights.get(tileKey({ x: tile.x + neighbor.dx, y: tile.y + neighbor.dy }));
         if (lower === undefined || lower >= height) {
             continue;
         }
-        appendFace(batches, neighbor.face(tile, lower, height), sideStyle, colors.tileEdge);
+        appendFace(batches, neighbor.face(tile, lower, height), sideStyle, colors.tileEdge, pattern);
     }
 }
-function appendFace(batches, vertices, style, edgeColor) {
-    const batch = faceBatch(batches.faces, style);
+function appendFace(batches, vertices, style, edgeColor, pattern) {
+    const batch = faceBatch(batches.faces, style, pattern);
     const offset = batch.positions.length / 3;
     for (const vertex of vertices) {
         batch.positions.push(...vertex);
     }
     appendFaceColors(batch, style);
+    batch.uvs.push(...faceUvs(vertices));
     batch.indices.push(offset, offset + 1, offset + 2, offset, offset + 2, offset + 3);
     appendEdges(edgeBatch(batches.edges, edgeColor), vertices);
 }
@@ -79,13 +80,13 @@ function edgeBatch(edges, color) {
     edges.set(color, created);
     return created;
 }
-function faceBatch(batches, style) {
-    const key = styleKey(style);
+function faceBatch(batches, style, pattern) {
+    const key = `${pattern ?? "plain"}:${styleKey(style)}`;
     const existing = batches.get(key);
     if (existing) {
         return existing;
     }
-    const created = { style, positions: [], colors: [], indices: [] };
+    const created = { style, positions: [], colors: [], uvs: [], indices: [], pattern };
     batches.set(key, created);
     return created;
 }
@@ -95,12 +96,18 @@ function styleKey(style) {
 function faceMesh(batch) {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.Float32BufferAttribute(batch.positions, 3));
+    geometry.setAttribute("uv", new THREE.Float32BufferAttribute(batch.uvs, 2));
     geometry.setIndex(batch.indices);
     if (batch.colors.length > 0) {
         geometry.setAttribute("color", new THREE.Float32BufferAttribute(batch.colors, 3));
     }
     geometry.computeVertexNormals();
-    return new THREE.Mesh(geometry, terrainMaterial(batch.style));
+    return new THREE.Mesh(geometry, terrainMaterial(batch.style, batch.pattern));
+}
+function faceUvs(vertices) {
+    const isTop = vertices.every((vertex) => vertex[2] === vertices[0][2]);
+    const usesX = isTop || vertices.some((vertex) => vertex[0] !== vertices[0][0]);
+    return vertices.flatMap((vertex) => [usesX ? vertex[0] : vertex[1], isTop ? vertex[1] : vertex[2]]);
 }
 function edgeLines(edges, color) {
     const geometry = new THREE.BufferGeometry();

@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { colors, terrainHeight } from "../constants.js";
 import { sameTile } from "../grid.js";
 import type { TerrainStyle } from "./terrain-mesh.js";
-import { tileBiome, tileTerrain } from "../world/index.js";
+import { isWallTile, tileBiome, tileTerrain } from "../world/index.js";
 import type { BiomeKind, BoardState, RenderUnit, Tile } from "../types.js";
 
 type BiomeStyle = {
@@ -38,6 +38,12 @@ const biomeStyles = {
 } satisfies Record<BiomeKind, BiomeStyle>;
 
 export function tileStyle(tile: Tile, boardState: BoardState, level: number): TerrainStyle {
+  const style = baseTileStyle(tile, boardState, level);
+
+  return isWallTile(tile) ? { ...style, pattern: "brick" } : style;
+}
+
+function baseTileStyle(tile: Tile, boardState: BoardState, level: number): TerrainStyle {
   const priority = priorityTileStyle(tile, boardState, level);
 
   if (priority) {
@@ -95,6 +101,10 @@ function movementTileStyle(tile: Tile, boardState: BoardState, level: number): T
 
 function biomeTerrainStyle(tile: Tile, level: number): TerrainStyle {
   const terrain = tileTerrain(tile);
+
+  if (isWallTile(tile)) {
+    return terrainStyle(colors.wallTile, colors.wallTileSide, level);
+  }
 
   if (terrain.kind === "water") {
     return terrainStyle(colors.waterTile, colors.waterTileSide, level);

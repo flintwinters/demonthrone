@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { colors } from "../constants.js";
 import { tileKey } from "../grid.js";
 import { terrainEdgeMaterial, terrainMaterial } from "./render-materials.js";
-import type { TerrainStyle } from "./terrain-mesh.js";
+import type { TerrainPattern, TerrainStyle } from "./terrain-mesh.js";
 import type { Tile } from "../types.js";
 
 type Vertex = readonly [number, number, number];
@@ -11,7 +11,9 @@ type FaceBatch = {
   style: string | readonly string[];
   positions: number[];
   colors: number[];
+  uvs: number[];
   indices: number[];
+  pattern?: TerrainPattern;
 };
 
 type TerrainBatches = {
@@ -76,8 +78,8 @@ function appendTile(
     return;
   }
 
-  appendFace(batches, topFace(tile, height), style.top, style.edge);
-  appendSideFaces(batches, tile, height, style.side, heights);
+  appendFace(batches, topFace(tile, height), style.top, style.edge, style.pattern);
+  appendSideFaces(batches, tile, height, style.side, heights, style.pattern);
 }
 
 function appendSideFaces(
@@ -86,6 +88,7 @@ function appendSideFaces(
   height: number,
   sideStyle: TerrainStyle["side"],
   heights: Map<string, number>,
+  pattern?: TerrainPattern,
 ): void {
   for (const neighbor of neighbors) {
     const lower = heights.get(tileKey({ x: tile.x + neighbor.dx, y: tile.y + neighbor.dy }));
@@ -94,7 +97,7 @@ function appendSideFaces(
       continue;
     }
 
-    appendFace(batches, neighbor.face(tile, lower, height), sideStyle, colors.tileEdge);
+    appendFace(batches, neighbor.face(tile, lower, height), sideStyle, colors.tileEdge, pattern);
   }
 }
 
@@ -103,8 +106,9 @@ function appendFace(
   vertices: readonly Vertex[],
   style: FaceBatch["style"],
   edgeColor: string,
+  pattern?: TerrainPattern,
 ): void {
-  const batch = faceBatch(batches.faces, style);
+  const batch = faceBatch(batches.faces, style, pattern);
   const offset = batch.positions.length / 3;
 
   for (const vertex of vertices) {
@@ -112,6 +116,7 @@ function appendFace(
   }
 
   appendFaceColors(batch, style);
+  batch.uvs.push(...faceUvs(vertices));
   batch.indices.push(offset, offset + 1, offset + 2, offset, offset + 2, offset + 3);
   appendEdges(edgeBatch(batches.edges, edgeColor), vertices);
 }
@@ -150,15 +155,19 @@ function edgeBatch(edges: Map<string, number[]>, color: string): number[] {
   return created;
 }
 
-function faceBatch(batches: Map<string, FaceBatch>, style: FaceBatch["style"]): FaceBatch {
-  const key = styleKey(style);
+function faceBatch(
+  batches: Map<string, FaceBatch>,
+  style: FaceBatch["style"],
+  pattern?: TerrainPattern,
+): FaceBatch {
+  const key = `${pattern ?? "plain"}:${styleKey(style)}`;
   const existing = batches.get(key);
 
   if (existing) {
     return existing;
   }
 
-  const created = { style, positions: [], colors: [], indices: [] };
+  const created = { style, positions: [], colors: [], uvs: [], indices: [], pattern };
 
   batches.set(key, created);
   return created;
@@ -172,12 +181,20 @@ function faceMesh(batch: FaceBatch): THREE.Mesh {
   const geometry = new THREE.BufferGeometry();
 
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(batch.positions, 3));
+  geometry.setAttribute("uv", new THREE.Float32BufferAttribute(batch.uvs, 2));
   geometry.setIndex(batch.indices);
   if (batch.colors.length > 0) {
     geometry.setAttribute("color", new THREE.Float32BufferAttribute(batch.colors, 3));
   }
   geometry.computeVertexNormals();
-  return new THREE.Mesh(geometry, terrainMaterial(batch.style));
+  return new THREE.Mesh(geometry, terrainMaterial(batch.style, batch.pattern));
+}
+
+function faceUvs(vertices: readonly Vertex[]): number[] {
+  const isTop = vertices.every((vertex) => vertex[2] === vertices[0][2]);
+  const usesX = isTop || vertices.some((vertex) => vertex[0] !== vertices[0][0]);
+
+  return vertices.flatMap((vertex) => [usesX ? vertex[0] : vertex[1], isTop ? vertex[1] : vertex[2]]);
 }
 
 function edgeLines(edges: number[], color: string): THREE.LineSegments {

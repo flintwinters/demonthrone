@@ -4,11 +4,13 @@ import { edgeMaterial, terrainMaterial } from "./render-materials.js";
 import type { Tile } from "../types.js";
 
 export type SurfaceStyle = string | readonly [string, string, string, string];
+export type TerrainPattern = "brick";
 
 export type TerrainStyle = {
   top: SurfaceStyle;
   side: SurfaceStyle;
   edge: string;
+  pattern?: TerrainPattern;
 };
 
 const neighbors = [

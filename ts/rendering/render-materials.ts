@@ -1,11 +1,13 @@
 import * as THREE from "three";
 import { colors } from "../constants.js";
+import type { TerrainPattern } from "./terrain-mesh.js";
 
 const materials: Map<string, THREE.MeshLambertMaterial> = new Map();
 const transparentMaterials: Map<string, THREE.MeshLambertMaterial> = new Map();
 const terrainMaterials: Map<string, THREE.MeshLambertMaterial> = new Map();
 const lineMaterials: Map<string, THREE.LineBasicMaterial> = new Map();
 const edgeMaterials: Map<string, THREE.LineBasicMaterial> = new Map();
+let brickTexture: THREE.DataTexture | null = null;
 
 export const edgeMaterial = terrainEdgeMaterial(colors.tileEdge);
 
@@ -85,8 +87,11 @@ export function transparentMaterial(color: string, opacity: number): THREE.MeshL
   return created;
 }
 
-export function terrainMaterial(color: string | readonly string[]): THREE.MeshLambertMaterial {
-  const key = typeof color === "string" ? color : "vertex-colors";
+export function terrainMaterial(
+  color: string | readonly string[],
+  pattern?: TerrainPattern,
+): THREE.MeshLambertMaterial {
+  const key = `${pattern ?? "plain"}:${typeof color === "string" ? color : "vertex-colors"}`;
   const existing = terrainMaterials.get(key);
 
   if (existing) {
@@ -96,6 +101,7 @@ export function terrainMaterial(color: string | readonly string[]): THREE.MeshLa
   const created = new THREE.MeshLambertMaterial({
     color: typeof color === "string" ? color : "#ffffff",
     vertexColors: typeof color !== "string",
+    map: pattern === "brick" ? wallBrickTexture() : null,
     side: THREE.DoubleSide,
     polygonOffset: true,
     polygonOffsetFactor: 1,
@@ -104,4 +110,42 @@ export function terrainMaterial(color: string | readonly string[]): THREE.MeshLa
 
   terrainMaterials.set(key, created);
   return created;
+}
+
+export function wallBrickTexture(): THREE.DataTexture {
+  if (brickTexture) return brickTexture;
+  const width = 32;
+  const height = 16;
+  const pixels = new Uint8Array(width * height * 4);
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const shade = brickShade(x, y);
+      const offset = (y * width + x) * 4;
+
+      pixels.set([shade, shade, shade, 255], offset);
+    }
+  }
+
+  const texture = new THREE.DataTexture(pixels, width, height, THREE.RGBAFormat);
+
+  texture.name = "wall-brick-pattern";
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.magFilter = THREE.NearestFilter;
+  texture.minFilter = THREE.NearestMipmapNearestFilter;
+  texture.needsUpdate = true;
+  brickTexture = texture;
+  return texture;
+}
+
+function brickShade(x: number, y: number): number {
+  const course = Math.floor(y / 8);
+  const jointOffset = course % 2 === 0 ? 0 : 8;
+  const isBedJoint = y % 8 === 0;
+  const isHeadJoint = (x - jointOffset + 32) % 16 <= 1;
+
+  if (isBedJoint || isHeadJoint) return 240;
+  return 132 + ((x + y * 3) % 4) * 8;
 }
