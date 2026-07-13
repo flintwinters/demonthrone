@@ -62,6 +62,13 @@ test("walls are tall ordinary blocks governed by terrain slope", () => {
   assert.equal(wallRise(wall) >= landscapePaths.wall.height, true);
 });
 
+test("walls form substantial multi-tile-thick runs", () => {
+  const walls = pathTiles(isWallTile);
+  const interior = walls.filter((wall) => neighbors(wall).filter(isWallTile).length >= 3);
+
+  assert.equal(interior.length / walls.length > 0.35, true);
+});
+
 test("wall elevation is proportional and subtracts a second Perlin layer", () => {
   const wall = pathTiles(isWallTile).find((tile) => wallStrength(tile) === 1);
 
