@@ -27,7 +27,7 @@ test("ordinary terrain batches remain untextured", () => {
   assert.equal(mesh.material.map, null);
 });
 
-test("brick mortar is lighter than the wall's brick faces", () => {
+test("brick mortar is darker than the wall's varied brick faces without being black", () => {
   const texture = terrainMesh({
     top: "#a0a0a0", side: "#707070", edge: "#928374", pattern: "brick",
   }).material.map;
@@ -35,17 +35,28 @@ test("brick mortar is lighter than the wall's brick faces", () => {
   const mortar = pixels[0];
   const brick = pixels[(2 * texture.image.width + 4) * 4];
 
-  assert.equal(mortar > brick, true);
+  assert.equal(mortar < brick, true);
+  assert.equal(mortar > 64, true);
 });
 
 test("generated walls use neutral gray independent of biome", () => {
   const wall = findWall();
   const style = tileStyle(wall, idleBoardState(), tileHeight(wall));
-  const top = new THREE.Color(style.top);
+  const top = new THREE.Color(surfaceColor(style.top));
 
   assert.equal(style.pattern, "brick");
   assert.equal(top.r, top.g);
   assert.equal(top.g, top.b);
+});
+
+test("generated wall blocks have stable brightness variation", () => {
+  const walls = findWalls(12);
+  const colors = walls.map((wall) => surfaceColor(tileStyle(wall, idleBoardState(), tileHeight(wall)).top));
+
+  assert.equal(new Set(colors).size > 1, true);
+  assert.deepEqual(colors, walls.map((wall) => surfaceColor(tileStyle(
+    wall, idleBoardState(), tileHeight(wall),
+  ).top)));
 });
 
 function terrainMesh(style) {
@@ -59,14 +70,25 @@ function terrainMesh(style) {
   return group.children.find((child) => child.isMesh);
 }
 
+function surfaceColor(style) {
+  return typeof style === "string" ? style : style[0];
+}
+
 function findWall() {
+  return findWalls(1)[0];
+}
+
+function findWalls(count) {
+  const walls = [];
+
   for (let y = -40; y <= 40; y += 1) {
     for (let x = -40; x <= 40; x += 1) {
-      if (isWallTile({ x, y })) return { x, y };
+      if (isWallTile({ x, y })) walls.push({ x, y });
+      if (walls.length === count) return walls;
     }
   }
 
-  throw new Error("Expected a generated wall tile.");
+  throw new Error(`Expected ${count} generated wall tiles.`);
 }
 
 function idleBoardState() {

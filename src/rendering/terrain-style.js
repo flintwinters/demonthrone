@@ -1,7 +1,9 @@
 import * as THREE from "three";
 import { colors, terrainHeight } from "../constants.js";
 import { sameTile } from "../grid.js";
+import { deterministicUnit } from "../noise.js";
 import { isWallTile, tileBiome, tileTerrain } from "../world/index.js";
+import { wallStyleConfig } from "../world-config.js";
 const biomeStyles = {
     cinder: {
         top: colors.cinderTile,
@@ -75,7 +77,7 @@ function movementTileStyle(tile, boardState, level) {
 function biomeTerrainStyle(tile, level) {
     const terrain = tileTerrain(tile);
     if (isWallTile(tile)) {
-        return terrainStyle(colors.wallTile, colors.wallTileSide, level);
+        return vertexColoredTop(terrainStyle(variedWallColor(colors.wallTile, tile), variedWallColor(colors.wallTileSide, tile), level));
     }
     if (terrain.kind === "water") {
         return terrainStyle(colors.waterTile, colors.waterTileSide, level);
@@ -85,6 +87,18 @@ function biomeTerrainStyle(tile, level) {
     }
     const style = biomeStyles[tileBiome(tile)];
     return terrainStyle(style.top, style.side, level);
+}
+function vertexColoredTop(style) {
+    if (typeof style.top !== "string")
+        return style;
+    return { ...style, top: [style.top, style.top, style.top, style.top] };
+}
+function variedWallColor(color, tile) {
+    const unit = deterministicUnit(tile, wallStyleConfig.shadeSeed);
+    const variation = (unit * 2 - 1) * wallStyleConfig.shadeVariation;
+    const base = new THREE.Color(color);
+    const target = new THREE.Color(variation >= 0 ? "#ffffff" : "#000000");
+    return `#${base.lerp(target, Math.abs(variation)).getHexString()}`;
 }
 function terrainStyle(top, side, level, edge = colors.tileEdge) {
     return {

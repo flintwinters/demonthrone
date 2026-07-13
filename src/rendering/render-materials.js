@@ -114,6 +114,6 @@ function brickShade(x, y) {
     const isBedJoint = y % 8 === 0;
     const isHeadJoint = (x - jointOffset + 32) % 16 <= 1;
     if (isBedJoint || isHeadJoint)
-        return 240;
-    return 132 + ((x + y * 3) % 4) * 8;
+        return 96;
+    return 176 + ((x + y * 3) % 5) * 14;
 }

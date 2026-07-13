@@ -140,6 +140,11 @@ export const terrainPropConfig = {
   foliageScaleRange: 2,
 };
 
+export const wallStyleConfig = {
+  shadeSeed: worldSeed ^ 0x62726974,
+  shadeVariation: 0.14,
+};
+
 export const piecePickerConfig = {
   pickRadius: 30,
   minimumPickRadius: 18,
