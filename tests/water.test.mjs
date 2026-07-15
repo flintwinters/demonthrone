@@ -41,17 +41,17 @@ function hydrologyTiles() {
   return tiles;
 }
 
-test("water is impassable terrain without obstacle props", () => {
+test("water reduces movement rate by 90% without obstacle props", () => {
   const [tile] = waterTiles();
 
   assert.notEqual(tile, undefined, "Expected the configured world region to contain water.");
   const terrain = tileTerrain(tile);
 
   assert.equal(terrain.kind, "water");
-  assert.equal(terrain.blocksMovement, true);
+  assert.equal(terrain.blocksMovement, false);
   assert.equal(terrain.sightCost, 0.1);
-  assert.equal(terrain.movementCost, Number.POSITIVE_INFINITY);
-  assert.equal(isObstacleTile(tile), true);
+  assert.equal(terrain.movementCost, 10);
+  assert.equal(isObstacleTile(tile), false);
   assert.equal(isBoulderTile(tile), false);
   assert.equal(isBrushTile(tile), false);
   assert.equal(isWaterTile({ x: 5, y: 7 }), false);

@@ -36,15 +36,16 @@ test("procedural rivers snake across both world axes", () => {
   assert.equal(new Set(rivers.map(({ y }) => y)).size > 100, true);
 });
 
-test("river tiles are unobstructed impassable water with efficient sight traversal", () => {
+test("river tiles are unobstructed slow water with efficient sight traversal", () => {
   const [river] = pathTiles(isRiverTile);
 
   assert.notEqual(river, undefined);
   assert.equal(tileTerrain(river).kind, "water");
-  assert.equal(isObstacleTile(river), true);
+  assert.equal(isObstacleTile(river), false);
   assert.equal(isBoulderTile(river), false);
   assert.equal(isBrushTile(river), false);
   assert.equal(sightCost(river), 0.1);
+  assert.equal(movementCost(river), 10);
   assert.equal(tileHeight(river), groundHeight(river));
 });
 

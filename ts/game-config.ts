@@ -77,7 +77,7 @@ export const terrainTraits = {
   boulder: new TerrainType("boulder", true, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY),
   brush: new TerrainType("brush", false, 2, 1),
   ice: new TerrainType("ice", false, 0.1, 0.5),
-  water: new TerrainType("water", true, 0.1, Number.POSITIVE_INFINITY),
+  water: new TerrainType("water", false, 0.1, 10),
 } satisfies Record<TerrainKind, TerrainType>;
 
 export const worldDataCacheLimit = 32768;
