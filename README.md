@@ -2,6 +2,8 @@
 
 # Demonthrone
 
+<img src="public/favicon.png" alt="Demonthrone icon" width="192">
+
 </div>
 
 Demonthrone is a browser-based, squad tactics roguelike prototype rendered as a

@@ -23,6 +23,10 @@ DEFAULT_PORT = 8001
 SERVICE_NAME = "demonthrone"
 API_PREFIX = "/api/"
 PUBLIC_TOP_LEVEL_FILES = frozenset({"index.html"})
+PUBLIC_FILE_ALIASES = {
+    "favicon.ico": ("public", "favicon.png"),
+    "favicon.png": ("public", "favicon.png"),
+}
 PUBLIC_DIRECTORY_PREFIXES = (
     ("src",),
     ("node_modules", "three", "build"),
@@ -75,24 +79,37 @@ def build_new_game_payload() -> JsonPayload:
     }
 
 
-def is_public_static_path(request_target: str) -> bool:
-    """Return whether a request targets an intentionally public frontend file."""
+def resolve_public_static_path(request_target: str) -> str | None:
+    """Resolve a public request target to its repository-backed static path."""
 
     parsed_target = urlsplit(request_target)
     if parsed_target.scheme or parsed_target.netloc:
-        return False
+        return None
     path = unquote(parsed_target.path)
-    if "\\" in path or "\0" in path:
-        return False
+    if "%" in path or "\\" in path or "\0" in path:
+        return None
     segments = tuple(segment for segment in path.split("/") if segment)
     if any(segment in {".", ".."} for segment in segments):
-        return False
-    if not segments or (len(segments) == 1 and segments[0] in PUBLIC_TOP_LEVEL_FILES):
-        return True
-    return any(
+        return None
+    if not segments:
+        return "/"
+    if len(segments) == 1:
+        if segments[0] in PUBLIC_TOP_LEVEL_FILES:
+            return f"/{segments[0]}"
+        alias = PUBLIC_FILE_ALIASES.get(segments[0])
+        if alias:
+            return f"/{'/'.join(alias)}"
+    is_public_directory = any(
         segments[: len(prefix)] == prefix
         for prefix in PUBLIC_DIRECTORY_PREFIXES
     )
+    return f"/{'/'.join(segments)}" if is_public_directory else None
+
+
+def is_public_static_path(request_target: str) -> bool:
+    """Return whether a request targets an intentionally public frontend file."""
+
+    return resolve_public_static_path(request_target) is not None
 
 
 class DemonthroneRequestHandler(SimpleHTTPRequestHandler):
@@ -120,16 +137,14 @@ class DemonthroneRequestHandler(SimpleHTTPRequestHandler):
         if self.path.startswith(API_PREFIX):
             self._handle_api_get()
             return
-        if is_public_static_path(self.path):
-            super().do_GET()
+        if self._serve_public_static(super().do_GET):
             return
         self.send_error(HTTPStatus.NOT_FOUND)
 
     def do_HEAD(self) -> None:
         """Serve metadata only for intentionally public frontend files."""
 
-        if is_public_static_path(self.path):
-            super().do_HEAD()
+        if self._serve_public_static(super().do_HEAD):
             return
         self.send_error(HTTPStatus.NOT_FOUND)
 
@@ -166,6 +181,18 @@ class DemonthroneRequestHandler(SimpleHTTPRequestHandler):
             )
             return
         self._send_json(route_handler(), HTTPStatus.OK)
+
+    def _serve_public_static(self, serve: Callable[[], None]) -> bool:
+        static_path = resolve_public_static_path(self.path)
+        if static_path is None:
+            return False
+        request_target = self.path
+        self.path = static_path
+        try:
+            serve()
+        finally:
+            self.path = request_target
+        return True
 
     def _routes(self) -> dict[str, RouteHandler]:
         return {

@@ -13,6 +13,7 @@ from backend.app import (
     build_health_payload,
     build_new_game_payload,
     is_public_static_path,
+    resolve_public_static_path,
 )
 
 
@@ -39,6 +40,8 @@ class StaticPathTests(unittest.TestCase):
         public_paths = (
             "/",
             "/index.html",
+            "/favicon.ico",
+            "/favicon.png",
             "/src/main.js?version=1",
             "/node_modules/three/build/three.module.js",
         )
@@ -57,6 +60,7 @@ class StaticPathTests(unittest.TestCase):
             "/ts/main.ts",
             "/src/../backend/app.py",
             "/src/%2e%2e/backend/app.py",
+            "/src/%252e%252e/backend/app.py",
             "/src/%2E%2E%2F.git/HEAD",
             "/src%5c..%5c.git%5cHEAD",
             "//AGENTS.md",
@@ -66,6 +70,14 @@ class StaticPathTests(unittest.TestCase):
         for path in private_paths:
             with self.subTest(path=path):
                 self.assertFalse(is_public_static_path(path))
+
+    def test_favicon_routes_share_one_png_asset(self) -> None:
+        for path in ("/favicon.ico", "/favicon.png"):
+            with self.subTest(path=path):
+                self.assertEqual(
+                    resolve_public_static_path(path),
+                    "/public/favicon.png",
+                )
 
 
 class BackendRouteTests(unittest.TestCase):
@@ -118,6 +130,20 @@ class BackendRouteTests(unittest.TestCase):
             self.handler.do_GET()
 
         serve_static.assert_called_once_with()
+
+    def test_favicon_route_serves_png_asset_and_restores_request(self) -> None:
+        self.handler.path = "/favicon.ico"
+        served_paths: list[str] = []
+
+        with patch.object(
+            SimpleHTTPRequestHandler,
+            "do_GET",
+            side_effect=lambda: served_paths.append(self.handler.path),
+        ):
+            self.handler.do_GET()
+
+        self.assertEqual(served_paths, ["/public/favicon.png"])
+        self.assertEqual(self.handler.path, "/favicon.ico")
 
     def test_disconnected_static_client_does_not_escape_handler(self) -> None:
         with patch.object(SimpleHTTPRequestHandler, "handle", side_effect=BrokenPipeError):
