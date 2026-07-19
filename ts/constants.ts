@@ -39,7 +39,6 @@ export const rotationControlInterval = 16;
 
 export const colors = {
   background: "#111516",
-  sky: "#83a598",
   tile: "#3d3936",
   tileSideLeft: "#292726",
   tileSideRight: "#514b46",
