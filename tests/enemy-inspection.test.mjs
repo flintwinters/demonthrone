@@ -23,10 +23,11 @@ test("an inspected enemy exposes movement and attack overlay tiles", () => {
   const candidates = Array.from({ length: 7 }, (_, y) =>
     Array.from({ length: 7 }, (_, x) => ({ x: enemy.x + x - 3, y: enemy.y + y - 3 })),
   ).flat();
+  const movementPolicy = { key: "unblocked", isBlocked: () => false };
   const hasActionTile = (field) => candidates.some((tile) =>
-    isEnemyActionTile(selectedTile, tile, [enemy], () => false, field));
+    isEnemyActionTile(selectedTile, tile, [enemy], movementPolicy, field));
 
   assert.equal(hasActionTile("movement"), true);
   assert.equal(hasActionTile("attack"), true);
-  assert.equal(isEnemyActionTile(null, enemy, [enemy], () => false, "attack"), false);
+  assert.equal(isEnemyActionTile(null, enemy, [enemy], movementPolicy, "attack"), false);
 });

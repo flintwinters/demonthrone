@@ -1,5 +1,5 @@
 import { boardState, canSeeTile, enrichTile } from "./board-state.js";
-import { actionFields } from "./action-fields.js";
+import { actionFields, type MovementPolicy } from "./action-fields.js";
 import { syncCompass } from "./compass.js";
 import { devicePixelRatio, gridFromScreen } from "./controls/index.js";
 import { connectCancelInput } from "./controls/index.js";
@@ -91,7 +91,7 @@ function selectTile(tile: Tile): void {
   const attackTarget = isPushInteraction(tile, unit) ? null : tryPlanAttack(
     tile, unit, [...enemies, ...pushables],
     (candidate) => Boolean(unit
-      && actionFields(unit, enemies, teamVisibleMovementBlocker()).attack.has(tileKey(candidate))),
+      && actionFields(unit, enemies, teamVisibleMovementPolicy()).attack.has(tileKey(candidate))),
   );
 
   if (attackTarget) {
@@ -139,19 +139,21 @@ function canInteractionTargetTile(tile: Tile): boolean {
 
   const unit = selectedUnit();
 
-  return unit ? canMoveToTile(tile, unit) : isEnemyActionTile(selectedTile, tile, enemies, isMovementBlocked, "movement");
+  return unit ? canMoveToTile(tile, unit) : isEnemyActionTile(
+    selectedTile, tile, enemies, boardMovementPolicy(), "movement",
+  );
 }
 
 function canSelectedUnitAttackTile(tile: Tile): boolean {
   return isSelectionAttackTile(
-    selectedUnit(), selectedTile, tile, enemies, [...enemies, ...pushables], teamVisibleMovementBlocker(),
+    selectedUnit(), selectedTile, tile, enemies, [...enemies, ...pushables], teamVisibleMovementPolicy(),
   );
 }
 
 function conflictsWithUnitAction(tile: Tile, unit: Unit): boolean {
   return canMoveToTile(tile, unit) || canPlanAttack(
     unit, tile, [...enemies, ...pushables],
-    (candidate) => actionFields(unit, enemies, teamVisibleMovementBlocker()).attack.has(tileKey(candidate)),
+    (candidate) => actionFields(unit, enemies, teamVisibleMovementPolicy()).attack.has(tileKey(candidate)),
   );
 }
 
@@ -163,13 +165,20 @@ function canMoveIgnoringAction(tile: Tile, unit: Unit): boolean {
   return canSeeTile(tile, enemies, gameOver.center)
     && (canPushTo(unit, tile, isPushDestinationBlocked, tileHeight)
       || (!isMovementBlocked(tile)
-        && actionFields(unit, enemies, teamVisibleMovementBlocker()).movement.has(tileKey(tile))));
+        && actionFields(unit, enemies, teamVisibleMovementPolicy()).movement.has(tileKey(tile))));
 }
 
-function teamVisibleMovementBlocker(): TilePredicate {
+function teamVisibleMovementPolicy(): MovementPolicy {
   const visible = visibilityState(enemies, gameOver.center).keys;
 
-  return (tile) => isMovementBlocked(tile) || !visible.has(tileKey(tile));
+  return {
+    key: `team-visible:${gameOver.center ? tileKey(gameOver.center) : "living-team"}`,
+    isBlocked: (tile) => isMovementBlocked(tile) || !visible.has(tileKey(tile)),
+  };
+}
+
+function boardMovementPolicy(): MovementPolicy {
+  return { key: "board-occupancy", isBlocked: isMovementBlocked };
 }
 
 function isPushInteraction(tile: Tile, unit: Unit | null): boolean {

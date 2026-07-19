@@ -11,11 +11,12 @@ import { lineOfSightConfig } from "./world-config.js";
 import type { Character, Enemy, TilePredicate } from "./types.js";
 
 export type ActionFields = { movement: Set<string>; attack: Set<string> };
+export type MovementPolicy = { key: string; isBlocked: TilePredicate };
 
 let cached: { signature: string; fields: ActionFields } | null = null;
 
-export function actionFields(unit: Character, enemies: Enemy[], isMovementBlocked: TilePredicate): ActionFields {
-  const signature = actionFieldSignature(unit, enemies);
+export function actionFields(unit: Character, enemies: Enemy[], movementPolicy: MovementPolicy): ActionFields {
+  const signature = actionFieldSignature(unit, enemies, movementPolicy.key);
 
   if (cached?.signature === signature) return cached.fields;
   const context = sightContext(
@@ -26,7 +27,7 @@ export function actionFields(unit: Character, enemies: Enemy[], isMovementBlocke
     lineOfSightConfig.attackHeightMultiplier,
   );
   const movement = reachableTileKeys(
-    unit, unit.movement, isMovementBlocked, tileHeight, movementCost,
+    unit, unit.movement, movementPolicy.isBlocked, tileHeight, movementCost,
   );
   const attack = new Set(shadowcastTiles(
     unit, unit.attackRange, context, sightGeometry.eyeHeight,
@@ -37,9 +38,9 @@ export function actionFields(unit: Character, enemies: Enemy[], isMovementBlocke
   return fields;
 }
 
-function actionFieldSignature(unit: Character, enemies: Enemy[]): string {
+function actionFieldSignature(unit: Character, enemies: Enemy[], movementPolicyKey: string): string {
   return [
-    unit.id, unit.x, unit.y, unit.movement, unit.attackRange,
+    movementPolicyKey, unit.id, unit.x, unit.y, unit.movement, unit.attackRange,
     ...[...units, ...enemies, ...pushables].map(entitySignature),
   ].join(";");
 }
