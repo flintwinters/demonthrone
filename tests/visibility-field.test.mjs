@@ -85,6 +85,17 @@ test("supersampled footprints fill partial shadow gaps without adjacency dilatio
   assert.equal(keys.has("-3:-9"), false);
 });
 
+test("the tile-center vote does not preserve unrelated legacy-ray speckles", () => {
+  const ridge = (tile) => tile.x === -2 && tile.y === -8;
+  const keys = new Set(field(unit(12), {
+    tileHeight: (tile) => ridge(tile) ? 3 : 0,
+  }).map(tileKey));
+
+  assert.equal(keys.has("-2:-8"), true);
+  assert.equal(keys.has("-2:-11"), true);
+  assert.equal(keys.has("-4:-11"), false);
+});
+
 test("a one-tile origin move preserves a partially visible footprint", () => {
   const tileHeight = (tile) => tile.x === -1 && tile.y === -6 ? 3 : 0;
   const before = new Set(field(unit(10), { tileHeight }).map(tileKey));

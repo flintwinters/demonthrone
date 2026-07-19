@@ -9,7 +9,6 @@ type Sweep = {
   costs: Float64Array;
   slopes: Float64Array;
   steps: Float64Array;
-  centerSamples: Uint8Array;
   eyeZ: number;
   targetOffset: number;
 };
@@ -20,6 +19,7 @@ type Footprints = {
 };
 type SampledTile = {
   minor: number;
+  centerBin: number;
   horizontal: number;
   terrainCost: number;
   groundHeight: number;
@@ -99,7 +99,7 @@ function sweepOctant(
       const minor = Math.min(depth, Math.floor(sweep.slopes[bin] * (depth + 1)));
 
       if (sample?.minor !== minor) {
-        sample = sampleTile(origin, octant, depth, minor, range, context);
+        sample = sampleTile(origin, octant, depth, minor, range, bins, context);
       }
       visitBin(range, depth, bin, sample, sweep, footprints, context);
     }
@@ -111,20 +111,17 @@ function createSweep(bins: number, eyeZ: number, targetOffset: number): Sweep {
   const horizons = new Float64Array(bins);
   const slopes = new Float64Array(bins);
   const steps = new Float64Array(bins);
-  const centerSamples = new Uint8Array(bins);
 
   horizons.fill(Number.NEGATIVE_INFINITY);
   for (let bin = 0; bin < bins; bin += 1) {
     slopes[bin] = bin / (bins - 1);
     steps[bin] = Math.hypot(1, slopes[bin]);
-    centerSamples[bin] = bin % angularSupersampling === 0 ? 1 : 0;
   }
   return {
     horizons,
     costs: new Float64Array(bins),
     slopes,
     steps,
-    centerSamples,
     eyeZ,
     targetOffset,
   };
@@ -147,7 +144,7 @@ function visitBin(
   const visible = isBinVisible(tile.groundHeight, tile.horizontal, bin, range, sweep, context);
 
   if (visible) footprints.visible[tile.minor] += 1;
-  if (visible && sweep.centerSamples[bin] === 1) footprints.centerVisible[tile.minor] = 1;
+  if (bin === tile.centerBin) footprints.centerVisible[tile.minor] = visible ? 1 : 0;
   sweep.horizons[bin] = Math.max(
     sweep.horizons[bin],
     occlusionSlope(tile.obstructionTop, depth, step, sweep),
@@ -160,24 +157,38 @@ function sampleTile(
   depth: number,
   minor: number,
   range: number,
+  bins: number,
   context: SightContext,
 ): SampledTile {
   const tile = projectTile(origin, octant, depth, minor);
   const horizontal = Math.hypot(depth, minor);
+  const centerBin = tileCenterBin(minor, depth, bins);
 
   if (horizontal > range) {
-    return { minor, horizontal, terrainCost: 0, groundHeight: 0, obstructionTop: 0 };
+    return { minor, centerBin, horizontal, terrainCost: 0, groundHeight: 0, obstructionTop: 0 };
   }
   const terrainCost = finiteSightCost(context.sightCost(tile));
   const groundHeight = context.tileHeight(tile);
 
   return {
     minor,
+    centerBin,
     horizontal,
     terrainCost,
     groundHeight,
     obstructionTop: obstructionHeight(tile, groundHeight, context),
   };
+}
+
+function tileCenterBin(minor: number, depth: number, bins: number): number {
+  const denominator = bins - 1;
+  const lower = Math.ceil(minor * denominator / (depth + 1));
+  const upper = minor === depth
+    ? denominator
+    : Math.ceil((minor + 1) * denominator / (depth + 1)) - 1;
+  const center = Math.round(minor * denominator / depth);
+
+  return Math.max(lower, Math.min(center, upper));
 }
 
 function createFootprints(size: number): Footprints {
