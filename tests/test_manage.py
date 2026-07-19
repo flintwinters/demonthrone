@@ -20,6 +20,22 @@ class ManageTests(unittest.TestCase):
 
     @patch("manage.run_server")
     @patch("manage.build_frontend")
+    def test_default_command_builds_then_serves(
+        self,
+        build_frontend: object,
+        run_server: object,
+    ) -> None:
+        manage.main(())
+
+        build_frontend.assert_called_once_with()
+        run_server.assert_called_once_with(
+            host="127.0.0.1",
+            port=8001,
+            static_root=manage.PROJECT_ROOT,
+        )
+
+    @patch("manage.run_server")
+    @patch("manage.build_frontend")
     def test_runserver_builds_then_serves(
         self,
         build_frontend: object,

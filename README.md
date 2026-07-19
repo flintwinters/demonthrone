@@ -49,12 +49,13 @@ Fetch the pinned frontend dependencies once with `npm ci`. Then use the root
 management entrypoint to build and run the game:
 
 ```sh
-python manage.py runserver
+python manage.py
 ```
 
-This builds the TypeScript first, then serves the browser app at
-`http://127.0.0.1:8001`. Use `python manage.py runserver --no-build` to skip a
-build or `python manage.py build` to compile without starting the server.
+This single command builds the TypeScript first, then serves the browser app at
+`http://127.0.0.1:8001`. `npm start` is equivalent. Use
+`python manage.py runserver --no-build` to intentionally serve existing output,
+or `python manage.py build` to compile without starting the server.
 
 ## Verification
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import subprocess
+import sys
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -48,7 +49,10 @@ def create_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> None:
     """Run the requested project-management command."""
 
-    args = create_parser().parse_args(argv)
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    if not arguments:
+        arguments.append("runserver")
+    args = create_parser().parse_args(arguments)
     if args.command == "build":
         build_frontend()
         return

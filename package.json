@@ -7,9 +7,8 @@
     "build": "tsc -p tsconfig.json",
     "check": "npm run build && npm run lint && node --test tests/*.test.mjs && npm run syntax",
     "lint": "eslint .",
+    "start": "python manage.py",
     "syntax": "find src -name '*.js' -print0 | xargs -0 -n1 node --check",
-    "backend": "python -m backend.app",
-    "serve": "npx serve .",
     "test": "npm run check"
   },
   "devDependencies": {
