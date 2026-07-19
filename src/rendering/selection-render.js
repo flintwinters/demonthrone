@@ -2,14 +2,35 @@ import * as THREE from "three";
 import { terrainHeight } from "../constants.js";
 import { tileKey } from "../grid.js";
 import { lineMaterial, selectedOutlineMaterial } from "./render-materials.js";
+import { material } from "./render-materials.js";
 import { parabolicSelectionLineConfig, selectionOutlineConfig } from "../selection-visuals.js";
+import { hoveredTileColor } from "./terrain-style.js";
 export function addSelectionVisuals(root, boardState) {
+    addHoverSurface(root, boardState);
     addSelectionOutlines(root, boardState);
     for (const arc of boardState.selectionLines) {
         const line = new THREE.LineSegments(selectionLineGeometry(arc), lineMaterial(arc.color));
         line.renderOrder = 90;
         root.add(line);
     }
+}
+function addHoverSurface(root, boardState) {
+    const tile = boardState.hoveredTile;
+    if (!tile)
+        return;
+    const color = hoveredTileColor(tile, boardState);
+    if (!color)
+        return;
+    const z = visualHeight(tile.height) + 0.002;
+    const geometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(tile.x, tile.y, z),
+        new THREE.Vector3(tile.x + 1, tile.y, z),
+        new THREE.Vector3(tile.x + 1, tile.y + 1, z),
+        new THREE.Vector3(tile.x, tile.y + 1, z),
+    ]);
+    geometry.setIndex([0, 1, 2, 0, 2, 3]);
+    geometry.computeVertexNormals();
+    root.add(new THREE.Mesh(geometry, material(color)));
 }
 function addSelectionOutlines(root, boardState) {
     const tiles = selectedOutlineTiles(boardState);

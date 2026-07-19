@@ -40,14 +40,10 @@ function baseTileStyle(tile, boardState, level) {
         return priority;
     }
     if (boardState.isAttackTile(tile)) {
-        const top = sameTile(boardState.hoveredTile, tile) ? colors.hoveredAttackTile : colors.attackTile;
-        return terrainStyle(top, colors.tileSideRight, level);
+        return terrainStyle(colors.attackTile, colors.tileSideRight, level);
     }
     if (boardState.isMovementTile(tile)) {
-        return movementTileStyle(tile, boardState, level);
-    }
-    if (sameTile(boardState.hoveredTile, tile)) {
-        return terrainStyle(colors.hoveredTile, colors.tileSideRight, level);
+        return movementTileStyle(level);
     }
     return biomeTerrainStyle(tile, level);
 }
@@ -70,9 +66,24 @@ function isPlannedAttackTarget(tile, boardState) {
     const target = [...boardState.enemies, ...boardState.pushables].find((candidate) => sameTile(candidate, tile));
     return Boolean(target && boardState.units.some((unit) => unit.attackTargetId === target.id));
 }
-function movementTileStyle(tile, boardState, level) {
-    const top = sameTile(boardState.hoveredTile, tile) ? colors.hoveredMovementTile : colors.movementTile;
-    return terrainStyle(top, colors.movementTileSideRight, level, colors.movementTileStroke);
+export function hoveredTileColor(tile, boardState) {
+    if (!sameTile(boardState.hoveredTile, tile) || isPriorityTile(tile, boardState)) {
+        return null;
+    }
+    if (boardState.isAttackTile(tile))
+        return colors.hoveredAttackTile;
+    if (boardState.isMovementTile(tile))
+        return colors.hoveredMovementTile;
+    return colors.hoveredTile;
+}
+function isPriorityTile(tile, boardState) {
+    return isPlannedAttackTarget(tile, boardState)
+        || isPlannedMoveTarget(tile, boardState.units)
+        || isPlannedMoveStart(tile, boardState.units)
+        || sameTile(boardState.selectedTile, tile);
+}
+function movementTileStyle(level) {
+    return terrainStyle(colors.movementTile, colors.movementTileSideRight, level, colors.movementTileStroke);
 }
 function biomeTerrainStyle(tile, level) {
     const terrain = tileTerrain(tile);

@@ -31,7 +31,6 @@ function styleSignature(boardState) {
     return [
         boardState.selectedUnitId ?? "",
         tileSignature(boardState.selectedTile),
-        tileSignature(boardState.hoveredTile),
         unitsSignature(boardState.units),
     ].join("|");
 }

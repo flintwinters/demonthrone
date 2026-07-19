@@ -53,17 +53,11 @@ function baseTileStyle(tile: Tile, boardState: BoardState, level: number): Terra
   }
 
   if (boardState.isAttackTile(tile)) {
-    const top = sameTile(boardState.hoveredTile, tile) ? colors.hoveredAttackTile : colors.attackTile;
-
-    return terrainStyle(top, colors.tileSideRight, level);
+    return terrainStyle(colors.attackTile, colors.tileSideRight, level);
   }
 
   if (boardState.isMovementTile(tile)) {
-    return movementTileStyle(tile, boardState, level);
-  }
-
-  if (sameTile(boardState.hoveredTile, tile)) {
-    return terrainStyle(colors.hoveredTile, colors.tileSideRight, level);
+    return movementTileStyle(level);
   }
 
   return biomeTerrainStyle(tile, level);
@@ -95,10 +89,27 @@ function isPlannedAttackTarget(tile: Tile, boardState: BoardState): boolean {
   return Boolean(target && boardState.units.some((unit) => unit.attackTargetId === target.id));
 }
 
-function movementTileStyle(tile: Tile, boardState: BoardState, level: number): TerrainStyle {
-  const top = sameTile(boardState.hoveredTile, tile) ? colors.hoveredMovementTile : colors.movementTile;
+export function hoveredTileColor(tile: Tile, boardState: BoardState): string | null {
+  if (!sameTile(boardState.hoveredTile, tile) || isPriorityTile(tile, boardState)) {
+    return null;
+  }
 
-  return terrainStyle(top, colors.movementTileSideRight, level, colors.movementTileStroke);
+  if (boardState.isAttackTile(tile)) return colors.hoveredAttackTile;
+  if (boardState.isMovementTile(tile)) return colors.hoveredMovementTile;
+  return colors.hoveredTile;
+}
+
+function isPriorityTile(tile: Tile, boardState: BoardState): boolean {
+  return isPlannedAttackTarget(tile, boardState)
+    || isPlannedMoveTarget(tile, boardState.units)
+    || isPlannedMoveStart(tile, boardState.units)
+    || sameTile(boardState.selectedTile, tile);
+}
+
+function movementTileStyle(level: number): TerrainStyle {
+  return terrainStyle(
+    colors.movementTile, colors.movementTileSideRight, level, colors.movementTileStroke,
+  );
 }
 
 function biomeTerrainStyle(tile: Tile, level: number): TerrainStyle {
