@@ -5,7 +5,7 @@ import { colors, terrainHeight } from "../constants.js";
 import { material } from "./render-materials.js";
 import { addSelectionVisuals } from "./selection-render.js";
 import { pushableMeshes } from "./pushable-render.js";
-import { skyBackground } from "./sky-background.js";
+import { centerSkybox, createSkybox } from "./skybox.js";
 import { terrainLayer, terrainSignature } from "./terrain-layer.js";
 const tombstoneGeometry = new THREE.SphereGeometry(0.15, 12, 8);
 const hemisphereLightIntensity = 4.2;
@@ -16,6 +16,7 @@ export function drawGrid(canvas, boardState) {
     const renderState = initializeRenderer(canvas);
     const tiles = boardState.visibleTiles;
     configureViewCamera(canvas, renderState.camera);
+    centerSkybox(renderState.skybox, renderState.camera);
     syncTerrain(renderState, boardState, tiles);
     clearRoot(renderState.dynamicRoot);
     addTombstones(renderState, boardState.tombstones);
@@ -35,18 +36,19 @@ function initializeRenderer(canvas) {
         configureRendererSize(state.current.renderer, canvas);
         return state.current;
     }
+    const skybox = createSkybox(colors.background, colors.sky);
     const renderState = {
         renderer: new THREE.WebGLRenderer({ canvas, antialias: false }),
         scene: new THREE.Scene(),
         camera: createViewCamera(),
         root: new THREE.Group(),
         dynamicRoot: new THREE.Group(),
+        skybox,
         terrainCache: null,
     };
     configureRendererSize(renderState.renderer, canvas);
     renderState.renderer.setClearColor(colors.background, 1);
-    renderState.scene.background = skyBackground(colors.background, colors.sky);
-    renderState.scene.add(renderState.root);
+    renderState.scene.add(renderState.root, skybox);
     renderState.root.add(renderState.dynamicRoot);
     renderState.scene.add(new THREE.HemisphereLight(colors.tileStroke, colors.background, hemisphereLightIntensity));
     renderState.scene.add(directionalLight());
