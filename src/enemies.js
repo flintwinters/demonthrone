@@ -5,7 +5,7 @@ import { canCharacterSeeEntity, characterSightBlockers, sightContext, } from "./
 import { isBoulderTile, sightCost, tileHeight } from "./world/index.js";
 const enemyTemplates = new Map(enemyConfigs.map((config) => [
     config.type,
-    new EnemyTemplate(config.type, config.stats, config.color),
+    new EnemyTemplate(config.type, config.infoText, config.stats, config.color),
 ]));
 export function createEnemy(type, id, tile) {
     const template = enemyTemplates.get(type);

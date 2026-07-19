@@ -1,32 +1,26 @@
 import { entityAtTile } from "./grid.js";
-const terrainInfo = {
-    boulder: "boulder",
-    brush: "foliage",
-    ice: "ice",
-    water: "water",
-};
 export function selectedEntityAt(tile, entities) {
     return entityAtTile(entities, tile);
 }
 export function entityStatus(entity) {
-    return entity?.entityType ?? "";
+    return entity?.infoText ?? "";
 }
 export function selectedEntityStatus(selectedUnit, selectedSource, selectedTile, entities) {
     return entityStatus(selectedSource ?? selectedUnit ?? selectedEntityAt(selectedTile, entities));
 }
-export function selectedObjectStatus(selectedUnit, selectedSource, selectedTile, entities, terrainKind) {
+export function selectedObjectStatus(selectedUnit, selectedSource, selectedTile, entities, terrainAt) {
     return selectedEntityStatus(selectedUnit, selectedSource, selectedTile, entities)
-        || selectedInspectionStatus(selectedTile, entities, terrainKind);
+        || selectedInspectionStatus(selectedTile, entities, terrainAt);
 }
-function selectedInspectionStatus(tile, entities, terrainKind) {
+function selectedInspectionStatus(tile, entities, terrainAt) {
     const entity = selectedEntityAt(tile, entities);
-    return entity ? entityStatus(entity) : selectedTerrainStatus(tile, terrainKind);
+    return entity ? entityStatus(entity) : selectedTerrainStatus(tile, terrainAt);
 }
-function selectedTerrainStatus(tile, terrainKind) {
-    return tile ? terrainInfo[terrainKind(tile)] ?? "" : "";
+function selectedTerrainStatus(tile, terrainAt) {
+    return tile ? terrainAt(tile).infoText : "";
 }
-export function isInspectableTerrain(kind) {
-    return terrainInfo[kind] !== undefined;
+export function isInspectableTerrain(terrain) {
+    return terrain.infoText.length > 0;
 }
 export function selectVisibleEntityTile(tile, units, entities, canSee, enrich, interact, isInspectableTile = () => false) {
     if (!canSee(tile)) {

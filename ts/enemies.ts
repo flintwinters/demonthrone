@@ -9,7 +9,7 @@ import type { Enemy, EnemyType, Tile, TilePredicate, Unit } from "./types.js";
 
 const enemyTemplates = new Map(enemyConfigs.map((config) => [
   config.type,
-  new EnemyTemplate(config.type, config.stats, config.color),
+  new EnemyTemplate(config.type, config.infoText, config.stats, config.color),
 ]));
 
 export function createEnemy(type: EnemyType, id: string, tile: Tile): Enemy {

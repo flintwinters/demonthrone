@@ -9,6 +9,7 @@ export type EnemyType = "nephilim" | "pursuer";
 
 export type Terrain = {
   kind: TerrainKind;
+  infoText: string;
   biome: BiomeKind;
   blocksMovement: boolean;
   sightCost: number;
@@ -52,6 +53,7 @@ export interface Entity extends Tile {
   id: string;
   entityKind: "teammate" | "enemy" | "object";
   entityType: string;
+  infoText: string;
 }
 
 export interface DamageableEntity extends Entity {

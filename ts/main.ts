@@ -61,7 +61,7 @@ function draw(): void {
   selectionStatus.value = selectedObjectStatus(
     selectedUnit(), enchantmentSelection.source(), game.selectedTile,
     [...game.units, ...game.enemies, ...game.pushables],
-    (tile) => tileTerrain(tile).kind,
+    tileTerrain,
   );
 }
 
@@ -109,7 +109,7 @@ function selectTile(tile: Tile): void {
     (candidate) => canSeeTile(candidate, game, gameOver.center),
     enrichTile,
     (candidate) => clickBoardTile(candidate, canMoveToTile, assignMoveTarget),
-    (candidate) => isInspectableTerrain(tileTerrain(candidate).kind),
+    (candidate) => isInspectableTerrain(tileTerrain(candidate)),
   );
   draw();
 }

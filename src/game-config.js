@@ -54,11 +54,11 @@ export const landscapePaths = {
     },
 };
 export const terrainTraits = {
-    floor: new TerrainType("floor", false, 1, 1),
-    boulder: new TerrainType("boulder", true, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY),
-    brush: new TerrainType("brush", false, 2, 1),
-    ice: new TerrainType("ice", false, 0.1, 0.5),
-    water: new TerrainType("water", false, 0.1, 10),
+    floor: new TerrainType("floor", "", false, 1, 1),
+    boulder: new TerrainType("boulder", "boulder", true, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY),
+    brush: new TerrainType("brush", "foliage", false, 2, 1),
+    ice: new TerrainType("ice", "ice", false, 0.1, 0.5),
+    water: new TerrainType("water", "water", false, 0.1, 10),
 };
 export const worldDataCacheLimit = 32768;
 export const basinConfig = {
@@ -105,6 +105,7 @@ export const pushableConfig = {
     maxUpwardPushHeight: 2,
     health: 3,
     type: "crate",
+    infoText: "crate",
 };
 export const terrainPropConfig = {
     foliageHeightSeed: 0x6419,

@@ -4,6 +4,7 @@ import type { CharacterStats, EnemyStats, EnemyType } from "./types.js";
 export type TeammateConfig = {
   id: string;
   type: string;
+  infoText: string;
   spawn: { x: number; y: number };
   color: string;
   stats: CharacterStats;
@@ -24,6 +25,7 @@ export type EnemyAppearance = {
 };
 export type EnemyConfig = {
   type: EnemyType;
+  infoText: string;
   color: string;
   stats: EnemyStats;
   appearance: EnemyAppearance;
@@ -45,7 +47,7 @@ function teammate(
   attackRange: number,
   health: number,
 ): TeammateConfig {
-  return { id, type: id, spawn, color, stats: { sight, movement, attackRange, health } };
+  return { id, type: id, infoText: id, spawn, color, stats: { sight, movement, attackRange, health } };
 }
 
 function enemy(
@@ -59,5 +61,11 @@ function enemy(
   damage: number,
   movementInterval: number,
 ): EnemyConfig {
-  return { type, color, appearance, stats: { sight, movement, attackRange, health, damage, movementInterval } };
+  return {
+    type,
+    infoText: type,
+    color,
+    appearance,
+    stats: { sight, movement, attackRange, health, damage, movementInterval },
+  };
 }

@@ -6,7 +6,7 @@ import type { HeightTile, Tile, Unit } from "./types.js";
 
 export const units: Unit[] = [
   ...teammateConfigs.map((config) => {
-    const template = new TeammateTemplate(config.type, config.stats, config.color);
+    const template = new TeammateTemplate(config.type, config.infoText, config.stats, config.color);
 
     return template.create(config.id, config.spawn);
   }),

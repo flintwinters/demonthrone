@@ -102,6 +102,7 @@ export class BiomeProfile {
 export class TerrainType {
   constructor(
     readonly kind: TerrainKind,
+    readonly infoText: string,
     readonly blocksMovement: boolean,
     private readonly baseSightCost: number,
     private readonly baseMovementCost: number,
@@ -110,6 +111,7 @@ export class TerrainType {
   terrain(biome: BiomeProfile): Terrain {
     return {
       kind: this.kind,
+      infoText: this.infoText,
       biome: biome.kind,
       blocksMovement: this.blocksMovement,
       sightCost: this.kind === "brush" ? biome.brushSightCost : this.baseSightCost,

@@ -1,7 +1,7 @@
 import { entityAtTile, l1Distance, neighborTile } from "./grid.js";
 import { PushableTemplate } from "./domain.js";
 import { pushableConfig } from "./world-config.js";
-const crateTemplate = new PushableTemplate(pushableConfig.type, pushableConfig.health);
+const crateTemplate = new PushableTemplate(pushableConfig.type, pushableConfig.infoText, pushableConfig.health);
 export const pushables = [];
 export function createPushable(id, tile) {
     return crateTemplate.create(id, tile);

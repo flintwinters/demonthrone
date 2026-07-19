@@ -1,22 +1,15 @@
 import { entityAtTile } from "./grid.js";
-import type { Entity, HeightTile, TerrainKind, Tile, Unit } from "./types.js";
+import type { Entity, HeightTile, Terrain, Tile, Unit } from "./types.js";
 
 type TileEnricher = (tile: Tile) => HeightTile;
 type TileInteraction = (tile: HeightTile) => HeightTile | null;
-
-const terrainInfo: Readonly<Partial<Record<TerrainKind, string>>> = {
-  boulder: "boulder",
-  brush: "foliage",
-  ice: "ice",
-  water: "water",
-};
 
 export function selectedEntityAt(tile: Tile | null, entities: readonly Entity[]): Entity | null {
   return entityAtTile(entities, tile);
 }
 
 export function entityStatus(entity: Entity | null): string {
-  return entity?.entityType ?? "";
+  return entity?.infoText ?? "";
 }
 
 export function selectedEntityStatus(
@@ -33,31 +26,31 @@ export function selectedObjectStatus(
   selectedSource: Entity | null,
   selectedTile: Tile | null,
   entities: readonly Entity[],
-  terrainKind: (tile: Tile) => TerrainKind,
+  terrainAt: (tile: Tile) => Terrain,
 ): string {
   return selectedEntityStatus(selectedUnit, selectedSource, selectedTile, entities)
-    || selectedInspectionStatus(selectedTile, entities, terrainKind);
+    || selectedInspectionStatus(selectedTile, entities, terrainAt);
 }
 
 function selectedInspectionStatus(
   tile: Tile | null,
   entities: readonly Entity[],
-  terrainKind: (tile: Tile) => TerrainKind,
+  terrainAt: (tile: Tile) => Terrain,
 ): string {
   const entity = selectedEntityAt(tile, entities);
 
-  return entity ? entityStatus(entity) : selectedTerrainStatus(tile, terrainKind);
+  return entity ? entityStatus(entity) : selectedTerrainStatus(tile, terrainAt);
 }
 
 function selectedTerrainStatus(
   tile: Tile | null,
-  terrainKind: (tile: Tile) => TerrainKind,
+  terrainAt: (tile: Tile) => Terrain,
 ): string {
-  return tile ? terrainInfo[terrainKind(tile)] ?? "" : "";
+  return tile ? terrainAt(tile).infoText : "";
 }
 
-export function isInspectableTerrain(kind: TerrainKind): boolean {
-  return terrainInfo[kind] !== undefined;
+export function isInspectableTerrain(terrain: Terrain): boolean {
+  return terrain.infoText.length > 0;
 }
 
 export function selectVisibleEntityTile(

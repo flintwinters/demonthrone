@@ -6,26 +6,26 @@ const stats = { sight: 8, movement: 2, attackRange: 3, health: 5 };
 const enemyStats = { ...stats, damage: 2, movementInterval: 1 };
 
 test("character templates create discriminated, independently extensible archetypes", () => {
-  const teammate = new TeammateTemplate("ranger", stats, "#83a598")
+  const teammate = new TeammateTemplate("ranger", "ranger", stats, "#83a598")
     .create("ally-1", { x: 2, y: 3 });
-  const enemy = new EnemyTemplate("nephilim", enemyStats, "#cc241d")
+  const enemy = new EnemyTemplate("nephilim", "nephilim", enemyStats, "#cc241d")
     .create("enemy-1", { x: 7, y: 9 });
 
   assert.deepEqual(
-    [teammate.entityKind, teammate.entityType, teammate.target, teammate.attackTargetId],
-    ["teammate", "ranger", null, null],
+    [teammate.entityKind, teammate.entityType, teammate.infoText, teammate.target, teammate.attackTargetId],
+    ["teammate", "ranger", "ranger", null, null],
   );
   assert.deepEqual(
-    [enemy.entityKind, enemy.entityType, enemy.health, enemy.attackRange, enemy.damage],
-    ["enemy", "nephilim", 5, 3, 2],
+    [enemy.entityKind, enemy.entityType, enemy.infoText, enemy.health, enemy.attackRange, enemy.damage],
+    ["enemy", "nephilim", "nephilim", 5, 3, 2],
   );
 });
 
 test("object templates share entity identity while preserving object-specific state", () => {
-  const relic = new PushableTemplate("relic", 12).create("relic-1", { x: -4, y: 6 });
+  const relic = new PushableTemplate("relic", "ancient relic", 12).create("relic-1", { x: -4, y: 6 });
 
   assert.deepEqual(
-    [relic.entityKind, relic.entityType, relic.health, relic.target, relic.followsId],
-    ["object", "relic", 12, null, null],
+    [relic.entityKind, relic.entityType, relic.infoText, relic.health, relic.target, relic.followsId],
+    ["object", "relic", "ancient relic", 12, null, null],
   );
 });

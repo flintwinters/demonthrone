@@ -3,7 +3,11 @@ import { PushableTemplate } from "./domain.js";
 import { pushableConfig } from "./world-config.js";
 import type { Pushable, Tile, TileHeight, TilePredicate, Unit } from "./types.js";
 
-const crateTemplate = new PushableTemplate(pushableConfig.type, pushableConfig.health);
+const crateTemplate = new PushableTemplate(
+  pushableConfig.type,
+  pushableConfig.infoText,
+  pushableConfig.health,
+);
 
 export const pushables: Pushable[] = [];
 

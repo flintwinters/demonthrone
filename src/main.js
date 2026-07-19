@@ -41,7 +41,7 @@ function draw() {
     drawGrid(canvas, boardState(game, canInteractionTargetTile, canSelectedUnitAttackTile, enchantmentSelection.source()?.id ?? null, plannedSelectionLines(enchantmentSelection, game.hoveredTile, game.units, game.enemies, game.pushables, enrichTile), gameOver.center));
     goButton.hidden = units.length === 0;
     gameOver.syncStatus();
-    selectionStatus.value = selectedObjectStatus(selectedUnit(), enchantmentSelection.source(), game.selectedTile, [...game.units, ...game.enemies, ...game.pushables], (tile) => tileTerrain(tile).kind);
+    selectionStatus.value = selectedObjectStatus(selectedUnit(), enchantmentSelection.source(), game.selectedTile, [...game.units, ...game.enemies, ...game.pushables], tileTerrain);
 }
 function resize() {
     const pixelRatio = devicePixelRatio();
@@ -68,7 +68,7 @@ function selectTile(tile) {
         draw();
         return;
     }
-    game.selectedTile = selectVisibleEntityTile(tile, game.units, [...game.units, ...game.enemies, ...game.pushables], (candidate) => canSeeTile(candidate, game, gameOver.center), enrichTile, (candidate) => clickBoardTile(candidate, canMoveToTile, assignMoveTarget), (candidate) => isInspectableTerrain(tileTerrain(candidate).kind));
+    game.selectedTile = selectVisibleEntityTile(tile, game.units, [...game.units, ...game.enemies, ...game.pushables], (candidate) => canSeeTile(candidate, game, gameOver.center), enrichTile, (candidate) => clickBoardTile(candidate, canMoveToTile, assignMoveTarget), (candidate) => isInspectableTerrain(tileTerrain(candidate)));
     draw();
 }
 function hoverTile(tile) {

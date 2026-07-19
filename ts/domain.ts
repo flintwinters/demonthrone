@@ -25,7 +25,7 @@ export class SafeZone {
 }
 
 export abstract class EntityTemplate<TEntity extends Entity> {
-  constructor(readonly entityType: string) {}
+  constructor(readonly entityType: string, readonly infoText: string) {}
 
   abstract create(id: string, tile: Tile): TEntity;
 }
@@ -33,10 +33,11 @@ export abstract class EntityTemplate<TEntity extends Entity> {
 abstract class CharacterTemplate<TEntity extends Character> extends EntityTemplate<TEntity> {
   constructor(
     entityType: string,
+    infoText: string,
     protected readonly stats: CharacterStats,
     protected readonly color: string,
   ) {
-    super(entityType);
+    super(entityType, infoText);
   }
 }
 
@@ -48,6 +49,7 @@ export class TeammateTemplate extends CharacterTemplate<Unit> {
       id,
       entityKind: "teammate",
       entityType: this.entityType,
+      infoText: this.infoText,
       color: this.color,
       target: null,
       attackTargetId: null,
@@ -56,8 +58,13 @@ export class TeammateTemplate extends CharacterTemplate<Unit> {
 }
 
 export class EnemyTemplate extends CharacterTemplate<Enemy> {
-  constructor(private readonly enemyType: EnemyType, private readonly enemyStats: EnemyStats, color: string) {
-    super(enemyType, enemyStats, color);
+  constructor(
+    private readonly enemyType: EnemyType,
+    infoText: string,
+    private readonly enemyStats: EnemyStats,
+    color: string,
+  ) {
+    super(enemyType, infoText, enemyStats, color);
   }
 
   create(id: string, tile: Tile): Enemy {
@@ -67,6 +74,7 @@ export class EnemyTemplate extends CharacterTemplate<Enemy> {
       id,
       entityKind: "enemy",
       entityType: this.enemyType,
+      infoText: this.infoText,
       color: this.color,
       turnsUntilMove: 0,
     };
@@ -74,8 +82,8 @@ export class EnemyTemplate extends CharacterTemplate<Enemy> {
 }
 
 export class PushableTemplate extends EntityTemplate<Pushable> {
-  constructor(entityType: string, private readonly health: number) {
-    super(entityType);
+  constructor(entityType: string, infoText: string, private readonly health: number) {
+    super(entityType, infoText);
   }
 
   create(id: string, tile: Tile): Pushable {
@@ -84,6 +92,7 @@ export class PushableTemplate extends EntityTemplate<Pushable> {
       ...tile,
       entityKind: "object",
       entityType: this.entityType,
+      infoText: this.infoText,
       health: this.health,
       target: null,
       pushedByUnitId: null,

@@ -10,8 +10,14 @@ export const enemyConfigs = [
     enemy("nephilim", colors.nephilim, { shape: "cylinder", radius: 0.22, height: 0.9, labelHeight: 1.1 }, 5, 1, 1, 8, 3, 3),
 ];
 function teammate(id, spawn, color, sight, movement, attackRange, health) {
-    return { id, type: id, spawn, color, stats: { sight, movement, attackRange, health } };
+    return { id, type: id, infoText: id, spawn, color, stats: { sight, movement, attackRange, health } };
 }
 function enemy(type, color, appearance, sight, movement, attackRange, health, damage, movementInterval) {
-    return { type, color, appearance, stats: { sight, movement, attackRange, health, damage, movementInterval } };
+    return {
+        type,
+        infoText: type,
+        color,
+        appearance,
+        stats: { sight, movement, attackRange, health, damage, movementInterval },
+    };
 }

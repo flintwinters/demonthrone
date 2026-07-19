@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { terrainTraits } from "../src/game-config.js";
 import {
   entityStatus,
   isInspectableTerrain,
@@ -13,9 +14,17 @@ const warden = {
   id: "unit-2",
   entityKind: "teammate",
   entityType: "warden",
+  infoText: "warden",
   x: 8,
   y: 6,
 };
+
+test("every configured terrain type owns its inspection text", () => {
+  assert.deepEqual(
+    Object.fromEntries(Object.entries(terrainTraits).map(([kind, terrain]) => [kind, terrain.infoText])),
+    { floor: "", boulder: "boulder", brush: "foliage", ice: "ice", water: "water" },
+  );
+});
 
 test("selection status contains only the selected entity archetype", () => {
   assert.equal(entityStatus(warden), "warden");
@@ -28,10 +37,12 @@ test("status lookup ignores empty selected terrain", () => {
 });
 
 test("entity status prioritizes explicit gameplay selections", () => {
-  const crate = { ...warden, id: "crate-1", entityKind: "object", entityType: "crate" };
+  const crate = {
+    ...warden, id: "crate-1", entityKind: "object", entityType: "crate", infoText: "wooden crate",
+  };
 
-  assert.equal(selectedEntityStatus(warden, crate, crate, [warden, crate]), "crate");
-  assert.equal(selectedEntityStatus(null, crate, warden, [warden, crate]), "crate");
+  assert.equal(selectedEntityStatus(warden, crate, crate, [warden, crate]), "wooden crate");
+  assert.equal(selectedEntityStatus(null, crate, warden, [warden, crate]), "wooden crate");
 });
 
 test("status text remains concise during active interactions", () => {
@@ -41,16 +52,19 @@ test("status text remains concise during active interactions", () => {
     id: "crate-1",
     entityKind: "object",
     entityType: "crate",
+    infoText: "crate",
     enchanterUnitId: null,
   };
-  const kindAt = () => "floor";
+  const terrainAt = () => ({ infoText: "" });
 
-  assert.equal(selectedObjectStatus(unit, null, unit, [unit, crate], kindAt), "warden");
-  assert.equal(selectedObjectStatus(null, crate, crate, [unit, crate], kindAt), "crate");
+  assert.equal(selectedObjectStatus(unit, null, unit, [unit, crate], terrainAt), "warden");
+  assert.equal(selectedObjectStatus(null, crate, crate, [unit, crate], terrainAt), "crate");
 });
 
 test("visible non-unit entities can be selected for inspection", () => {
-  const enemy = { ...warden, id: "enemy-1", entityKind: "enemy", entityType: "pursuer" };
+  const enemy = {
+    ...warden, id: "enemy-1", entityKind: "enemy", entityType: "pursuer", infoText: "pursuer",
+  };
   const enrich = (tile) => ({ ...tile, height: 2 });
 
   assert.deepEqual(
@@ -61,11 +75,11 @@ test("visible non-unit entities can be selected for inspection", () => {
 });
 
 test("terrain objects have concise user-facing inspection text", () => {
-  const kindAt = () => "brush";
+  const foliage = { infoText: "foliage" };
 
-  assert.equal(selectedObjectStatus(null, null, { x: 3, y: 4 }, [], kindAt), "foliage");
-  assert.equal(isInspectableTerrain("boulder"), true);
-  assert.equal(isInspectableTerrain("floor"), false);
+  assert.equal(selectedObjectStatus(null, null, { x: 3, y: 4 }, [], () => foliage), "foliage");
+  assert.equal(isInspectableTerrain({ infoText: "boulder" }), true);
+  assert.equal(isInspectableTerrain({ infoText: "" }), false);
 });
 
 test("visible terrain objects can be selected for inspection", () => {

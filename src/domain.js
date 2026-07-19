@@ -13,15 +13,17 @@ export class SafeZone {
 }
 export class EntityTemplate {
     entityType;
-    constructor(entityType) {
+    infoText;
+    constructor(entityType, infoText) {
         this.entityType = entityType;
+        this.infoText = infoText;
     }
 }
 class CharacterTemplate extends EntityTemplate {
     stats;
     color;
-    constructor(entityType, stats, color) {
-        super(entityType);
+    constructor(entityType, infoText, stats, color) {
+        super(entityType, infoText);
         this.stats = stats;
         this.color = color;
     }
@@ -34,6 +36,7 @@ export class TeammateTemplate extends CharacterTemplate {
             id,
             entityKind: "teammate",
             entityType: this.entityType,
+            infoText: this.infoText,
             color: this.color,
             target: null,
             attackTargetId: null,
@@ -43,8 +46,8 @@ export class TeammateTemplate extends CharacterTemplate {
 export class EnemyTemplate extends CharacterTemplate {
     enemyType;
     enemyStats;
-    constructor(enemyType, enemyStats, color) {
-        super(enemyType, enemyStats, color);
+    constructor(enemyType, infoText, enemyStats, color) {
+        super(enemyType, infoText, enemyStats, color);
         this.enemyType = enemyType;
         this.enemyStats = enemyStats;
     }
@@ -55,6 +58,7 @@ export class EnemyTemplate extends CharacterTemplate {
             id,
             entityKind: "enemy",
             entityType: this.enemyType,
+            infoText: this.infoText,
             color: this.color,
             turnsUntilMove: 0,
         };
@@ -62,8 +66,8 @@ export class EnemyTemplate extends CharacterTemplate {
 }
 export class PushableTemplate extends EntityTemplate {
     health;
-    constructor(entityType, health) {
-        super(entityType);
+    constructor(entityType, infoText, health) {
+        super(entityType, infoText);
         this.health = health;
     }
     create(id, tile) {
@@ -72,6 +76,7 @@ export class PushableTemplate extends EntityTemplate {
             ...tile,
             entityKind: "object",
             entityType: this.entityType,
+            infoText: this.infoText,
             health: this.health,
             target: null,
             pushedByUnitId: null,
