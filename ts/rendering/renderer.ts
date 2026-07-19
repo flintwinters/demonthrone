@@ -1,11 +1,16 @@
 import * as THREE from "three";
-import { configureViewCamera, createViewCamera, devicePixelRatio } from "../controls/index.js";
+import {
+  configureViewCamera,
+  createViewCamera,
+  devicePixelRatio,
+  viewportSize,
+} from "../controls/index.js";
 import { enemyObjects, unitObjects } from "./character-render.js";
 import { colors, terrainHeight } from "../constants.js";
 import { material } from "./render-materials.js";
 import { addSelectionVisuals } from "./selection-render.js";
 import { pushableMeshes } from "./pushable-render.js";
-import { centerSkybox, createSkybox } from "./skybox.js";
+import { configureSkybox, createSkybox } from "./skybox.js";
 import { terrainLayer, terrainSignature } from "./terrain-layer.js";
 import type { BoardState, RenderPushable, RenderTombstone, Tile } from "../types.js";
 
@@ -15,7 +20,7 @@ type RenderState = {
   camera: THREE.OrthographicCamera;
   root: THREE.Group;
   dynamicRoot: THREE.Group;
-  skybox: THREE.Object3D;
+  skybox: ReturnType<typeof createSkybox>;
   terrainCache: TerrainCache | null;
 };
 
@@ -36,7 +41,7 @@ export function drawGrid(canvas: HTMLCanvasElement, boardState: BoardState): voi
   const tiles = boardState.visibleTiles;
 
   configureViewCamera(canvas, renderState.camera);
-  centerSkybox(renderState.skybox, renderState.camera);
+  configureSkybox(renderState.skybox, renderState.camera, viewportSize(canvas));
   syncTerrain(renderState, boardState, tiles);
   clearRoot(renderState.dynamicRoot);
   addTombstones(renderState, boardState.tombstones);

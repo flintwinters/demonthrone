@@ -1,11 +1,17 @@
 import * as THREE from "three";
-import { cameraDistance } from "../constants.js";
+const skyNear = 0.1;
+const skyFar = 10;
+const skyHalfHeight = 1;
+const skyViewRotation = new THREE.Matrix4();
+const skyProjection = new THREE.Matrix4();
 const vertexShader = `
+  uniform mat4 skyViewProjection;
   varying vec3 skyDirection;
 
   void main() {
     skyDirection = position;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec4 clipPosition = skyViewProjection * vec4(position, 1.0);
+    gl_Position = clipPosition.xyww;
   }
 `;
 const fragmentShader = `
@@ -22,11 +28,12 @@ const fragmentShader = `
   }
 `;
 export function createSkybox(bottom, top) {
-    const geometry = new THREE.BoxGeometry(cameraDistance * 2, cameraDistance * 2, cameraDistance * 2);
+    const geometry = new THREE.BoxGeometry(2, 2, 2);
     const material = new THREE.ShaderMaterial({
         uniforms: {
             bottomColor: { value: new THREE.Color(bottom) },
             topColor: { value: new THREE.Color(top) },
+            skyViewProjection: { value: new THREE.Matrix4() },
         },
         vertexShader,
         fragmentShader,
@@ -40,6 +47,9 @@ export function createSkybox(bottom, top) {
     skybox.renderOrder = Number.NEGATIVE_INFINITY;
     return skybox;
 }
-export function centerSkybox(skybox, camera) {
-    skybox.position.copy(camera.position);
+export function configureSkybox(skybox, camera, viewport) {
+    const aspect = viewport.width / viewport.height;
+    skyProjection.makePerspective(-skyHalfHeight * aspect, skyHalfHeight * aspect, skyHalfHeight, -skyHalfHeight, skyNear, skyFar);
+    skyViewRotation.extractRotation(camera.matrixWorldInverse);
+    skybox.material.uniforms.skyViewProjection.value.multiplyMatrices(skyProjection, skyViewRotation);
 }
