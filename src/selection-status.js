@@ -1,4 +1,4 @@
-import { sameTile } from "./grid.js";
+import { entityAtTile } from "./grid.js";
 const terrainInfo = {
     boulder: "boulder",
     brush: "foliage",
@@ -6,7 +6,7 @@ const terrainInfo = {
     water: "water",
 };
 export function selectedEntityAt(tile, entities) {
-    return tile ? entities.find((entity) => sameTile(entity, tile)) ?? null : null;
+    return entityAtTile(entities, tile);
 }
 export function entityStatus(entity) {
     return entity?.entityType ?? "";
@@ -32,7 +32,7 @@ export function selectVisibleEntityTile(tile, units, entities, canSee, enrich, i
     if (!canSee(tile)) {
         return null;
     }
-    const clickedUnit = units.some((unit) => sameTile(unit, tile));
+    const clickedUnit = entityAtTile(units, tile) !== null;
     const interactionTile = interact(enrich(tile));
     return interactionTile ?? inspectTile(tile, clickedUnit, entities, enrich, isInspectableTile);
 }

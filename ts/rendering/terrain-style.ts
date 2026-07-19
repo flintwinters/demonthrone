@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { colors, terrainHeight } from "../constants.js";
-import { sameTile } from "../grid.js";
+import { entityAtTile, sameTile } from "../grid.js";
 import { deterministicUnit } from "../noise.js";
 import type { TerrainStyle } from "./terrain-mesh.js";
 import { isWallTile, tileBiome, tileTerrain } from "../world/index.js";
@@ -84,7 +84,7 @@ function priorityTileStyle(tile: Tile, boardState: BoardState, level: number): T
 }
 
 function isPlannedAttackTarget(tile: Tile, boardState: BoardState): boolean {
-  const target = [...boardState.enemies, ...boardState.pushables].find((candidate) => sameTile(candidate, tile));
+  const target = entityAtTile([...boardState.enemies, ...boardState.pushables], tile);
 
   return Boolean(target && boardState.units.some((unit) => unit.attackTargetId === target.id));
 }

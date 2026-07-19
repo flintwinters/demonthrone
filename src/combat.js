@@ -1,9 +1,10 @@
 import { canTakeAction, cancelAction, spendAction } from "./teammate-turns.js";
+import { entityAtTile } from "./grid.js";
 export function canAttack(unit, target) {
     return Math.hypot(unit.x - target.x, unit.y - target.y) <= unit.attackRange;
 }
 export function canPlanAttack(unit, tile, targets, canSee) {
-    const target = targets.find((candidate) => candidate.x === tile.x && candidate.y === tile.y);
+    const target = entityAtTile(targets, tile);
     return Boolean(target
         && (canTakeAction(unit) || unit.attackTargetId === target.id)
         && canSee(target)
@@ -14,7 +15,7 @@ export function planAttack(unit, target) {
     unit.attackTargetId = target.id;
 }
 export function tryPlanAttack(tile, unit, targets, canSee) {
-    const target = targets.find((candidate) => candidate.x === tile.x && candidate.y === tile.y);
+    const target = entityAtTile(targets, tile);
     if (!target || !unit || !canSee(target) || !canAttack(unit, target)) {
         return null;
     }

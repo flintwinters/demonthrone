@@ -1,6 +1,6 @@
 import { actionFields, type ActionFields, type MovementPolicy } from "./action-fields.js";
 import { canPlanAttack } from "./combat.js";
-import { sameTile, tileKey } from "./grid.js";
+import { entityAtTile, tileKey } from "./grid.js";
 import type { GameState } from "./game-state.js";
 import type { DamageableEntity, HeightTile, Tile, Unit } from "./types.js";
 
@@ -28,7 +28,7 @@ export function isEnemyActionTile(
   field: keyof ActionFields,
 ): boolean {
   if (!selectedTile) return false;
-  const enemy = game.enemies.find((candidate) => sameTile(candidate, selectedTile));
+  const enemy = entityAtTile(game.enemies, selectedTile);
 
   return Boolean(enemy && actionFields(enemy, game, movementPolicy)[field].has(tileKey(tile)));
 }

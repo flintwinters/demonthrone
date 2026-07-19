@@ -1,5 +1,5 @@
 import { TeammateTemplate } from "./domain.js";
-import { sameTile } from "./grid.js";
+import { entityAtTile, sameTile } from "./grid.js";
 import { cancelAction, spendAction } from "./teammate-turns.js";
 import { teammateConfigs } from "./world-config.js";
 import type { HeightTile, Tile, Unit } from "./types.js";
@@ -85,5 +85,5 @@ function assignSelectedTarget(
 }
 
 function unitAt(tile: Tile): Unit | null {
-  return units.find((unit) => unit.x === tile.x && unit.y === tile.y) ?? null;
+  return entityAtTile(units, tile);
 }

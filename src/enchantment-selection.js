@@ -1,5 +1,5 @@
 import { bindEnchantment, dispelEnchantment, enchantmentOwner } from "./enchantment.js";
-import { sameTile } from "./grid.js";
+import { entityAtTile, sameTile } from "./grid.js";
 import { pushableAt, pushables } from "./pushables.js";
 import { canTakeAction, spendAction } from "./teammate-turns.js";
 export class EnchantmentSelection {
@@ -58,7 +58,7 @@ export class EnchantmentSelection {
     }
 }
 function targetAt(tile, units) {
-    return units.find((unit) => sameTile(unit, tile)) ?? pushableAt(tile);
+    return entityAtTile(units, tile) ?? pushableAt(tile);
 }
 function bindingOwner(source, tile, units) {
     const target = targetAt(tile, units);

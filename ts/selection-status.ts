@@ -1,4 +1,4 @@
-import { sameTile } from "./grid.js";
+import { entityAtTile } from "./grid.js";
 import type { Entity, HeightTile, TerrainKind, Tile, Unit } from "./types.js";
 
 type TileEnricher = (tile: Tile) => HeightTile;
@@ -12,7 +12,7 @@ const terrainInfo: Readonly<Partial<Record<TerrainKind, string>>> = {
 };
 
 export function selectedEntityAt(tile: Tile | null, entities: readonly Entity[]): Entity | null {
-  return tile ? entities.find((entity) => sameTile(entity, tile)) ?? null : null;
+  return entityAtTile(entities, tile);
 }
 
 export function entityStatus(entity: Entity | null): string {
@@ -73,7 +73,7 @@ export function selectVisibleEntityTile(
     return null;
   }
 
-  const clickedUnit = units.some((unit) => sameTile(unit, tile));
+  const clickedUnit = entityAtTile(units, tile) !== null;
   const interactionTile = interact(enrich(tile));
 
   return interactionTile ?? inspectTile(tile, clickedUnit, entities, enrich, isInspectableTile);

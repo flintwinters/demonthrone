@@ -1,4 +1,4 @@
-import { l1Distance, neighborTile, sameTile } from "./grid.js";
+import { entityAtTile, l1Distance, neighborTile, sameTile } from "./grid.js";
 import { PushableTemplate } from "./domain.js";
 import { pushableConfig } from "./world-config.js";
 import type { Pushable, Tile, TileHeight, TilePredicate, Unit } from "./types.js";
@@ -12,7 +12,7 @@ export function createPushable(id: string, tile: Tile): Pushable {
 }
 
 export function pushableAt(tile: Tile): Pushable | null {
-  return pushables.find((pushable) => sameTile(pushable, tile)) ?? null;
+  return entityAtTile(pushables, tile);
 }
 
 export function isPushableTile(tile: Tile): boolean {

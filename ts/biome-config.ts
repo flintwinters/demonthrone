@@ -1,12 +1,15 @@
 import { BiomeProfile } from "./domain.js";
 import type {
-  BiomeProfileConfig, HeightComponentConfig, NoiseFeatureConfig, NoiseLayerConfig,
+  BiomeProfileConfig, HeightComponentConfig, NoiseFeatureConfig,
 } from "./domain.js";
 import type { BiomeKind } from "./types.js";
 
-const worldSeed = 0x5eedf;
+export function createBiomes(
+  worldSeed: number,
+  heightComponents: readonly HeightComponentConfig[],
+): Record<BiomeKind, BiomeProfile> {
+  const feature = featureFactory(worldSeed);
 
-export function createBiomes(heightComponents: readonly HeightComponentConfig[]): Record<BiomeKind, BiomeProfile> {
   return {
     cinder: profile({
       kind: "cinder", height: { base: 0.18, components: heightComponents },
@@ -51,10 +54,11 @@ function profile(config: BiomeProfileConfig): BiomeProfile {
   return new BiomeProfile(config);
 }
 
-function noise(scale: number, salt: number, magnitude: number): NoiseLayerConfig {
-  return { scale, magnitude, seed: worldSeed ^ salt };
-}
-
-function feature(scale: number, salt: number, threshold: number, magnitude: number = 1): NoiseFeatureConfig {
-  return { ...noise(scale, salt, magnitude), threshold };
+function featureFactory(worldSeed: number) {
+  return (
+    scale: number,
+    salt: number,
+    threshold: number,
+    magnitude: number = 1,
+  ): NoiseFeatureConfig => ({ scale, magnitude, seed: worldSeed ^ salt, threshold });
 }

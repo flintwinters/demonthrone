@@ -1,6 +1,6 @@
 import { BiomeProfile } from "./domain.js";
-const worldSeed = 0x5eedf;
-export function createBiomes(heightComponents) {
+export function createBiomes(worldSeed, heightComponents) {
+    const feature = featureFactory(worldSeed);
     return {
         cinder: profile({
             kind: "cinder", height: { base: 0.18, components: heightComponents },
@@ -43,9 +43,6 @@ export function createBiomes(heightComponents) {
 function profile(config) {
     return new BiomeProfile(config);
 }
-function noise(scale, salt, magnitude) {
-    return { scale, magnitude, seed: worldSeed ^ salt };
-}
-function feature(scale, salt, threshold, magnitude = 1) {
-    return { ...noise(scale, salt, magnitude), threshold };
+function featureFactory(worldSeed) {
+    return (scale, salt, threshold, magnitude = 1) => ({ scale, magnitude, seed: worldSeed ^ salt, threshold });
 }

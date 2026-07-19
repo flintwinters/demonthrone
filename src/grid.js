@@ -16,6 +16,9 @@ export function neighborTile(tile, direction) {
 export function sameTile(first, second) {
     return first?.x === second?.x && first?.y === second?.y;
 }
+export function entityAtTile(entities, tile) {
+    return tile ? entities.find((entity) => sameTile(entity, tile)) ?? null : null;
+}
 export function tileKey(tile) {
     return `${tile.x}:${tile.y}`;
 }

@@ -1,4 +1,5 @@
 import { canTakeAction, cancelAction, spendAction } from "./teammate-turns.js";
+import { entityAtTile } from "./grid.js";
 import type { DamageableEntity, DamageableEntityPredicate, Tile, Unit } from "./types.js";
 
 export function canAttack(unit: Unit, target: DamageableEntity): boolean {
@@ -11,7 +12,7 @@ export function canPlanAttack(
   targets: readonly DamageableEntity[],
   canSee: DamageableEntityPredicate,
 ): boolean {
-  const target = targets.find((candidate) => candidate.x === tile.x && candidate.y === tile.y);
+  const target = entityAtTile(targets, tile);
 
   return Boolean(target
     && (canTakeAction(unit) || unit.attackTargetId === target.id)
@@ -30,7 +31,7 @@ export function tryPlanAttack(
   targets: readonly DamageableEntity[],
   canSee: DamageableEntityPredicate,
 ): DamageableEntity | null {
-  const target = targets.find((candidate) => candidate.x === tile.x && candidate.y === tile.y);
+  const target = entityAtTile(targets, tile);
 
   if (!target || !unit || !canSee(target) || !canAttack(unit, target)) {
     return null;

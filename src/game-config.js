@@ -9,7 +9,7 @@ export const elevationConfig = {
         { wavelength: 4, amplitude: 0.2, seed: worldSeed ^ 0xa713, sample: "centered" },
     ],
 };
-export const biomes = createBiomes(elevationConfig.layers);
+export const biomes = createBiomes(worldSeed, elevationConfig.layers);
 export const layers = {
     elevation: new NoiseLayer({ scale: 0.055, magnitude: 1, seed: worldSeed ^ 0x1234 }),
     moisture: new NoiseLayer({ scale: 0.06, magnitude: 1, seed: worldSeed ^ 0x4321 }),
