@@ -20,15 +20,20 @@ Demonthrone is a tactical, turn-based roguelike where you command a team of adve
 - [ ] more than one enemy
 - [ ] more than one obstacle - destructible obstacles
 
-## Backend
+## Run the project
 
-Run the zero-dependency Python backend from the project root:
+Use the root management entrypoint to compile the frontend and start the
+zero-dependency Python backend:
 
 ```sh
-python -m backend.app
+python manage.py runserver
 ```
 
-The backend serves the static browser app at `http://127.0.0.1:8001` and exposes:
+This builds the TypeScript first, then serves the browser app at
+`http://127.0.0.1:8001`. Use `python manage.py runserver --no-build` to skip a
+build or `python manage.py build` to compile without starting the server.
+
+The backend exposes:
 
 - `GET /api/health`
 - `GET /api/game/new`

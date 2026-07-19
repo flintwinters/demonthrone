@@ -1,5 +1,5 @@
 - Project state: browser proof of concept for a crisp Three.js/WebGL isometric tactics grid.
-- Run locally by opening `index.html` or serving the directory with any static file server.
+- Root `manage.py` is the centralized project entrypoint: `python manage.py build` compiles the frontend, while `python manage.py runserver` builds and starts the backend (use `--no-build` to serve existing output).
 - TypeScript source lives in `ts/`; compiled browser modules are emitted recursively to `src/` by `npm run build`. Cold subsystems live in `controls/`, `world/`, `visibility/`, and `rendering/`; imports crossing those directory boundaries must use the module `index.ts` facade.
 - Reusable object-oriented domain classes for biome profiles, terrain kinds, safe zones, noise layers, height profiles, and typed entity templates live in `ts/domain.ts`; feature modules should compose those classes rather than rebuilding parallel tables.
 - `ts/game-config.ts` owns exactly three typed elevation Perlin layers spanning macro, terrain-shaping, and detail wavelengths; every layer independently configures wavelength in tiles, output amplitude, seed, and sample transformation, and every biome composes those layers with its own base elevation.

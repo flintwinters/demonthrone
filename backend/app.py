@@ -161,6 +161,23 @@ def create_server(
     return ThreadingHTTPServer((host, port), create_handler(config))
 
 
+def run_server(
+    host: str = DEFAULT_HOST,
+    port: int = DEFAULT_PORT,
+    static_root: Path = PROJECT_ROOT,
+) -> None:
+    """Run a configured server until it is interrupted."""
+
+    server = create_server(host, port, static_root)
+    print(f"Serving Demonthrone on http://{host}:{port}", flush=True)
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.server_close()
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the Demonthrone backend.")
     parser.add_argument("--host", default=DEFAULT_HOST)
@@ -171,14 +188,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    server = create_server(args.host, args.port, args.static_root.resolve())
-    print(f"Serving Demonthrone on http://{args.host}:{args.port}", flush=True)
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        server.server_close()
+    run_server(args.host, args.port, args.static_root.resolve())
 
 
 if __name__ == "__main__":
