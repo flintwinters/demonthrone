@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { tileKey } from "../src/grid.js";
+import { enemyObscuredSightCost } from "../src/visibility/index.js";
 import { visibleTiles } from "../src/visibility/index.js";
 import { shadowcastTiles } from "../src/visibility/index.js";
 import { sightContext } from "../src/visibility/index.js";
@@ -91,6 +92,22 @@ test("shadowcast LOS slope penalty is configurable", () => {
 
   assert.equal(flatVision.has("3:0"), true);
   assert.equal(steepVision.has("3:0"), false);
+});
+
+test("enemy occupancy multiplies the existing sight traversal cost", () => {
+  const sightCost = enemyObscuredSightCost([{ x: 2, y: 0 }], () => 1);
+
+  assert.equal(sightCost({ x: 1, y: 0 }), 1);
+  assert.equal(sightCost({ x: 2, y: 0 }), 3);
+});
+
+test("enemy sight cost shortens visibility behind the occupied tile", () => {
+  const sightCost = enemyObscuredSightCost([{ x: 2, y: 0 }], () => 1);
+  const keys = new Set(field(unit(5), { sightCost }).map(tileKey));
+
+  assert.equal(keys.has("2:0"), true);
+  assert.equal(keys.has("4:0"), false);
+  assert.equal(keys.has("0:4"), true);
 });
 
 function cardinalNeighbors(tile) {

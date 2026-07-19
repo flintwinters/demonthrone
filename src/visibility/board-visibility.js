@@ -3,7 +3,7 @@ import { characterSightBlockers } from "./visibility.js";
 import { visibleTiles } from "./tiles.js";
 import { units } from "../units.js";
 import { isBoulderTile, sightCost, tileHeight } from "../world/index.js";
-import { gameOverConfig } from "../world-config.js";
+import { gameOverConfig, lineOfSightConfig } from "../world-config.js";
 let cached = null;
 export function visibilityState(enemies, revealCenter = null) {
     const signature = revealCenter ? `defeat:${tileKey(revealCenter)}` : visibilitySignature(enemies);
@@ -12,10 +12,14 @@ export function visibilityState(enemies, revealCenter = null) {
     const blockers = characterSightBlockers([...units, ...enemies], tileHeight);
     const tiles = revealCenter
         ? circularTiles(revealCenter, gameOverConfig.revealRadius)
-        : visibleTiles(units, blockers, sightCost, tileHeight, isBoulderTile);
+        : visibleTiles(units, blockers, enemyObscuredSightCost(enemies), tileHeight, isBoulderTile);
     const state = { tiles, keys: new Set(tiles.map(tileKey)), blockers };
     cached = { signature, state };
     return state;
+}
+export function enemyObscuredSightCost(enemies, baseSightCost = sightCost) {
+    const occupied = new Set(enemies.map(tileKey));
+    return (tile) => baseSightCost(tile) * (occupied.has(tileKey(tile)) ? lineOfSightConfig.enemySightCostMultiplier : 1);
 }
 export function circularTiles(center, radius) {
     const tiles = [];

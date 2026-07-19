@@ -1,4 +1,4 @@
-export { circularTiles, visibilityState } from "./board-visibility.js";
+export { circularTiles, enemyObscuredSightCost, visibilityState, } from "./board-visibility.js";
 export { lineSightCost, sightSearchRadius } from "./sight-cost.js";
 export { visibleTiles } from "./tiles.js";
 export { appendShadowcastTiles, shadowcastTiles } from "./visibility-field.js";

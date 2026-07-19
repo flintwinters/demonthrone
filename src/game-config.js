@@ -98,6 +98,7 @@ export const movementConfig = { maxUpwardStepHeight: 2 };
 export const lineOfSightConfig = {
     visionHeightMultiplier: 1,
     attackHeightMultiplier: 1,
+    enemySightCostMultiplier: 3,
 };
 export const pushableConfig = {
     maxUpwardPushHeight: 2,
