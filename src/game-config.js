@@ -49,7 +49,8 @@ export const landscapePaths = {
         threshold: 0.46,
         taper: 0.12,
         terrainProportion: 0.35,
-        height: 6,
+        height: 12,
+        riseScale: 0.5,
     },
 };
 export const terrainTraits = {

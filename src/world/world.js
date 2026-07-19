@@ -94,7 +94,8 @@ function wallRiseAt(tile, ground) {
     const target = ground * landscapePaths.wall.terrainProportion
         + taperedHeight
         - landscapePaths.wall.subtraction.value(tile);
-    return Math.max(0, Math.round(target) - ground);
+    const rise = Math.max(0, target - ground);
+    return Math.round(rise * landscapePaths.wall.riseScale);
 }
 function hydrologySurfaceAt(tile, excludesHydrology) {
     return excludesHydrology ? null : basinField.surfaceAt(tile, isHydrologicallyWet);

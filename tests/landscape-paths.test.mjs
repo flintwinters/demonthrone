@@ -49,19 +49,20 @@ test("river tiles are unobstructed slow water with efficient sight traversal", (
   assert.equal(tileHeight(river), groundHeight(river));
 });
 
-test("walls are tall ordinary blocks governed by terrain slope", () => {
+test("walls are short ordinary blocks governed by terrain slope", () => {
   const walls = pathTiles(isWallTile);
   const wall = walls.reduce((highest, tile) => (
     wallRise(tile) > wallRise(highest) ? tile : highest
   ));
 
   assert.notEqual(wall, undefined);
-  assert.equal(landscapePaths.wall.height, 6);
+  assert.equal(landscapePaths.wall.height, 12);
+  assert.equal(landscapePaths.wall.riseScale, 0.5);
   assert.equal(tileTerrain(wall).kind, "floor");
   assert.equal(isObstacleTile(wall), false);
   assert.equal(isBoulderTile(wall), false);
   assert.equal(isBrushTile(wall), false);
-  assert.equal(wallRise(wall) >= landscapePaths.wall.height, true);
+  assert.equal(wallRise(wall) >= landscapePaths.wall.height * landscapePaths.wall.riseScale, true);
 });
 
 test("walls form substantial multi-tile-thick runs", () => {
@@ -71,7 +72,7 @@ test("walls form substantial multi-tile-thick runs", () => {
   assert.equal(interior.length / walls.length > 0.35, true);
 });
 
-test("wall elevation is proportional and subtracts a second Perlin layer", () => {
+test("wall elevation scales the positive terrain-relative rise", () => {
   const wall = pathTiles(isWallTile).find((tile) => wallStrength(tile) === 1);
 
   assert.notEqual(wall, undefined);
@@ -80,7 +81,9 @@ test("wall elevation is proportional and subtracts a second Perlin layer", () =>
     + landscapePaths.wall.height
     - landscapePaths.wall.subtraction.value(wall);
 
-  assert.equal(wallRise(wall), Math.max(0, Math.round(target) - ground));
+  const expectedRise = Math.round(Math.max(0, target - ground) * landscapePaths.wall.riseScale);
+
+  assert.equal(wallRise(wall), expectedRise);
 });
 
 test("high terrain can overtake and absorb a full-height wall contour", () => {
