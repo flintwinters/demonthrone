@@ -4,7 +4,29 @@ import type { SightContext } from "./visibility.js";
 import type { Tile, Unit } from "../types.js";
 
 type Octant = { majorX: number; majorY: number; minorX: number; minorY: number };
-type Sweep = { horizons: Float64Array; costs: Float64Array; bins: number; eyeZ: number; targetOffset: number };
+type Sweep = {
+  horizons: Float64Array;
+  costs: Float64Array;
+  slopes: Float64Array;
+  steps: Float64Array;
+  centerSamples: Uint8Array;
+  eyeZ: number;
+  targetOffset: number;
+};
+type Footprints = {
+  visible: Uint32Array;
+  total: Uint32Array;
+  centerVisible: Uint8Array;
+};
+type SampledTile = {
+  minor: number;
+  horizontal: number;
+  terrainCost: number;
+  groundHeight: number;
+  obstructionTop: number;
+};
+
+const angularSupersampling = 3;
 
 const octants: readonly Octant[] = [
   { majorX: 1, majorY: 0, minorX: 0, minorY: 1 },
@@ -65,48 +87,130 @@ function sweepOctant(
   seen: Set<string>,
   tiles: Tile[],
 ): void {
-  const bins = radius + 1;
+  const bins = angularSupersampling * radius + 1;
   const sweep = createSweep(bins, context.tileHeight(origin) + sightGeometry.eyeHeight, targetOffset);
+  const footprints = createFootprints(radius + 1);
 
   for (let depth = 1; depth <= radius; depth += 1) {
+    resetFootprints(footprints, depth + 1);
+    let sample: SampledTile | null = null;
+
     for (let bin = 0; bin < bins; bin += 1) {
-      visitBin(origin, range, context, octant, depth, bin, sweep, seen, tiles);
+      const minor = Math.min(depth, Math.floor(sweep.slopes[bin] * (depth + 1)));
+
+      if (sample?.minor !== minor) {
+        sample = sampleTile(origin, octant, depth, minor, range, context);
+      }
+      visitBin(range, depth, bin, sample, sweep, footprints, context);
     }
+    appendVisibleFootprints(origin, octant, depth, footprints, seen, tiles);
   }
 }
 
 function createSweep(bins: number, eyeZ: number, targetOffset: number): Sweep {
   const horizons = new Float64Array(bins);
+  const slopes = new Float64Array(bins);
+  const steps = new Float64Array(bins);
+  const centerSamples = new Uint8Array(bins);
 
   horizons.fill(Number.NEGATIVE_INFINITY);
-  return { horizons, costs: new Float64Array(bins), bins, eyeZ, targetOffset };
+  for (let bin = 0; bin < bins; bin += 1) {
+    slopes[bin] = bin / (bins - 1);
+    steps[bin] = Math.hypot(1, slopes[bin]);
+    centerSamples[bin] = bin % angularSupersampling === 0 ? 1 : 0;
+  }
+  return {
+    horizons,
+    costs: new Float64Array(bins),
+    slopes,
+    steps,
+    centerSamples,
+    eyeZ,
+    targetOffset,
+  };
 }
 
 function visitBin(
-  origin: Tile,
   range: number,
-  context: SightContext,
-  octant: Octant,
   depth: number,
   bin: number,
+  tile: SampledTile,
   sweep: Sweep,
-  seen: Set<string>,
-  tiles: Tile[],
+  footprints: Footprints,
+  context: SightContext,
 ): void {
-  const angularSlope = bin / (sweep.bins - 1);
-  const minor = Math.min(depth, Math.floor(angularSlope * (depth + 1)));
+  if (tile.horizontal > range) return;
+  const step = sweep.steps[bin];
+
+  sweep.costs[bin] += step * tile.terrainCost;
+  footprints.total[tile.minor] += 1;
+  const visible = isBinVisible(tile.groundHeight, tile.horizontal, bin, range, sweep, context);
+
+  if (visible) footprints.visible[tile.minor] += 1;
+  if (visible && sweep.centerSamples[bin] === 1) footprints.centerVisible[tile.minor] = 1;
+  sweep.horizons[bin] = Math.max(
+    sweep.horizons[bin],
+    occlusionSlope(tile.obstructionTop, depth, step, sweep),
+  );
+}
+
+function sampleTile(
+  origin: Tile,
+  octant: Octant,
+  depth: number,
+  minor: number,
+  range: number,
+  context: SightContext,
+): SampledTile {
   const tile = projectTile(origin, octant, depth, minor);
   const horizontal = Math.hypot(depth, minor);
 
-  if (horizontal > range) return;
-  const step = Math.hypot(1, angularSlope);
-  const terrainCost = finiteSightCost(context.sightCost(tile));
-
-  sweep.costs[bin] += step * terrainCost;
-  if (isBinVisible(tile, horizontal, bin, range, sweep, context)) {
-    appendTile(tile, seen, tiles);
+  if (horizontal > range) {
+    return { minor, horizontal, terrainCost: 0, groundHeight: 0, obstructionTop: 0 };
   }
-  sweep.horizons[bin] = Math.max(sweep.horizons[bin], occlusionSlope(tile, depth, angularSlope, sweep, context));
+  const terrainCost = finiteSightCost(context.sightCost(tile));
+  const groundHeight = context.tileHeight(tile);
+
+  return {
+    minor,
+    horizontal,
+    terrainCost,
+    groundHeight,
+    obstructionTop: obstructionHeight(tile, groundHeight, context),
+  };
+}
+
+function createFootprints(size: number): Footprints {
+  return {
+    visible: new Uint32Array(size),
+    total: new Uint32Array(size),
+    centerVisible: new Uint8Array(size),
+  };
+}
+
+function resetFootprints(footprints: Footprints, end: number): void {
+  footprints.visible.fill(0, 0, end);
+  footprints.total.fill(0, 0, end);
+  footprints.centerVisible.fill(0, 0, end);
+}
+
+function appendVisibleFootprints(
+  origin: Tile,
+  octant: Octant,
+  depth: number,
+  footprints: Footprints,
+  seen: Set<string>,
+  tiles: Tile[],
+): void {
+  for (let minor = 0; minor <= depth; minor += 1) {
+    if (!isFootprintVisible(minor, footprints)) continue;
+    appendTile(projectTile(origin, octant, depth, minor), seen, tiles);
+  }
+}
+
+function isFootprintVisible(minor: number, footprints: Footprints): boolean {
+  return footprints.centerVisible[minor] === 1
+    || footprints.visible[minor] * 2 > footprints.total[minor];
 }
 
 function projectTile(origin: Tile, octant: Octant, major: number, minor: number): Tile {
@@ -117,7 +221,7 @@ function projectTile(origin: Tile, octant: Octant, major: number, minor: number)
 }
 
 function isBinVisible(
-  tile: Tile,
+  groundHeight: number,
   horizontal: number,
   bin: number,
   sight: number,
@@ -125,7 +229,7 @@ function isBinVisible(
   context: SightContext,
 ): boolean {
   if (horizontal > sight) return false;
-  const deltaZ = context.tileHeight(tile) + sweep.targetOffset - sweep.eyeZ;
+  const deltaZ = groundHeight + sweep.targetOffset - sweep.eyeZ;
   const heightMultiplier = context.heightMultiplier ?? 1;
   const rangeCost = sweep.costs[bin] * (1 + heightMultiplier * Math.abs(deltaZ) / horizontal);
 
@@ -133,22 +237,21 @@ function isBinVisible(
 }
 
 function occlusionSlope(
-  tile: Tile,
+  obstructionTop: number,
   depth: number,
-  angularSlope: number,
+  step: number,
   sweep: Sweep,
-  context: SightContext,
 ): number {
-  const nearDistance = Math.max(0.5, (depth - 0.5) * Math.hypot(1, angularSlope));
-  const top = obstructionTop(tile, context);
+  const nearDistance = Math.max(0.5, (depth - 0.5) * step);
 
-  return (top - sweep.eyeZ) / nearDistance;
+  return (obstructionTop - sweep.eyeZ) / nearDistance;
 }
 
-function obstructionTop(tile: Tile, context: SightContext): number {
-  let top = context.tileHeight(tile);
+function obstructionHeight(tile: Tile, groundHeight: number, context: SightContext): number {
+  let top = groundHeight;
 
   if (context.isBoulderTile(tile)) top += context.boulderHeight;
+  if (context.blockers.size === 0) return top;
   for (const blocker of context.blockers.get(tileKey(tile)) ?? []) {
     top = Math.max(top, blocker.top);
   }
