@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { tileKey } from "../src/grid.js";
 import { canReachTile, movementStepCost, reachableTileKeys } from "../src/movement.js";
 
 const unblocked = () => false;
@@ -42,4 +43,15 @@ test("one movement field contains every tile reachable around obstacles", () => 
   assert.equal(keys.has("1:0"), false);
   assert.equal(keys.has("2:0"), false);
   assert.equal(keys.has("1:1"), true);
+});
+
+test("movement cannot cross darkness to an isolated team-visible tile", () => {
+  const visible = new Set(["0:0", "1:0", "3:0"]);
+  const outsideTeamVisibility = (tile) => !visible.has(tileKey(tile));
+  const keys = reachableTileKeys(
+    { x: 0, y: 0 }, 4, outsideTeamVisibility, () => 0, () => 1,
+  );
+
+  assert.equal(keys.has("1:0"), true);
+  assert.equal(keys.has("3:0"), false);
 });

@@ -19,6 +19,7 @@ import { pickPieceTile } from "./controls/index.js";
 import { canPushTo, clearPlannedPush, commitPlannedPushes, isPushableTile, planPush, pushables } from "./pushables.js";
 import { drawGrid } from "./rendering/index.js";
 import { connectRotationControls } from "./controls/index.js";
+import { visibilityState } from "./visibility/index.js";
 import { isInspectableTerrain, selectedObjectStatus, selectVisibleEntityTile } from "./selection-status.js";
 import { tileHeight, tileTerrain } from "./world/index.js";
 import { connectTurnControl } from "./turn-control.js";
@@ -32,7 +33,7 @@ import {
   syncUnitSelection,
   units,
 } from "./units.js";
-import type { Enemy, HeightTile, ScreenPoint, Tile, Unit } from "./types.js";
+import type { Enemy, HeightTile, ScreenPoint, Tile, TilePredicate, Unit } from "./types.js";
 
 const canvas = requiredElement<HTMLCanvasElement>("#grid");
 const goButton = requiredElement<HTMLButtonElement>("#go");
@@ -89,7 +90,8 @@ function selectTile(tile: Tile): void {
   const unit = selectedUnit();
   const attackTarget = isPushInteraction(tile, unit) ? null : tryPlanAttack(
     tile, unit, [...enemies, ...pushables],
-    (candidate) => Boolean(unit && actionFields(unit, enemies, isMovementBlocked).attack.has(tileKey(candidate))),
+    (candidate) => Boolean(unit
+      && actionFields(unit, enemies, teamVisibleMovementBlocker()).attack.has(tileKey(candidate))),
   );
 
   if (attackTarget) {
@@ -142,14 +144,14 @@ function canInteractionTargetTile(tile: Tile): boolean {
 
 function canSelectedUnitAttackTile(tile: Tile): boolean {
   return isSelectionAttackTile(
-    selectedUnit(), selectedTile, tile, enemies, [...enemies, ...pushables], isMovementBlocked,
+    selectedUnit(), selectedTile, tile, enemies, [...enemies, ...pushables], teamVisibleMovementBlocker(),
   );
 }
 
 function conflictsWithUnitAction(tile: Tile, unit: Unit): boolean {
   return canMoveToTile(tile, unit) || canPlanAttack(
     unit, tile, [...enemies, ...pushables],
-    (candidate) => actionFields(unit, enemies, isMovementBlocked).attack.has(tileKey(candidate)),
+    (candidate) => actionFields(unit, enemies, teamVisibleMovementBlocker()).attack.has(tileKey(candidate)),
   );
 }
 
@@ -161,7 +163,13 @@ function canMoveIgnoringAction(tile: Tile, unit: Unit): boolean {
   return canSeeTile(tile, enemies, gameOver.center)
     && (canPushTo(unit, tile, isPushDestinationBlocked, tileHeight)
       || (!isMovementBlocked(tile)
-        && actionFields(unit, enemies, isMovementBlocked).movement.has(tileKey(tile))));
+        && actionFields(unit, enemies, teamVisibleMovementBlocker()).movement.has(tileKey(tile))));
+}
+
+function teamVisibleMovementBlocker(): TilePredicate {
+  const visible = visibilityState(enemies, gameOver.center).keys;
+
+  return (tile) => isMovementBlocked(tile) || !visible.has(tileKey(tile));
 }
 
 function isPushInteraction(tile: Tile, unit: Unit | null): boolean {
