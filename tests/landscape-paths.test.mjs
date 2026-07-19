@@ -56,6 +56,7 @@ test("walls are tall ordinary blocks governed by terrain slope", () => {
   ));
 
   assert.notEqual(wall, undefined);
+  assert.equal(landscapePaths.wall.height, 6);
   assert.equal(tileTerrain(wall).kind, "floor");
   assert.equal(isObstacleTile(wall), false);
   assert.equal(isBoulderTile(wall), false);
