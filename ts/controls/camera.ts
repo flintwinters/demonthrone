@@ -6,6 +6,7 @@ import {
   worldPixelsPerUnit,
 } from "../constants.js";
 import type { ScreenPoint, Tile, TileHeight, ViewportSize } from "../types.js";
+import { terrainTileAlongRay } from "./terrain-picker.js";
 
 type ScreenRay = {
   origin: THREE.Vector3;
@@ -79,9 +80,11 @@ export function gridFromScreen(
   screenY: number,
   heightAt: TileHeight | null = null,
 ): Tile {
-  const point = heightAt
-    ? topGridPointFromScreen(canvas, screenX, screenY, heightAt)
-    : worldPointAtHeight(canvas, screenX, screenY, 0);
+  if (heightAt) {
+    return topGridTileFromScreen(canvas, screenX, screenY, heightAt);
+  }
+
+  const point = worldPointAtHeight(canvas, screenX, screenY, 0);
 
   return {
     x: Math.floor(point.x),
@@ -131,25 +134,22 @@ export function screenFromGrid(canvas: HTMLCanvasElement, x: number, y: number, 
   return projectWorldPoint(canvas, projectedPoint.set(x, y, z));
 }
 
-function topGridPointFromScreen(
+function topGridTileFromScreen(
   canvas: HTMLCanvasElement,
   screenX: number,
   screenY: number,
   heightAt: TileHeight,
-): THREE.Vector3 {
+): Tile {
   const ray = screenRay(canvas, screenX, screenY);
-  const point = new THREE.Vector3();
+  const tile = terrainTileAlongRay(ray, heightAt);
 
-  for (let z = terrainHeight.max; z >= terrainHeight.min; z -= 1) {
-    pointAtRayHeight(ray, visualHeight(z), point);
-    const tile = { x: Math.floor(point.x), y: Math.floor(point.y) };
-
-    if (heightAt(tile) === z) {
-      return point;
-    }
+  if (tile) {
+    return tile;
   }
 
-  return pointAtRayHeight(ray, visualHeight(terrainHeight.min), point);
+  const point = pointAtRayHeight(ray, visualHeight(terrainHeight.min), new THREE.Vector3());
+
+  return { x: Math.floor(point.x), y: Math.floor(point.y) };
 }
 
 function worldPointAtHeight(

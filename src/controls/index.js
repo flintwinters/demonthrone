@@ -2,4 +2,5 @@ export { configureViewCamera, createViewCamera, devicePixelRatio, gridFromScreen
 export { connectCancelInput } from "./cancel-input.js";
 export { connectInput } from "./input.js";
 export { pickPieceTile } from "./piece-picker.js";
+export { terrainTileAlongRay } from "./terrain-picker.js";
 export { connectRotationControls } from "./rotation-controls.js";
