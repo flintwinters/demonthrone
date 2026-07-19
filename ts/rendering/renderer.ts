@@ -5,6 +5,7 @@ import { colors, terrainHeight } from "../constants.js";
 import { material } from "./render-materials.js";
 import { addSelectionVisuals } from "./selection-render.js";
 import { pushableMeshes } from "./pushable-render.js";
+import { skyBackground } from "./sky-background.js";
 import { terrainLayer, terrainSignature } from "./terrain-layer.js";
 import type { BoardState, RenderPushable, RenderTombstone, Tile } from "../types.js";
 
@@ -67,6 +68,7 @@ function initializeRenderer(canvas: HTMLCanvasElement): RenderState {
 
   configureRendererSize(renderState.renderer, canvas);
   renderState.renderer.setClearColor(colors.background, 1);
+  renderState.scene.background = skyBackground(colors.background, colors.sky);
   renderState.scene.add(renderState.root);
   renderState.root.add(renderState.dynamicRoot);
   renderState.scene.add(new THREE.HemisphereLight(
