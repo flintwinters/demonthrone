@@ -1,10 +1,9 @@
 import { tileKey } from "../grid.js";
 import { characterSightBlockers } from "./visibility.js";
 import { visibleTiles } from "./tiles.js";
-import { units } from "../units.js";
 import { isBoulderTile, sightCost, tileHeight } from "../world/index.js";
 import { gameOverConfig, lineOfSightConfig } from "../world-config.js";
-import type { Enemy, SightBlocker, Tile, TileSightCost } from "../types.js";
+import type { Enemy, SightBlocker, Tile, TileSightCost, Unit } from "../types.js";
 
 export type VisibilityState = {
   tiles: Tile[];
@@ -14,8 +13,12 @@ export type VisibilityState = {
 
 let cached: { signature: string; state: VisibilityState } | null = null;
 
-export function visibilityState(enemies: Enemy[], revealCenter: Tile | null = null): VisibilityState {
-  const signature = revealCenter ? `defeat:${tileKey(revealCenter)}` : visibilitySignature(enemies);
+export function visibilityState(
+  units: Unit[],
+  enemies: Enemy[],
+  revealCenter: Tile | null = null,
+): VisibilityState {
+  const signature = revealCenter ? `defeat:${tileKey(revealCenter)}` : visibilitySignature(units, enemies);
 
   if (cached?.signature === signature) return cached.state;
   const blockers = characterSightBlockers([...units, ...enemies], tileHeight);
@@ -50,7 +53,7 @@ export function circularTiles(center: Tile, radius: number): Tile[] {
   return tiles;
 }
 
-function visibilitySignature(enemies: Enemy[]): string {
+function visibilitySignature(units: Unit[], enemies: Enemy[]): string {
   return [...units, ...enemies]
     .map((character) => `${character.id}:${character.x}:${character.y}:${character.sight}:${character.health}`)
     .join(";");

@@ -11,6 +11,7 @@ import { captureFollowerPositions, dispelDestroyedPushable, followPositionHistor
 import { EnchantmentSelection } from "./enchantment-selection.js";
 import { sameTile, tileKey } from "./grid.js";
 import { GameOverState } from "./game-over.js";
+import { createGameState } from "./game-state.js";
 import { connectInput } from "./controls/index.js";
 import { cancelAttackForMovement, clearInteraction, handleEnchantmentClick } from "./interaction.js";
 import { requiredElement } from "./dom.js";
@@ -25,25 +26,22 @@ import { tileHeight, tileTerrain } from "./world/index.js";
 import { connectTurnControl } from "./turn-control.js";
 import { canTakeAction, cancelAction, resetActions } from "./teammate-turns.js";
 import { plannedSelectionLines } from "./selection-visuals.js";
-import { clearUnitSelection, clickBoardTile, commitPlannedMoves, selectedUnit, syncUnitSelection, units, } from "./units.js";
+import { clearUnitSelection, clickBoardTile, commitPlannedMoves, selectedUnit, selection, syncUnitSelection, units, } from "./units.js";
 const canvas = requiredElement("#grid");
 const goButton = requiredElement("#go");
 const rotateLeftButton = requiredElement("#rotate-left");
 const rotateRightButton = requiredElement("#rotate-right");
 const selectionStatus = requiredElement("#selection-status");
 const compassDial = requiredElement("#compass-dial");
-let selectedTile = null;
-let hoveredTile = null;
-const enemies = [];
-const tombstones = [];
+const game = createGameState(units, pushables, selection);
 const enchantmentSelection = new EnchantmentSelection();
 const gameOver = new GameOverState(requiredElement("#game-over"));
 function draw() {
     syncCompass(compassDial);
-    drawGrid(canvas, boardState(selectedTile, hoveredTile, enemies, tombstones, canInteractionTargetTile, canSelectedUnitAttackTile, enchantmentSelection.source()?.id ?? null, plannedSelectionLines(enchantmentSelection, hoveredTile, units, enemies, pushables, enrichTile), gameOver.center));
+    drawGrid(canvas, boardState(game, canInteractionTargetTile, canSelectedUnitAttackTile, enchantmentSelection.source()?.id ?? null, plannedSelectionLines(enchantmentSelection, game.hoveredTile, game.units, game.enemies, game.pushables, enrichTile), gameOver.center));
     goButton.hidden = units.length === 0;
     gameOver.syncStatus();
-    selectionStatus.value = selectedObjectStatus(selectedUnit(), enchantmentSelection.source(), selectedTile, [...units, ...enemies, ...pushables], (tile) => tileTerrain(tile).kind);
+    selectionStatus.value = selectedObjectStatus(selectedUnit(), enchantmentSelection.source(), game.selectedTile, [...game.units, ...game.enemies, ...game.pushables], (tile) => tileTerrain(tile).kind);
 }
 function resize() {
     const pixelRatio = devicePixelRatio();
@@ -56,59 +54,59 @@ function resize() {
 }
 function selectTile(tile) {
     cancelAttackForMovement(tile, selectedUnit(), canMoveIgnoringAction, cancelAction);
-    const enchantmentClick = handleEnchantmentClick(tile, selectedTile, enchantmentSelection, units, selectedUnit(), conflictsWithUnitAction, enrichTile, clearUnitSelection);
+    const enchantmentClick = handleEnchantmentClick(tile, game.selectedTile, enchantmentSelection, game.units, selectedUnit(), conflictsWithUnitAction, enrichTile, clearUnitSelection);
     if (enchantmentClick.handled) {
-        selectedTile = enchantmentClick.selectedTile;
+        game.selectedTile = enchantmentClick.selectedTile;
         draw();
         return;
     }
     const unit = selectedUnit();
-    const attackTarget = isPushInteraction(tile, unit) ? null : tryPlanAttack(tile, unit, [...enemies, ...pushables], (candidate) => Boolean(unit
-        && actionFields(unit, enemies, teamVisibleMovementPolicy()).attack.has(tileKey(candidate))));
+    const attackTarget = isPushInteraction(tile, unit) ? null : tryPlanAttack(tile, unit, [...game.enemies, ...game.pushables], (candidate) => Boolean(unit
+        && actionFields(unit, game, teamVisibleMovementPolicy()).attack.has(tileKey(candidate))));
     if (attackTarget) {
-        selectedTile = enrichTile(attackTarget);
+        game.selectedTile = enrichTile(attackTarget);
         draw();
         return;
     }
-    selectedTile = selectVisibleEntityTile(tile, units, [...units, ...enemies, ...pushables], (candidate) => canSeeTile(candidate, enemies, gameOver.center), enrichTile, (candidate) => clickBoardTile(candidate, canMoveToTile, assignMoveTarget), (candidate) => isInspectableTerrain(tileTerrain(candidate).kind));
+    game.selectedTile = selectVisibleEntityTile(tile, game.units, [...game.units, ...game.enemies, ...game.pushables], (candidate) => canSeeTile(candidate, game, gameOver.center), enrichTile, (candidate) => clickBoardTile(candidate, canMoveToTile, assignMoveTarget), (candidate) => isInspectableTerrain(tileTerrain(candidate).kind));
     draw();
 }
 function hoverTile(tile) {
-    const nextTile = tile && canSeeTile(tile, enemies, gameOver.center) ? enrichTile(tile) : null;
-    if (sameTile(hoveredTile, nextTile)) {
+    const nextTile = tile && canSeeTile(tile, game, gameOver.center) ? enrichTile(tile) : null;
+    if (sameTile(game.hoveredTile, nextTile)) {
         return;
     }
-    hoveredTile = nextTile;
+    game.hoveredTile = nextTile;
     draw();
 }
 function pickSelectableTile(point) {
-    const piece = pickPieceTile(canvas, point, [...units, ...enemies, ...pushables], (tile) => canSeeTile(tile, enemies, gameOver.center), tileHeight);
+    const piece = pickPieceTile(canvas, point, [...game.units, ...game.enemies, ...game.pushables], (tile) => canSeeTile(tile, game, gameOver.center), tileHeight);
     return piece ?? gridFromScreen(canvas, point.x, point.y, tileHeight);
 }
 function canInteractionTargetTile(tile) {
     if (enchantmentSelection.source()) {
-        return enchantmentSelection.canBindTo(tile, units);
+        return enchantmentSelection.canBindTo(tile, game.units);
     }
     const unit = selectedUnit();
-    return unit ? canMoveToTile(tile, unit) : isEnemyActionTile(selectedTile, tile, enemies, boardMovementPolicy(), "movement");
+    return unit ? canMoveToTile(tile, unit) : isEnemyActionTile(game.selectedTile, tile, game, boardMovementPolicy(), "movement");
 }
 function canSelectedUnitAttackTile(tile) {
-    return isSelectionAttackTile(selectedUnit(), selectedTile, tile, enemies, [...enemies, ...pushables], teamVisibleMovementPolicy());
+    return isSelectionAttackTile(selectedUnit(), game.selectedTile, tile, game, [...game.enemies, ...game.pushables], teamVisibleMovementPolicy());
 }
 function conflictsWithUnitAction(tile, unit) {
-    return canMoveToTile(tile, unit) || canPlanAttack(unit, tile, [...enemies, ...pushables], (candidate) => actionFields(unit, enemies, teamVisibleMovementPolicy()).attack.has(tileKey(candidate)));
+    return canMoveToTile(tile, unit) || canPlanAttack(unit, tile, [...game.enemies, ...game.pushables], (candidate) => actionFields(unit, game, teamVisibleMovementPolicy()).attack.has(tileKey(candidate)));
 }
 function canMoveToTile(tile, unit) {
     return canTakeAction(unit) && canMoveIgnoringAction(tile, unit);
 }
 function canMoveIgnoringAction(tile, unit) {
-    return canSeeTile(tile, enemies, gameOver.center)
+    return canSeeTile(tile, game, gameOver.center)
         && (canPushTo(unit, tile, isPushDestinationBlocked, tileHeight)
             || (!isMovementBlocked(tile)
-                && actionFields(unit, enemies, teamVisibleMovementPolicy()).movement.has(tileKey(tile))));
+                && actionFields(unit, game, teamVisibleMovementPolicy()).movement.has(tileKey(tile))));
 }
 function teamVisibleMovementPolicy() {
-    const visible = visibilityState(enemies, gameOver.center).keys;
+    const visible = visibilityState(game.units, game.enemies, gameOver.center).keys;
     return {
         key: `team-visible:${gameOver.center ? tileKey(gameOver.center) : "living-team"}`,
         isBlocked: (tile) => isMovementBlocked(tile) || !visible.has(tileKey(tile)),
@@ -129,34 +127,34 @@ function assignMoveTarget(unit, tile) {
 }
 function isMovementBlocked(tile) {
     return isBoardObstacle(tile)
-        || units.some((unit) => sameTile(unit, tile))
-        || enemies.some((enemy) => sameTile(enemy, tile));
+        || game.units.some((unit) => sameTile(unit, tile))
+        || game.enemies.some((enemy) => sameTile(enemy, tile));
 }
 function isPushDestinationBlocked(tile) {
     return isMovementBlocked(tile)
-        || units.some((unit) => sameTile(unit.target, tile))
-        || pushables.some((pushable) => sameTile(pushable.target, tile));
+        || game.units.some((unit) => sameTile(unit.target, tile))
+        || game.pushables.some((pushable) => sameTile(pushable.target, tile));
 }
 function go() {
-    if (units.length === 0) {
+    if (game.units.length === 0) {
         return;
     }
-    tombstones.length = 0;
-    const previousPositions = captureFollowerPositions(units);
+    game.tombstones.length = 0;
+    const previousPositions = captureFollowerPositions(game.units);
     commitPlannedMoves();
     commitPlannedPushes();
-    followPositionHistory(units, previousPositions);
-    tombstones.push(...resolveAttacks(units, enemies, pushables, target => dispelDestroyedPushable(target, units)));
-    const defeatedUnits = attackUnits(units, enemies);
-    tombstones.push(...defeatedUnits.map(({ x, y }) => ({ x, y })));
-    gameOver.recordDefeated(defeatedUnits, units);
-    materializeEntities(units, enemies);
-    moveEnemies(enemies, units, isBoardObstacle);
+    followPositionHistory(game.units, previousPositions);
+    game.tombstones.push(...resolveAttacks(game.units, game.enemies, game.pushables, target => dispelDestroyedPushable(target, game.units)));
+    const defeatedUnits = attackUnits(game.units, game.enemies);
+    game.tombstones.push(...defeatedUnits.map(({ x, y }) => ({ x, y })));
+    gameOver.recordDefeated(defeatedUnits, game.units);
+    materializeEntities(game.units, game.enemies);
+    moveEnemies(game.enemies, game.units, isBoardObstacle);
     resetActions();
     enchantmentSelection.clear();
     syncUnitSelection();
     if (!selectedUnit()) {
-        selectedTile = null;
+        game.selectedTile = null;
     }
     draw();
 }
@@ -165,11 +163,11 @@ connectCancelInput(cancelInteraction);
 connectRotationControls(canvas, { left: rotateLeftButton, right: rotateRightButton }, draw);
 connectTurnControl(goButton, go);
 window.addEventListener("resize", resize);
-materializeEntities(units, enemies);
-moveEnemies(enemies, units, isBoardObstacle);
+materializeEntities(game.units, game.enemies);
+moveEnemies(game.enemies, game.units, isBoardObstacle);
 resize();
 function cancelInteraction() {
     clearInteraction(enchantmentSelection, selectedUnit(), cancelAction, clearUnitSelection);
-    selectedTile = null;
+    game.selectedTile = null;
     draw();
 }

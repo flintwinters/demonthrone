@@ -1,8 +1,7 @@
 import { visibilityState } from "./visibility/index.js";
 import { tileKey } from "./grid.js";
+import type { GameState } from "./game-state.js";
 import { isObstacleTile } from "./obstacles.js";
-import { pushables } from "./pushables.js";
-import { selection, units } from "./units.js";
 import { canUnitSeeEntity, sightContext } from "./visibility/index.js";
 import { isBoulderTile, isBrushTile, sightCost, tileHeight } from "./world/index.js";
 import { lineOfSightConfig } from "./world-config.js";
@@ -12,41 +11,42 @@ import type {
 } from "./types.js";
 
 export function boardState(
-  selectedTile: HeightTile | null,
-  hoveredTile: HeightTile | null,
-  enemies: Enemy[],
-  tombstones: Tile[],
+  game: GameState,
   isMovementTile: TilePredicate,
   isAttackTile: TilePredicate,
   enchantmentSourceId: string | null = null,
   selectionLines: readonly SelectionArc[] = [],
   revealCenter: Tile | null = null,
 ): BoardState {
-  const visibility = visibilityState(enemies, revealCenter);
+  const visibility = visibilityState(game.units, game.enemies, revealCenter);
 
   return {
-    selectedTile,
-    hoveredTile,
+    selectedTile: game.selectedTile,
+    hoveredTile: game.hoveredTile,
     selectionLines,
-    units: renderableUnits(),
+    units: renderableUnits(game),
     visibleTiles: visibility.tiles,
-    enemies: renderableEnemies(enemies, visibility.keys),
+    enemies: renderableEnemies(game.enemies, visibility.keys),
     sightBlockers: visibility.blockers,
-    tombstones: renderableTombstones(tombstones, visibility.keys),
-    pushables: renderablePushables(visibility.keys, enchantmentSourceId),
+    tombstones: renderableTombstones(game.tombstones, visibility.keys),
+    pushables: renderablePushables(game, visibility.keys, enchantmentSourceId),
     isObstacleTile,
     isBoulderTile,
     isBrushTile,
     sightCost,
-    selectedUnitId: selection.unitId,
+    selectedUnitId: game.selection.unitId,
     tileHeight,
     isMovementTile,
     isAttackTile,
   };
 }
 
-function renderablePushables(visible: Set<string>, enchantmentSourceId: string | null): RenderPushable[] {
-  return pushables
+function renderablePushables(
+  game: GameState,
+  visible: Set<string>,
+  enchantmentSourceId: string | null,
+): RenderPushable[] {
+  return game.pushables
     .filter((pushable) => visible.has(tileKey(pushable)))
     .map((pushable) => ({
       ...pushable,
@@ -56,13 +56,13 @@ function renderablePushables(visible: Set<string>, enchantmentSourceId: string |
     }));
 }
 
-export function canSeeTile(tile: Tile, enemies: Enemy[], revealCenter: Tile | null = null): boolean {
-  return visibilityState(enemies, revealCenter).keys.has(tileKey(tile));
+export function canSeeTile(tile: Tile, game: GameState, revealCenter: Tile | null = null): boolean {
+  return visibilityState(game.units, game.enemies, revealCenter).keys.has(tileKey(tile));
 }
 
-export function canUnitSee(unit: Unit, target: DamageableEntity, enemies: Enemy[]): boolean {
+export function canUnitSee(unit: Unit, target: DamageableEntity, game: GameState): boolean {
   return canUnitSeeEntity(unit, target, sightContext(
-    visibilityState(enemies).blockers,
+    visibilityState(game.units, game.enemies).blockers,
     sightCost,
     tileHeight,
     isBoulderTile,
@@ -74,8 +74,8 @@ export function enrichTile(tile: Tile): HeightTile {
   return { ...tile, height: tileHeight(tile) };
 }
 
-function renderableUnits(): RenderUnit[] {
-  return units.map((unit) => ({
+function renderableUnits(game: GameState): RenderUnit[] {
+  return game.units.map((unit) => ({
     ...unit,
     height: tileHeight(unit),
     target: unit.target ? enrichTile(unit.target) : null,

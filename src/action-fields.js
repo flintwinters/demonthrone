@@ -2,28 +2,26 @@ import { visibilityState } from "./visibility/index.js";
 import { sightGeometry } from "./constants.js";
 import { tileKey } from "./grid.js";
 import { reachableTileKeys } from "./movement.js";
-import { pushables } from "./pushables.js";
-import { units } from "./units.js";
 import { shadowcastTiles } from "./visibility/index.js";
 import { sightContext } from "./visibility/index.js";
 import { isBoulderTile, movementCost, tileHeight } from "./world/index.js";
 import { lineOfSightConfig } from "./world-config.js";
 let cached = null;
-export function actionFields(unit, enemies, movementPolicy) {
-    const signature = actionFieldSignature(unit, enemies, movementPolicy.key);
+export function actionFields(unit, game, movementPolicy) {
+    const signature = actionFieldSignature(unit, game, movementPolicy.key);
     if (cached?.signature === signature)
         return cached.fields;
-    const context = sightContext(visibilityState(enemies).blockers, () => 1, tileHeight, isBoulderTile, lineOfSightConfig.attackHeightMultiplier);
+    const context = sightContext(visibilityState(game.units, game.enemies).blockers, () => 1, tileHeight, isBoulderTile, lineOfSightConfig.attackHeightMultiplier);
     const movement = reachableTileKeys(unit, unit.movement, movementPolicy.isBlocked, tileHeight, movementCost);
     const attack = new Set(shadowcastTiles(unit, unit.attackRange, context, sightGeometry.eyeHeight).map(tileKey));
     const fields = { movement, attack };
     cached = { signature, fields };
     return fields;
 }
-function actionFieldSignature(unit, enemies, movementPolicyKey) {
+function actionFieldSignature(unit, game, movementPolicyKey) {
     return [
         movementPolicyKey, unit.id, unit.x, unit.y, unit.movement, unit.attackRange,
-        ...[...units, ...enemies, ...pushables].map(entitySignature),
+        ...[...game.units, ...game.enemies, ...game.pushables].map(entitySignature),
     ].join(";");
 }
 function entitySignature(entity) {

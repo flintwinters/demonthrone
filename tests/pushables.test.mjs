@@ -50,6 +50,13 @@ const unit = {
 };
 const flatHeight = () => 0;
 
+function gameState() {
+  return {
+    units, enemies: [], pushables, tombstones: [], selection: { unitId: null },
+    selectedTile: null, hoveredTile: null,
+  };
+}
+
 test("a teammate can push an adjacent crate into a free tile", () => {
   assert.equal(initialCrate.health, 3);
   assert.equal(canPushTo(unit, initialCrate, () => false, flatHeight), true);
@@ -107,7 +114,7 @@ test("crates outside teammate line of sight are not rendered", () => {
 
   crate.x = 1000;
   crate.y = 1000;
-  const isRendered = boardState(null, null, [], [], () => false).pushables
+  const isRendered = boardState(gameState(), () => false, () => false).pushables
     .some((candidate) => candidate.id === crate.id);
 
   assert.equal(isRendered, false);
@@ -121,7 +128,7 @@ test("the pending enchantment source is exposed to the renderer", () => {
 
   crate.x = units[0].x;
   crate.y = units[0].y;
-  const renderedCrate = boardState(null, null, [], [], () => false, () => false, crate.id).pushables
+  const renderedCrate = boardState(gameState(), () => false, () => false, crate.id).pushables
     .find((candidate) => candidate.id === crate.id);
 
   assert.equal(renderedCrate?.isEnchantmentSource, true);

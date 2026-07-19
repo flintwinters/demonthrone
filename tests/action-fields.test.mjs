@@ -19,8 +19,12 @@ const character = {
 };
 
 test("action-field caching distinguishes movement policies", () => {
-  const blocked = actionFields(character, [], { key: "all-blocked", isBlocked: () => true });
-  const open = actionFields(character, [], { key: "unblocked", isBlocked: () => false });
+  const game = {
+    units: [], enemies: [], pushables: [], tombstones: [], selection: { unitId: null },
+    selectedTile: null, hoveredTile: null,
+  };
+  const blocked = actionFields(character, game, { key: "all-blocked", isBlocked: () => true });
+  const open = actionFields(character, game, { key: "unblocked", isBlocked: () => false });
 
   assert.equal(blocked.movement.size, 0);
   assert.equal(open.movement.size > 0, true);
