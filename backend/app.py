@@ -15,12 +15,18 @@ from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Callable
+from urllib.parse import unquote, urlsplit
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8001
 SERVICE_NAME = "demonthrone"
 API_PREFIX = "/api/"
+PUBLIC_TOP_LEVEL_FILES = frozenset({"index.html"})
+PUBLIC_DIRECTORY_PREFIXES = (
+    ("src",),
+    ("node_modules", "three", "build"),
+)
 
 
 @dataclass(frozen=True)
@@ -69,6 +75,26 @@ def build_new_game_payload() -> JsonPayload:
     }
 
 
+def is_public_static_path(request_target: str) -> bool:
+    """Return whether a request targets an intentionally public frontend file."""
+
+    parsed_target = urlsplit(request_target)
+    if parsed_target.scheme or parsed_target.netloc:
+        return False
+    path = unquote(parsed_target.path)
+    if "\\" in path or "\0" in path:
+        return False
+    segments = tuple(segment for segment in path.split("/") if segment)
+    if any(segment in {".", ".."} for segment in segments):
+        return False
+    if not segments or (len(segments) == 1 and segments[0] in PUBLIC_TOP_LEVEL_FILES):
+        return True
+    return any(
+        segments[: len(prefix)] == prefix
+        for prefix in PUBLIC_DIRECTORY_PREFIXES
+    )
+
+
 class DemonthroneRequestHandler(SimpleHTTPRequestHandler):
     """Serve static frontend files and Demonthrone API routes."""
 
@@ -94,7 +120,18 @@ class DemonthroneRequestHandler(SimpleHTTPRequestHandler):
         if self.path.startswith(API_PREFIX):
             self._handle_api_get()
             return
-        super().do_GET()
+        if is_public_static_path(self.path):
+            super().do_GET()
+            return
+        self.send_error(HTTPStatus.NOT_FOUND)
+
+    def do_HEAD(self) -> None:
+        """Serve metadata only for intentionally public frontend files."""
+
+        if is_public_static_path(self.path):
+            super().do_HEAD()
+            return
+        self.send_error(HTTPStatus.NOT_FOUND)
 
     def handle(self) -> None:
         """Ignore clients disconnecting before an HTTP response is complete."""
@@ -107,7 +144,15 @@ class DemonthroneRequestHandler(SimpleHTTPRequestHandler):
     def end_headers(self) -> None:
         """Apply lightweight hardening headers to every response."""
 
+        self.send_header(
+            "Content-Security-Policy",
+            "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+            "style-src 'self'; img-src 'self' data:; connect-src 'self'; "
+            "object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+        )
+        self.send_header("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
         self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
         self.send_header("Referrer-Policy", "no-referrer")
         super().end_headers()
 

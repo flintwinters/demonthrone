@@ -24,6 +24,8 @@
 - Python backend lives in `backend/`, uses only the standard library, tolerates clients disconnecting during static responses, serves the static frontend, and exposes `/api/health` plus `/api/game/new`.
 - Verification gate: run `npm run check`; ESLint enforces cyclomatic complexity and file length limits.
 - Backend verification gate: run `python -m unittest discover`.
+- Public-repository hygiene: generated Python bytecode, local environment files, private-key formats, coverage output, and logs are ignored.
+- The backend serves only the runtime allowlist (`index.html`, compiled `src/`, and the Three.js browser build); repository metadata, TypeScript, backend source, tests, and traversal paths must remain inaccessible over HTTP.
 - UI direction: dense high-contrast gruvbox dark theme, minimal labels, no animations or transitions; foliage is deliberately dimmer than other scene objects, remains visibly green, and uses explicit geometry normals to participate in strong scene lighting rather than glowing unlit or rendering black.
 - The lower-left selection status contains concise context-sensitive interaction guidance or selected entity/terrain info, with no heading or supplemental statistics; internal brush terrain is labeled `foliage`.
 - Use TypeScript as much as possible. Try not to hand-edit JavaScript.
