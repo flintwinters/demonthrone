@@ -181,7 +181,7 @@ function assignMoveTarget(unit: Unit, tile: Tile): void {
   clearPlannedPush(unit.id);
 
   if (isPushableTile(tile)) {
-    planPush(unit, tile);
+    planPush(unit, tile, isPushDestinationBlocked, tileHeight);
   }
 }
 

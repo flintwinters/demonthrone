@@ -118,7 +118,7 @@ function isPushInteraction(tile, unit) {
 function assignMoveTarget(unit, tile) {
     clearPlannedPush(unit.id);
     if (isPushableTile(tile)) {
-        planPush(unit, tile);
+        planPush(unit, tile, isPushDestinationBlocked, tileHeight);
     }
 }
 function isMovementBlocked(tile) {

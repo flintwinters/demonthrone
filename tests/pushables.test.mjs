@@ -12,6 +12,8 @@ import {
 } from "../src/enchantment.js";
 import { EnchantmentSelection } from "../src/enchantment-selection.js";
 import { handleEnchantmentClick } from "../src/interaction.js";
+import { reachableTileKeys } from "../src/movement.js";
+import { isBoardObstacle } from "../src/obstacles.js";
 import { canTakeAction, resetActions, spendAction } from "../src/teammate-turns.js";
 import { units } from "../src/units.js";
 import {
@@ -69,15 +71,34 @@ test("planned pushes can be cleared or committed", () => {
   const crate = pushables[0];
   const destination = { x: crate.x, y: crate.y + 1 };
 
-  planPush(unit, crate);
+  assert.equal(planPush(unit, crate, () => false, flatHeight), true);
   assert.deepEqual(crate.target, destination);
   clearPlannedPush(unit.id);
   assert.equal(crate.target, null);
 
-  planPush(unit, crate);
+  assert.equal(planPush(unit, crate, () => false, flatHeight), true);
   commitPlannedPushes();
   assert.deepEqual({ x: crate.x, y: crate.y }, destination);
   assert.equal(crate.target, null);
+});
+
+test("a non-adjacent crate cannot be assigned a multi-tile push", () => {
+  const crate = pushables[0];
+  const distantUnit = { ...unit, x: crate.x, y: crate.y - 2 };
+
+  assert.equal(planPush(distantUnit, crate, () => false, flatHeight), false);
+  assert.equal(crate.target, null);
+  assert.equal(crate.pushedByUnitId, null);
+});
+
+test("crate occupancy blocks movement fields", () => {
+  const crate = pushables[0];
+  const keys = reachableTileKeys(
+    { x: crate.x, y: crate.y - 1 }, 2, isBoardObstacle, flatHeight, () => 1,
+  );
+
+  assert.equal(keys.has(`${crate.x}:${crate.y}`), false);
+  assert.equal(keys.has(`${crate.x}:${crate.y + 1}`), false);
 });
 
 test("crates outside teammate line of sight are not rendered", () => {
@@ -183,7 +204,7 @@ test("spending an enchant action clears movement and push plans for the turn", (
   const crate = pushables[0];
 
   unit.target = { x: crate.x, y: crate.y };
-  planPush(unit, crate);
+  planPush(unit, crate, () => false, flatHeight);
   spendAction(unit);
   assert.equal(unit.target, null);
   assert.equal(crate.target, null);

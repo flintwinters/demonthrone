@@ -1,4 +1,4 @@
-import { neighborTile, sameTile } from "./grid.js";
+import { l1Distance, neighborTile, sameTile } from "./grid.js";
 import { PushableTemplate } from "./domain.js";
 import { pushableConfig } from "./world-config.js";
 import type { Pushable, Tile, TileHeight, TilePredicate, Unit } from "./types.js";
@@ -29,7 +29,7 @@ export function canPushTo(
 
   if (!pushable
     || (pushable.pushedByUnitId !== null && pushable.pushedByUnitId !== unit.id)
-    || Math.abs(tile.x - unit.x) + Math.abs(tile.y - unit.y) !== 1) {
+    || l1Distance(tile, unit) !== 1) {
     return false;
   }
 
@@ -38,14 +38,22 @@ export function canPushTo(
     && isValidPushHeight(tileHeight(pushable), tileHeight(destination));
 }
 
-export function planPush(unit: Unit, tile: Tile): void {
+export function planPush(
+  unit: Unit,
+  tile: Tile,
+  isBlocked: TilePredicate,
+  tileHeight: TileHeight,
+): boolean {
   clearPlannedPush(unit.id);
   const pushable = pushableAt(tile);
 
-  if (pushable) {
-    pushable.target = pushDestination(unit, pushable);
-    pushable.pushedByUnitId = unit.id;
+  if (!pushable || !canPushTo(unit, tile, isBlocked, tileHeight)) {
+    return false;
   }
+
+  pushable.target = pushDestination(unit, pushable);
+  pushable.pushedByUnitId = unit.id;
+  return true;
 }
 
 export function clearPlannedPush(unitId: string): void {

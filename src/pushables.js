@@ -1,4 +1,4 @@
-import { neighborTile, sameTile } from "./grid.js";
+import { l1Distance, neighborTile, sameTile } from "./grid.js";
 import { PushableTemplate } from "./domain.js";
 import { pushableConfig } from "./world-config.js";
 const crateTemplate = new PushableTemplate(pushableConfig.type, pushableConfig.health);
@@ -16,20 +16,22 @@ export function canPushTo(unit, tile, isBlocked, tileHeight) {
     const pushable = pushableAt(tile);
     if (!pushable
         || (pushable.pushedByUnitId !== null && pushable.pushedByUnitId !== unit.id)
-        || Math.abs(tile.x - unit.x) + Math.abs(tile.y - unit.y) !== 1) {
+        || l1Distance(tile, unit) !== 1) {
         return false;
     }
     const destination = pushDestination(unit, pushable);
     return !isBlocked(destination)
         && isValidPushHeight(tileHeight(pushable), tileHeight(destination));
 }
-export function planPush(unit, tile) {
+export function planPush(unit, tile, isBlocked, tileHeight) {
     clearPlannedPush(unit.id);
     const pushable = pushableAt(tile);
-    if (pushable) {
-        pushable.target = pushDestination(unit, pushable);
-        pushable.pushedByUnitId = unit.id;
+    if (!pushable || !canPushTo(unit, tile, isBlocked, tileHeight)) {
+        return false;
     }
+    pushable.target = pushDestination(unit, pushable);
+    pushable.pushedByUnitId = unit.id;
+    return true;
 }
 export function clearPlannedPush(unitId) {
     const pushable = pushables.find((candidate) => candidate.pushedByUnitId === unitId);
