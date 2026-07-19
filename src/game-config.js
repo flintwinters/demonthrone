@@ -33,8 +33,8 @@ export const landscapePaths = {
             scale: 0.027,
             magnitude: 1,
             seed: worldSeed ^ 0x77616c6c,
-            center: 0.5,
-            halfWidth: 0.023,
+            center: 0.675,
+            halfWidth: 0.025,
         }),
         envelope: new NoiseLayer({
             scale: 0.008,

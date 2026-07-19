@@ -65,11 +65,15 @@ test("walls are short ordinary blocks governed by terrain slope", () => {
   assert.equal(wallRise(wall) >= landscapePaths.wall.height * landscapePaths.wall.riseScale, true);
 });
 
-test("walls form substantial multi-tile-thick runs", () => {
+test("walls occupy a rare elevated noise band with substantial multi-tile-thick runs", () => {
   const walls = pathTiles(isWallTile);
   const interior = walls.filter((wall) => neighbors(wall).filter(isWallTile).length >= 3);
+  const sampledTileCount = 161 ** 2;
 
-  assert.equal(interior.length / walls.length > 0.35, true);
+  assert.equal(landscapePaths.wall.field.config.center - landscapePaths.wall.field.config.halfWidth, 0.65);
+  assert.equal(landscapePaths.wall.field.config.halfWidth * 2, 0.05);
+  assert.equal(walls.length / sampledTileCount < 0.02, true);
+  assert.equal(interior.length / walls.length > 0.42, true);
 });
 
 test("wall elevation scales the positive terrain-relative rise", () => {
