@@ -1,8 +1,15 @@
 :root {
+  --background: #111516;
+  --panel: #34302e;
+  --panel-active: #4b433e;
+  --foreground: #f3e6bd;
+  --muted: #b8aa96;
+  --red: #ff6354;
+  --yellow: #ffca3a;
   color-scheme: dark;
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #1d2021;
-  color: #ebdbb2;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 * {
@@ -12,12 +19,12 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: #1d2021;
+  background: var(--background);
   overflow: hidden;
 }
 
 canvas:focus-visible {
-  outline: 2px solid #fabd2f;
+  outline: 2px solid var(--yellow);
   outline-offset: 2px;
 }
 
@@ -39,7 +46,7 @@ canvas {
   right: 10px;
   width: 72px;
   height: 72px;
-  color: #ebdbb2;
+  color: var(--foreground);
   font: 700 11px/1 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   pointer-events: none;
 }
@@ -57,11 +64,11 @@ canvas {
   left: 13px;
   width: 46px;
   height: 2px;
-  background: #a89984;
+  background: var(--muted);
 }
 
 .compass-axis-north {
-  background: linear-gradient(90deg, #fb4934 0 50%, #a89984 50% 100%);
+  background: linear-gradient(90deg, var(--red) 0 50%, var(--muted) 50% 100%);
   transform: rotate(90deg);
 }
 
@@ -76,7 +83,7 @@ canvas {
 .compass-north {
   top: 0;
   left: 28px;
-  color: #fb4934;
+  color: var(--red);
 }
 
 .compass-east {
@@ -100,17 +107,17 @@ canvas {
   padding: 0;
   border: 0;
   border-radius: 4px;
-  background: #282828;
-  color: #fabd2f;
+  background: var(--panel);
+  color: var(--yellow);
   font: 700 24px/1 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .rotate-button:active {
-  background: #3c3836;
+  background: var(--panel-active);
 }
 
 .rotate-button:focus-visible {
-  outline: 2px solid #ebdbb2;
+  outline: 2px solid var(--foreground);
   outline-offset: 2px;
 }
 
@@ -121,19 +128,19 @@ canvas {
   min-width: 56px;
   min-height: 44px;
   padding: 8px 14px;
-  border: 1px solid #fabd2f;
+  border: 1px solid var(--yellow);
   border-radius: 4px;
-  background: #282828;
-  color: #fabd2f;
+  background: var(--panel);
+  color: var(--yellow);
   font: 700 16px/1 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .go-button:active {
-  background: #3c3836;
+  background: var(--panel-active);
 }
 
 .go-button:focus-visible {
-  outline: 2px solid #ebdbb2;
+  outline: 2px solid var(--foreground);
   outline-offset: 2px;
 }
 
@@ -141,7 +148,7 @@ canvas {
   position: fixed;
   left: 14px;
   bottom: 14px;
-  color: #ebdbb2;
+  color: var(--foreground);
   font: 700 14px/1.2 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -149,7 +156,7 @@ canvas {
   position: fixed;
   top: 10px;
   left: 50%;
-  color: #fb4934;
+  color: var(--red);
   font: 700 14px/1 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   transform: translateX(-50%);
 }

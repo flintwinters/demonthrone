@@ -29,7 +29,7 @@
 - Backend verification gate: run `python -m unittest discover`.
 - Public-repository hygiene: generated Python bytecode, local environment files, private-key formats, coverage output, and logs are ignored.
 - The backend serves only the runtime allowlist (`index.html`, compiled `src/`, the Three.js browser build, and `/favicon.ico` plus `/favicon.png` aliases to `public/favicon.png`); repository metadata, TypeScript, backend source, tests, and traversal paths must remain inaccessible over HTTP.
-- UI direction: dense high-contrast gruvbox dark theme, minimal labels, no animations or transitions; foliage is deliberately dimmer than other scene objects, remains visibly green, and uses explicit geometry normals to participate in strong scene lighting rather than glowing unlit or rendering black.
+- UI direction: dense high-contrast gruvbox dark theme with bright, moderately saturated biome families and interaction colors, minimal labels, no animations or transitions; foliage is deliberately dimmer than focus pieces, remains visibly colored and green-biased, and uses explicit geometry normals to participate in strong scene lighting rather than glowing unlit or rendering black.
 - The lower-left selection status contains concise context-sensitive interaction guidance or selected entity/terrain info, with no heading or supplemental statistics; internal brush terrain is labeled `foliage`.
 - Use TypeScript as much as possible. Try not to hand-edit JavaScript.
 - Stop rm-ing __pycache__
