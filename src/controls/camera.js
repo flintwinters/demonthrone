@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { cameraDistance, cameraElevation, terrainHeight, worldPixelsPerUnit, } from "../constants.js";
+import { cameraDistance, cameraElevation, maximumCameraElevation, terrainHeight, worldPixelsPerUnit, } from "../constants.js";
 import { terrainTileAlongRay } from "./terrain-picker.js";
 export const view = {
     targetX: 6.5,
@@ -76,7 +76,7 @@ export function zoomAt(canvas, screenX, screenY, nextZoom) {
 export function rotateAt(canvas, screenX, screenY, nextRotation, nextElevation = view.elevation) {
     const before = worldPointAtHeight(canvas, screenX, screenY, 0);
     view.rotation = normalizeRotation(nextRotation);
-    view.elevation = nextElevation;
+    view.elevation = Math.min(nextElevation, maximumCameraElevation);
     anchorView(canvas, screenX, screenY, before);
 }
 export function devicePixelRatio() {

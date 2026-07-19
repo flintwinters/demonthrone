@@ -23,6 +23,7 @@ export const gridTopOffset = 72;
 export const worldPixelsPerUnit = 76;
 export const cameraDistance = 80;
 export const cameraElevation = Math.atan(Math.SQRT1_2);
+export const maximumCameraElevation = Math.PI / 2;
 export const dragThreshold = 3;
 export const mouseRotateSpeed = -0.008;
 export const mousePitchSpeed = -0.006;

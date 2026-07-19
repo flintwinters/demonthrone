@@ -3,6 +3,7 @@ export {
   createViewCamera,
   devicePixelRatio,
   gridFromScreen,
+  rotateAt,
   screenFromGrid,
   view,
   viewportCenter,

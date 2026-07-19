@@ -2,6 +2,7 @@ import * as THREE from "three";
 import {
   cameraDistance,
   cameraElevation,
+  maximumCameraElevation,
   terrainHeight,
   worldPixelsPerUnit,
 } from "../constants.js";
@@ -122,7 +123,7 @@ export function rotateAt(
   const before = worldPointAtHeight(canvas, screenX, screenY, 0);
 
   view.rotation = normalizeRotation(nextRotation);
-  view.elevation = nextElevation;
+  view.elevation = Math.min(nextElevation, maximumCameraElevation);
   anchorView(canvas, screenX, screenY, before);
 }
 
