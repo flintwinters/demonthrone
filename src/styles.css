@@ -6,6 +6,9 @@
   --muted: #b8aa96;
   --red: #ff6354;
   --yellow: #ffca3a;
+  --discord-blue: #5865f2;
+  --discord-dark: #23272a;
+  --discord-white: #ffffff;
   color-scheme: dark;
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--background);
@@ -34,6 +37,57 @@ canvas {
   height: 100%;
   cursor: grab;
   touch-action: none;
+}
+
+.discord-link {
+  position: fixed;
+  z-index: 1;
+  top: 10px;
+  left: 10px;
+  overflow: hidden;
+  padding: 4px 6px;
+  border: 1px solid var(--discord-white);
+  background-color: var(--discord-blue);
+  background-image: linear-gradient(
+    105deg,
+    transparent 38%,
+    rgb(255 255 255 / 85%) 48%,
+    var(--discord-white) 50%,
+    rgb(255 255 255 / 85%) 52%,
+    transparent 62%
+  );
+  background-position: 125% 0;
+  background-repeat: no-repeat;
+  background-size: 250% 100%;
+  box-shadow: 3px 3px 0 var(--discord-dark);
+  color: var(--discord-white);
+  font: 700 11px/1 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  text-transform: uppercase;
+  animation: discord-shine 2.8s steps(32, end) infinite;
+}
+
+.discord-link:focus-visible {
+  outline: 2px solid var(--discord-white);
+  outline-offset: 3px;
+}
+
+@keyframes discord-shine {
+  from {
+    background-position: 125% 0;
+  }
+
+  to {
+    background-position: -125% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discord-link {
+    animation: none;
+    background-position: 50% 0;
+  }
 }
 
 .rotate-controls {
